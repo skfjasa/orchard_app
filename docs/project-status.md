@@ -8,7 +8,7 @@ Last updated: 2026-06-19
 - App code: `expo/`
 - Runtime: Expo React Native with Expo Router and TypeScript
 - Package manager: Bun
-- Backend: Supabase client skeleton only; no backend behavior wired yet
+- Backend: Supabase client and auth/session provider skeleton only; no backend profile/matching/chat behavior wired yet
 - Persistence: local `AsyncStorage`
 - Checks: `bun run lint` and `bun run typecheck`
 - Branch: `main`
@@ -16,7 +16,8 @@ Last updated: 2026-06-19
 
 ## Latest Foundation Commits
 
-- This commit - Add env-gated Supabase client skeleton
+- This commit - Add auth/session provider foundation
+- `a4f57ea` - Add env-gated Supabase client skeleton
 - `3efd74a` - Update provider architecture status
 - `4ad31ef` - Demo-enable monetizable features without MVP paywalls
 - `b5aa1d0` - Extract local profile mutation helpers
@@ -44,18 +45,19 @@ Last updated: 2026-06-19
 - Monetizable features should be demoable without payment walls when monetization is disabled.
 - Existing and possible future monetization surfaces are tracked in `docs/monetization-candidates.md`.
 - Supabase dependency and env-gated client skeleton exist.
+- Auth/session provider foundation exists and defaults to mock mode when Supabase env vars are absent.
 
 ## Current Task
 
-Add Supabase dependency and an env-gated client skeleton that preserves mock mode when Supabase env vars are absent.
+Add auth/session provider foundation while preserving the current local/mock sign-in behavior.
 
 ## Next Planned Tasks
 
-1. Add auth/session foundation while preserving mock mode.
-2. Draft initial Supabase schema/migration plan.
-3. Decide production bundle ID and beta app identity.
-4. Add safety/legal surfaces required for TestFlight planning.
-5. Wire one low-risk service to backend/mock adapter boundary.
+1. Draft initial Supabase schema/migration plan.
+2. Decide production bundle ID and beta app identity.
+3. Add safety/legal surfaces required for TestFlight planning.
+4. Wire one low-risk service to backend/mock adapter boundary.
+5. Start wiring real auth into onboarding/sign-in once schema decisions are made.
 
 ## Human Decisions Needed
 

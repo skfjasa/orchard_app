@@ -7,6 +7,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 
 import { ProfileProvider } from "@/providers/profile-provider";
+import { AuthProvider } from "@/providers/auth-provider";
 import Colors from "@/constants/colors";
 
 SplashScreen.preventAutoHideAsync();
@@ -66,12 +67,14 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <SafeAreaProvider>
-        <ProfileProvider>
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <StatusBar style="dark" />
-            <RootLayoutNav />
-          </GestureHandlerRootView>
-        </ProfileProvider>
+        <AuthProvider>
+          <ProfileProvider>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+              <StatusBar style="dark" />
+              <RootLayoutNav />
+            </GestureHandlerRootView>
+          </ProfileProvider>
+        </AuthProvider>
       </SafeAreaProvider>
     </QueryClientProvider>
   );

@@ -7,6 +7,13 @@ export type {
 } from "./service-types";
 
 export type {
+  AuthCredentials,
+  AuthResult,
+  AuthService,
+  AuthState,
+} from "./auth-service";
+
+export type {
   ProfileDraftInput,
   ProfileService,
   ProfileUpdateInput,

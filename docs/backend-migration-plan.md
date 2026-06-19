@@ -12,8 +12,9 @@ The current app is a local/mock Rork prototype.
 - Paywall, boosts, subscriptions, and Super Likes are simulated.
 - No backend exists.
 - Supabase JS dependency and env-gated client skeleton exist.
+- Auth/session provider foundation exists.
 - No migrations exist.
-- No real auth, storage, reciprocal matching, or chat backend exists.
+- No real onboarding/profile auth flow, storage, reciprocal matching, or chat backend exists.
 
 ## 2. Migration Principle
 
@@ -92,7 +93,7 @@ Initial tables:
 1. Add env-gated Supabase client with mock fallback. Done.
 2. Add service interfaces while existing provider still owns behavior. Done.
 3. Move mock profile/discovery access behind adapters.
-4. Add real auth/session provider.
+4. Add real auth/session provider. Foundation done; onboarding/sign-in flow not wired yet.
 5. Persist onboarding/profile to backend.
 6. Add photo upload through `StorageService`.
 7. Replace swipe persistence.

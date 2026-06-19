@@ -169,6 +169,7 @@ Runtime local helper modules now exist:
 - `expo/services/local-profile-mutation-service.ts`
 
 - `ProfileService`: profile lifecycle and settings.
+- `AuthProvider`: auth/session state and future Supabase auth operations.
 - `DiscoveryService`: eligible profile listing.
 - `SwipeService`: like/pass/super-like actions.
 - `MatchService`: match creation and match list.
