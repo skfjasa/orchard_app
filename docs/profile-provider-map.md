@@ -151,6 +151,8 @@ Partner invite/link behavior is local profile metadata. Invite links/codes are g
 
 ## Future Service Boundaries
 
+Initial interface skeletons exist under `expo/services/`; they are not wired into runtime behavior yet.
+
 - `ProfileService`: profile lifecycle and settings.
 - `DiscoveryService`: eligible profile listing.
 - `SwipeService`: like/pass/super-like actions.

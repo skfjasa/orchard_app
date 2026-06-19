@@ -30,6 +30,8 @@ Migration should:
 
 ## 3. Suggested Services / Adapters
 
+Initial TypeScript service interfaces now exist under `expo/services/`. They are contracts only; no runtime code uses them yet.
+
 - `ProfileService`: profile CRUD, onboarding completion, visibility.
 - `DiscoveryService`: eligible profile queries.
 - `SwipeService`: like/pass persistence.
