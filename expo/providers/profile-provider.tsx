@@ -1,9 +1,22 @@
 import createContextHook from "@nkzw/create-context-hook";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { MOCK_PROFILES } from "@/mocks/profiles";
+import {
+  loadStoredProfileState,
+  saveStoredBoost,
+  saveStoredConversations,
+  saveStoredExtraSlots,
+  saveStoredLikes,
+  saveStoredPasses,
+  saveStoredProfile,
+  saveStoredSubscription,
+  saveStoredSuperLikeBalance,
+  saveStoredSuperLikeLastUse,
+  saveStoredSuperLikes,
+} from "@/services/local-profile-storage";
+import type { SubscriptionState } from "@/services/local-profile-storage";
 import {
   BOOST_DURATION_MS,
   Conversation,
@@ -27,80 +40,7 @@ function makeInviteCode(): string {
   return out;
 }
 
-const PROFILE_KEY = "duet.profile.v1";
-const CONVOS_KEY = "duet.conversations.v1";
-const LIKES_KEY = "duet.likes.v1";
-const PASSES_KEY = "duet.passes.v1";
-const SUPERLIKES_KEY = "duet.superLikes.v1";
-const EXTRA_SLOTS_KEY = "duet.extraSlots.v1";
-const BOOST_KEY = "duet.boostedUntil.v1";
-const SUPERLIKE_BALANCE_KEY = "duet.superLikeBalance.v1";
-const SUPERLIKE_LAST_USE_KEY = "duet.superLikeLastUse.v1";
-const SUBSCRIPTION_KEY = "duet.subscription.v1";
-
-export interface SubscriptionState {
-  id: SubscriptionId;
-  startedAt: number;
-  renewsAt: number;
-  lastGrantAt: number;
-}
-
-interface Stored {
-  profile: Profile | null;
-  conversations: Conversation[];
-  likedIds: string[];
-  passedIds: string[];
-  superLikedIds: string[];
-  extraSlots: number;
-  boostedUntil: number | null;
-  superLikeBalance: number;
-  superLikeLastUseAt: number | null;
-  subscription: SubscriptionState | null;
-}
-
-async function loadAll(): Promise<Stored> {
-  try {
-    const [p, c, l, s, sl, es, b, slb, slu, sub] = await Promise.all([
-      AsyncStorage.getItem(PROFILE_KEY),
-      AsyncStorage.getItem(CONVOS_KEY),
-      AsyncStorage.getItem(LIKES_KEY),
-      AsyncStorage.getItem(PASSES_KEY),
-      AsyncStorage.getItem(SUPERLIKES_KEY),
-      AsyncStorage.getItem(EXTRA_SLOTS_KEY),
-      AsyncStorage.getItem(BOOST_KEY),
-      AsyncStorage.getItem(SUPERLIKE_BALANCE_KEY),
-      AsyncStorage.getItem(SUPERLIKE_LAST_USE_KEY),
-      AsyncStorage.getItem(SUBSCRIPTION_KEY),
-    ]);
-    return {
-      profile: p ? (JSON.parse(p) as Profile) : null,
-      conversations: c ? (JSON.parse(c) as Conversation[]) : [],
-      likedIds: l ? (JSON.parse(l) as string[]) : [],
-      passedIds: s ? (JSON.parse(s) as string[]) : [],
-      superLikedIds: sl ? (JSON.parse(sl) as string[]) : [],
-      extraSlots: es ? (JSON.parse(es) as number) : 0,
-      boostedUntil: b ? (JSON.parse(b) as number) : null,
-      superLikeBalance:
-        slb !== null ? (JSON.parse(slb) as number) : DEFAULT_SUPER_LIKES,
-      superLikeLastUseAt: slu ? (JSON.parse(slu) as number) : null,
-      subscription: sub ? (JSON.parse(sub) as SubscriptionState) : null,
-    };
-  } catch (e) {
-    console.log("[profile-provider] load error", e);
-    return {
-      profile: null,
-      conversations: [],
-      likedIds: [],
-      passedIds: [],
-      superLikedIds: [],
-      extraSlots: 0,
-      boostedUntil: null,
-      superLikeBalance: DEFAULT_SUPER_LIKES,
-      superLikeLastUseAt: null,
-      subscription: null,
-    };
-  }
-}
+export type { SubscriptionState } from "@/services/local-profile-storage";
 
 export const [ProfileProvider, useProfile] = createContextHook(() => {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -123,7 +63,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
   const loadQuery = useQuery({
     queryKey: ["duet-storage"],
-    queryFn: loadAll,
+    queryFn: loadStoredProfileState,
   });
 
   useEffect(() => {
@@ -149,81 +89,43 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   }, [loadQuery.data, hydrated]);
 
   const saveProfileMutation = useMutation({
-    mutationFn: async (p: Profile | null) => {
-      if (p) await AsyncStorage.setItem(PROFILE_KEY, JSON.stringify(p));
-      else await AsyncStorage.removeItem(PROFILE_KEY);
-      return p;
-    },
+    mutationFn: saveStoredProfile,
   });
 
   const saveConvosMutation = useMutation({
-    mutationFn: async (c: Conversation[]) => {
-      await AsyncStorage.setItem(CONVOS_KEY, JSON.stringify(c));
-      return c;
-    },
+    mutationFn: saveStoredConversations,
   });
 
   const saveLikesMutation = useMutation({
-    mutationFn: async (v: string[]) => {
-      await AsyncStorage.setItem(LIKES_KEY, JSON.stringify(v));
-      return v;
-    },
+    mutationFn: saveStoredLikes,
   });
 
   const savePassesMutation = useMutation({
-    mutationFn: async (v: string[]) => {
-      await AsyncStorage.setItem(PASSES_KEY, JSON.stringify(v));
-      return v;
-    },
+    mutationFn: saveStoredPasses,
   });
 
   const saveSuperLikesMutation = useMutation({
-    mutationFn: async (v: string[]) => {
-      await AsyncStorage.setItem(SUPERLIKES_KEY, JSON.stringify(v));
-      return v;
-    },
+    mutationFn: saveStoredSuperLikes,
   });
 
   const saveExtraSlotsMutation = useMutation({
-    mutationFn: async (v: number) => {
-      await AsyncStorage.setItem(EXTRA_SLOTS_KEY, JSON.stringify(v));
-      return v;
-    },
+    mutationFn: saveStoredExtraSlots,
   });
 
   const saveBoostMutation = useMutation({
-    mutationFn: async (v: number | null) => {
-      if (v === null) await AsyncStorage.removeItem(BOOST_KEY);
-      else await AsyncStorage.setItem(BOOST_KEY, JSON.stringify(v));
-      return v;
-    },
+    mutationFn: saveStoredBoost,
   });
 
   const saveSuperLikeBalanceMutation = useMutation({
-    mutationFn: async (v: number) => {
-      await AsyncStorage.setItem(SUPERLIKE_BALANCE_KEY, JSON.stringify(v));
-      return v;
-    },
+    mutationFn: saveStoredSuperLikeBalance,
   });
 
   const saveSuperLikeLastUseMutation = useMutation({
-    mutationFn: async (v: number | null) => {
-      if (v === null) await AsyncStorage.removeItem(SUPERLIKE_LAST_USE_KEY);
-      else
-        await AsyncStorage.setItem(
-          SUPERLIKE_LAST_USE_KEY,
-          JSON.stringify(v)
-        );
-      return v;
-    },
+    mutationFn: saveStoredSuperLikeLastUse,
   });
 
   const saveSubscriptionMutation = useMutation({
-    mutationFn: async (v: SubscriptionState | null) => {
-      if (v === null) await AsyncStorage.removeItem(SUBSCRIPTION_KEY);
-      else await AsyncStorage.setItem(SUBSCRIPTION_KEY, JSON.stringify(v));
-      return v;
-    },
+    mutationFn: saveStoredSubscription,
   });
 
   const completeOnboarding = useCallback(

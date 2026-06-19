@@ -53,3 +53,23 @@ export type {
   AnalyticsProperties,
   AnalyticsService,
 } from "./analytics-service";
+
+export {
+  emptyStoredProfileState,
+  loadStoredProfileState,
+  saveStoredBoost,
+  saveStoredConversations,
+  saveStoredExtraSlots,
+  saveStoredLikes,
+  saveStoredPasses,
+  saveStoredProfile,
+  saveStoredSubscription,
+  saveStoredSuperLikeBalance,
+  saveStoredSuperLikeLastUse,
+  saveStoredSuperLikes,
+} from "./local-profile-storage";
+
+export type {
+  StoredProfileState,
+  SubscriptionState,
+} from "./local-profile-storage";
