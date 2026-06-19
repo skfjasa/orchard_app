@@ -26,6 +26,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Colors from "@/constants/colors";
+import {
+  MVP_MONETIZATION_ENABLED,
+  MVP_SUPER_LIKES_ENABLED,
+} from "@/constants/features";
 import { getPolyFruit } from "@/constants/poly-fruits";
 import { MOCK_PROFILES } from "@/mocks/profiles";
 import { useProfile } from "@/providers/profile-provider";
@@ -93,15 +97,16 @@ export default function DiscoverScreen() {
   };
 
   const handleSuperLike = () => {
+    if (!MVP_SUPER_LIKES_ENABLED) return;
     if (!current || swipingRef.current) return;
     const profileId = current.profile.id;
     const alreadyMatched = likedIds.includes(profileId);
-    if (!alreadyMatched && isAtMatchLimit) {
+    if (MVP_MONETIZATION_ENABLED && !alreadyMatched && isAtMatchLimit) {
       triggerHaptic(Haptics.ImpactFeedbackStyle.Heavy);
       router.push("/paywall?reason=limit");
       return;
     }
-    if (superLikeBalance <= 0) {
+    if (MVP_MONETIZATION_ENABLED && superLikeBalance <= 0) {
       triggerHaptic(Haptics.ImpactFeedbackStyle.Heavy);
       router.push("/paywall?reason=superlikes");
       return;
@@ -131,9 +136,13 @@ export default function DiscoverScreen() {
     pendingSuperLikeRef.current = null;
     if (!pid) return;
     const res = superLikeProfile(pid);
-    if (!res.ok && res.reason === "limit") {
+    if (MVP_MONETIZATION_ENABLED && !res.ok && res.reason === "limit") {
       router.push("/paywall?reason=limit");
-    } else if (!res.ok && res.reason === "superlikes") {
+    } else if (
+      MVP_MONETIZATION_ENABLED &&
+      !res.ok &&
+      res.reason === "superlikes"
+    ) {
       router.push("/paywall?reason=superlikes");
     }
   };
@@ -141,6 +150,7 @@ export default function DiscoverScreen() {
   const swipe = (direction: "left" | "right") => {
     if (!current || swipingRef.current) return;
     if (
+      MVP_MONETIZATION_ENABLED &&
       direction === "right" &&
       isAtMatchLimit &&
       !likedIds.includes(current.profile.id)
@@ -226,20 +236,22 @@ export default function DiscoverScreen() {
             </Text>
             <Text style={styles.brand}>Discover</Text>
           </View>
-          <Pressable
-            onPress={() => router.push("/paywall")}
-            style={styles.slotsBadge}
-            testID="slots-badge"
-          >
-            <Heart
-              size={12}
-              color={Colors.palette.coral}
-              fill={Colors.palette.coral}
-            />
-            <Text style={styles.slotsText}>
-              {slotsRemaining}/{totalSlots} slots
-            </Text>
-          </Pressable>
+          {MVP_MONETIZATION_ENABLED && (
+            <Pressable
+              onPress={() => router.push("/paywall")}
+              style={styles.slotsBadge}
+              testID="slots-badge"
+            >
+              <Heart
+                size={12}
+                color={Colors.palette.coral}
+                fill={Colors.palette.coral}
+              />
+              <Text style={styles.slotsText}>
+                {slotsRemaining}/{totalSlots} slots
+              </Text>
+            </Pressable>
+          )}
         </View>
 
         {isBoosted && (
@@ -327,26 +339,28 @@ export default function DiscoverScreen() {
             >
               <X color={Colors.light.text} size={26} strokeWidth={2.5} />
             </ActionButton>
-            <View style={styles.superLikeWrap}>
-              <ActionButton
-                onPress={handleSuperLike}
-                bg={Colors.palette.evergreen}
-                size={54}
-                testID="superlike-btn"
-              >
-                <SuperLikeIcon size={28} color="#FFF" />
-              </ActionButton>
-              <View
-                style={[
-                  styles.superLikeBadge,
-                  superLikeBalance === 0 && styles.superLikeBadgeEmpty,
-                ]}
-              >
-                <Text style={styles.superLikeBadgeText}>
-                  {superLikeBalance}
-                </Text>
+            {MVP_SUPER_LIKES_ENABLED && (
+              <View style={styles.superLikeWrap}>
+                <ActionButton
+                  onPress={handleSuperLike}
+                  bg={Colors.palette.evergreen}
+                  size={54}
+                  testID="superlike-btn"
+                >
+                  <SuperLikeIcon size={28} color="#FFF" />
+                </ActionButton>
+                <View
+                  style={[
+                    styles.superLikeBadge,
+                    superLikeBalance === 0 && styles.superLikeBadgeEmpty,
+                  ]}
+                >
+                  <Text style={styles.superLikeBadgeText}>
+                    {superLikeBalance}
+                  </Text>
+                </View>
               </View>
-            </View>
+            )}
             <ActionButton
               onPress={() => swipe("right")}
               bg={Colors.light.tint}

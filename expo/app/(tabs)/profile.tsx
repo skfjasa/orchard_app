@@ -46,6 +46,7 @@ import * as Clipboard from "expo-clipboard";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Colors from "@/constants/colors";
+import { MVP_MONETIZATION_ENABLED } from "@/constants/features";
 import { getPolyFruit } from "@/constants/poly-fruits";
 import { useProfile } from "@/providers/profile-provider";
 import {
@@ -211,169 +212,177 @@ export default function ProfileScreen() {
             </View>
           )}
 
-          <View style={styles.slotsCard}>
-            <LinearGradient
-              colors={[Colors.palette.evergreen, Colors.palette.evergreenSoft]}
-              style={StyleSheet.absoluteFillObject}
-            />
-            <View style={styles.slotsTop}>
-              <View>
-                <Text style={styles.slotsLabel}>Match slots</Text>
-                <Text style={styles.slotsValue}>
-                  {slotsUsed} / {totalSlots} used
+          {MVP_MONETIZATION_ENABLED && (
+            <>
+              <View style={styles.slotsCard}>
+                <LinearGradient
+                  colors={[
+                    Colors.palette.evergreen,
+                    Colors.palette.evergreenSoft,
+                  ]}
+                  style={StyleSheet.absoluteFillObject}
+                />
+                <View style={styles.slotsTop}>
+                  <View>
+                    <Text style={styles.slotsLabel}>Match slots</Text>
+                    <Text style={styles.slotsValue}>
+                      {slotsUsed} / {totalSlots} used
+                    </Text>
+                  </View>
+                  <Pressable
+                    onPress={() => router.push("/paywall")}
+                    style={styles.upgradeBtn}
+                    testID="upgrade-btn"
+                  >
+                    <Plus size={14} color={Colors.light.accent} />
+                    <Text style={styles.upgradeBtnText}>Add slots</Text>
+                  </Pressable>
+                </View>
+                <View style={styles.slotsBar}>
+                  <View
+                    style={[
+                      styles.slotsBarFill,
+                      {
+                        width: `${Math.min(100, (slotsUsed / totalSlots) * 100)}%`,
+                      },
+                    ]}
+                  />
+                </View>
+                <Text style={styles.slotsHint}>
+                  {slotsRemaining > 0
+                    ? `${slotsRemaining} slot${slotsRemaining === 1 ? "" : "s"} free \u00b7 unlimited swipes`
+                    : "You're at your match limit. Unlock more to keep connecting."}
                 </Text>
               </View>
+
               <Pressable
-                onPress={() => router.push("/paywall")}
-                style={styles.upgradeBtn}
-                testID="upgrade-btn"
-              >
-                <Plus size={14} color={Colors.light.accent} />
-                <Text style={styles.upgradeBtnText}>Add slots</Text>
-              </Pressable>
-            </View>
-            <View style={styles.slotsBar}>
-              <View
-                style={[
-                  styles.slotsBarFill,
-                  {
-                    width: `${Math.min(100, (slotsUsed / totalSlots) * 100)}%`,
-                  },
+                onPress={() => router.push("/paywall?reason=superlikes")}
+                style={({ pressed }) => [
+                  styles.superCard,
+                  pressed && { opacity: 0.95 },
                 ]}
-              />
-            </View>
-            <Text style={styles.slotsHint}>
-              {slotsRemaining > 0
-                ? `${slotsRemaining} slot${slotsRemaining === 1 ? "" : "s"} free \u00b7 unlimited swipes`
-                : "You're at your match limit. Unlock more to keep connecting."}
-            </Text>
-          </View>
-
-          <Pressable
-            onPress={() => router.push("/paywall?reason=superlikes")}
-            style={({ pressed }) => [
-              styles.superCard,
-              pressed && { opacity: 0.95 },
-            ]}
-            testID="super-likes-card"
-          >
-            <View style={styles.superIcon}>
-              <SuperLikeIcon size={22} color={Colors.palette.honey} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.superTitle}>
-                {superLikeBalance} Super Like{superLikeBalance === 1 ? "" : "s"} left
-              </Text>
-              <Text style={styles.superSub}>
-                {rechargeLabel
-                  ? rechargeLabel
-                  : superLikeBalance >= DEFAULT_SUPER_LIKES
-                  ? `Full tank \u00b7 ${DEFAULT_SUPER_LIKES} recharge 30 days after last use`
-                  : "Tap to refill or stock up"}
-              </Text>
-            </View>
-            <ChevronRight color={Colors.light.text} size={18} />
-          </Pressable>
-
-          {activePlan ? (
-            <View
-              style={[
-                styles.planActiveCard,
-                {
-                  backgroundColor:
-                    activePlan.accent === "coral"
-                      ? Colors.palette.coral
-                      : Colors.palette.evergreen,
-                },
-              ]}
-              testID="subscription-active"
-            >
-              <View style={styles.planActiveTop}>
-                <View style={styles.planActiveBadge}>
-                  <Crown size={13} color="#FFF" />
-                  <Text style={styles.planActiveBadgeText}>
-                    {activePlan.title}
+                testID="super-likes-card"
+              >
+                <View style={styles.superIcon}>
+                  <SuperLikeIcon size={22} color={Colors.palette.honey} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.superTitle}>
+                    {superLikeBalance} Super Like
+                    {superLikeBalance === 1 ? "" : "s"} left
+                  </Text>
+                  <Text style={styles.superSub}>
+                    {rechargeLabel
+                      ? rechargeLabel
+                      : superLikeBalance >= DEFAULT_SUPER_LIKES
+                      ? `Full tank \u00b7 ${DEFAULT_SUPER_LIKES} recharge 30 days after last use`
+                      : "Tap to refill or stock up"}
                   </Text>
                 </View>
-                <Text style={styles.planActivePrice}>
-                  {activePlan.price}/mo
-                </Text>
-              </View>
-              <Text style={styles.planActiveTagline}>
-                Renews {renewLabel}
-              </Text>
-              <View style={styles.planActiveActions}>
+                <ChevronRight color={Colors.light.text} size={18} />
+              </Pressable>
+
+              {activePlan ? (
+                <View
+                  style={[
+                    styles.planActiveCard,
+                    {
+                      backgroundColor:
+                        activePlan.accent === "coral"
+                          ? Colors.palette.coral
+                          : Colors.palette.evergreen,
+                    },
+                  ]}
+                  testID="subscription-active"
+                >
+                  <View style={styles.planActiveTop}>
+                    <View style={styles.planActiveBadge}>
+                      <Crown size={13} color="#FFF" />
+                      <Text style={styles.planActiveBadgeText}>
+                        {activePlan.title}
+                      </Text>
+                    </View>
+                    <Text style={styles.planActivePrice}>
+                      {activePlan.price}/mo
+                    </Text>
+                  </View>
+                  <Text style={styles.planActiveTagline}>
+                    Renews {renewLabel}
+                  </Text>
+                  <View style={styles.planActiveActions}>
+                    <Pressable
+                      onPress={() => router.push("/paywall")}
+                      style={({ pressed }) => [
+                        styles.planManageBtn,
+                        pressed && { opacity: 0.9 },
+                      ]}
+                      testID="manage-plan"
+                    >
+                      <Text style={styles.planManageText}>Manage</Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={confirmCancel}
+                      style={({ pressed }) => [
+                        styles.planCancelBtn,
+                        pressed && { opacity: 0.9 },
+                      ]}
+                      testID="cancel-plan"
+                    >
+                      <Text style={styles.planCancelText}>Cancel</Text>
+                    </Pressable>
+                  </View>
+                </View>
+              ) : (
                 <Pressable
                   onPress={() => router.push("/paywall")}
                   style={({ pressed }) => [
-                    styles.planManageBtn,
-                    pressed && { opacity: 0.9 },
+                    styles.planPromoCard,
+                    pressed && { opacity: 0.95 },
                   ]}
-                  testID="manage-plan"
+                  testID="plan-promo"
                 >
-                  <Text style={styles.planManageText}>Manage</Text>
+                  <View style={styles.planPromoIcon}>
+                    <Crown color="#FFF" size={20} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.planPromoTitle}>Go Plus or Pro</Text>
+                    <Text style={styles.planPromoSub}>
+                      Monthly slots, Super Likes & more from $9.99
+                    </Text>
+                  </View>
+                  <ChevronRight color="#FFF" size={18} />
                 </Pressable>
-                <Pressable
-                  onPress={confirmCancel}
-                  style={({ pressed }) => [
-                    styles.planCancelBtn,
-                    pressed && { opacity: 0.9 },
-                  ]}
-                  testID="cancel-plan"
-                >
-                  <Text style={styles.planCancelText}>Cancel</Text>
-                </Pressable>
-              </View>
-            </View>
-          ) : (
-            <Pressable
-              onPress={() => router.push("/paywall")}
-              style={({ pressed }) => [
-                styles.planPromoCard,
-                pressed && { opacity: 0.95 },
-              ]}
-              testID="plan-promo"
-            >
-              <View style={styles.planPromoIcon}>
-                <Crown color="#FFF" size={20} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.planPromoTitle}>Go Plus or Pro</Text>
-                <Text style={styles.planPromoSub}>
-                  Monthly slots, Super Likes & more from $9.99
-                </Text>
-              </View>
-              <ChevronRight color="#FFF" size={18} />
-            </Pressable>
-          )}
-
-          <Pressable
-            onPress={() => router.push("/paywall?reason=boost")}
-            style={({ pressed }) => [
-              styles.boostCard,
-              pressed && { opacity: 0.95 },
-            ]}
-            testID="boost-card"
-          >
-            <View style={styles.boostIcon}>
-              {isBoosted ? (
-                <Zap color="#FFF" size={20} fill="#FFF" />
-              ) : (
-                <Flame color="#FFF" size={20} />
               )}
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.boostTitle}>
-                {isBoosted ? "You're boosted" : "Boost your profile"}
-              </Text>
-              <Text style={styles.boostSub}>
-                {isBoosted
-                  ? `Trending in your area \u00b7 ${boostRemainingLabel}`
-                  : "Trend in your area for 24 hours \u00b7 $20"}
-              </Text>
-            </View>
-            <ChevronRight color="#FFF" size={18} />
-          </Pressable>
+
+              <Pressable
+                onPress={() => router.push("/paywall?reason=boost")}
+                style={({ pressed }) => [
+                  styles.boostCard,
+                  pressed && { opacity: 0.95 },
+                ]}
+                testID="boost-card"
+              >
+                <View style={styles.boostIcon}>
+                  {isBoosted ? (
+                    <Zap color="#FFF" size={20} fill="#FFF" />
+                  ) : (
+                    <Flame color="#FFF" size={20} />
+                  )}
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.boostTitle}>
+                    {isBoosted ? "You're boosted" : "Boost your profile"}
+                  </Text>
+                  <Text style={styles.boostSub}>
+                    {isBoosted
+                      ? `Trending in your area \u00b7 ${boostRemainingLabel}`
+                      : "Trend in your area for 24 hours \u00b7 $20"}
+                  </Text>
+                </View>
+                <ChevronRight color="#FFF" size={18} />
+              </Pressable>
+            </>
+          )}
 
           <Section title="Bio" onPress={() => router.push("/edit-profile")}>
             <Pressable

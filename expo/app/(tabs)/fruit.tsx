@@ -13,13 +13,14 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Colors from "@/constants/colors";
+import { MVP_MONETIZATION_ENABLED } from "@/constants/features";
 import { getPolyFruit } from "@/constants/poly-fruits";
 import { FRUIT_PROFILES } from "@/mocks/fruit-profiles";
 import { useProfile } from "@/providers/profile-provider";
 import { scoreMatch } from "@/utils/match";
 
 export default function FruitScreen() {
-  const { profile, likedIds, passedIds } = useProfile();
+  const { profile, likedIds, passedIds, purchase } = useProfile();
 
   const trending = useMemo(() => {
     const pool = FRUIT_PROFILES.filter(
@@ -32,7 +33,9 @@ export default function FruitScreen() {
           : { distanceScore: 0.5, distanceKm: 0 };
         const t = p.trendingScore ?? 0.5;
         const isBoostedProfile =
-          p.boostedUntil && p.boostedUntil > Date.now() ? 1 : 0;
+          MVP_MONETIZATION_ENABLED && p.boostedUntil && p.boostedUntil > Date.now()
+            ? 1
+            : 0;
         const combined =
           t * 0.7 + s.distanceScore * 0.3 + isBoostedProfile * 0.2;
         return { profile: p, combined, distanceKm: s.distanceKm };
@@ -57,7 +60,13 @@ export default function FruitScreen() {
             <Text style={styles.brand}>Fruit</Text>
           </View>
           <Pressable
-            onPress={() => router.push("/paywall?reason=boost")}
+            onPress={() => {
+              if (MVP_MONETIZATION_ENABLED) {
+                router.push("/paywall?reason=boost");
+              } else {
+                purchase("boost");
+              }
+            }}
             style={styles.boostBtn}
             testID="boost-yours"
           >
@@ -101,7 +110,9 @@ export default function FruitScreen() {
               {trending.map((t) => {
                 const p = t.profile;
                 const boosted =
-                  p.boostedUntil && p.boostedUntil > Date.now();
+                  MVP_MONETIZATION_ENABLED &&
+                  p.boostedUntil &&
+                  p.boostedUntil > Date.now();
                 const isCouple = p.accountType === "couple";
                 return (
                   <Pressable

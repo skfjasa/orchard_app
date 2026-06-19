@@ -12,10 +12,12 @@ Last updated: 2026-06-19
 - Persistence: local `AsyncStorage`
 - Checks: `bun run lint` and `bun run typecheck`
 - Branch: `main`
+- MVP monetization: disabled
 
 ## Latest Foundation Commits
 
-- Pending - Extract local profile mutation helpers and add project status tracking
+- This commit - Demo-enable monetizable features without MVP paywalls
+- `b5aa1d0` - Extract local profile mutation helpers
 - `4a214e6` - Extract local monetization helpers
 - `b699432` - Extract local interaction helpers
 - `cb19b2b` - Extract local profile storage service
@@ -36,26 +38,21 @@ Last updated: 2026-06-19
 - Local monetization calculations are extracted.
 - Local profile mutation helpers are extracted.
 - `docs/project-status.md` is the running status/context/plan tracker.
+- Monetization is explicitly out of scope for the feedback MVP.
+- Monetizable features should be demoable without payment walls when monetization is disabled.
+- Existing and possible future monetization surfaces are tracked in `docs/monetization-candidates.md`.
 
 ## Current Task
 
-Profile mutation helper extraction is ready to commit:
-
-- profile patching
-- partner invite creation
-- partner invite resend
-- partner link acceptance
-- partner unlink/removal
-
-Goal: preserve local behavior while reducing provider responsibility before Supabase work begins.
+Hide or bypass prototype monetization walls for the feedback MVP while tagging monetizable ideas for later. Features that could later be monetized should remain demoable when practical.
 
 ## Next Planned Tasks
 
 1. Reassess `ProfileProvider` for remaining local responsibilities.
-2. Decide whether prototype monetization should be hidden for beta.
-3. Add Supabase dependency and env-gated client skeleton.
-4. Add auth/session foundation while preserving mock mode.
-5. Draft initial Supabase schema/migration plan.
+2. Add Supabase dependency and env-gated client skeleton.
+3. Add auth/session foundation while preserving mock mode.
+4. Draft initial Supabase schema/migration plan.
+5. Decide production bundle ID and beta app identity.
 
 ## Human Decisions Needed
 
@@ -63,7 +60,6 @@ Goal: preserve local behavior while reducing provider responsibility before Supa
 - Apple Developer account availability.
 - Supabase project name and region.
 - Public Privacy Policy, Terms, Support, and Account Deletion URLs.
-- Whether beta should hide paywall, boost, super-like, and subscription surfaces.
 - Whether to keep `Orchard` as final app name.
 
 ## Status Tracking Rule

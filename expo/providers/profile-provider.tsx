@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { MOCK_PROFILES } from "@/mocks/profiles";
+import { MVP_MONETIZATION_ENABLED } from "@/constants/features";
 import {
   addUniqueId,
   appendIncomingTextReply,
@@ -196,7 +197,9 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     saveSubscriptionMutation,
   ]);
 
-  const totalSlots = DEFAULT_MATCH_SLOTS + extraSlots;
+  const totalSlots = MVP_MONETIZATION_ENABLED
+    ? DEFAULT_MATCH_SLOTS + extraSlots
+    : Number.MAX_SAFE_INTEGER;
   const slotsUsed = likedIds.length;
   const slotsRemaining = Math.max(0, totalSlots - slotsUsed);
   const isAtMatchLimit = slotsRemaining <= 0;
@@ -248,21 +251,27 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const superLikeProfile = useCallback(
     (id: string): { ok: boolean; reason?: "limit" | "superlikes" } => {
       if (superLikedIds.includes(id) && likedIds.includes(id)) return { ok: true };
-      if (!likedIds.includes(id) && slotsUsed >= totalSlots) {
+      if (
+        MVP_MONETIZATION_ENABLED &&
+        !likedIds.includes(id) &&
+        slotsUsed >= totalSlots
+      ) {
         console.log("[profile-provider] superLike blocked: match limit");
         return { ok: false, reason: "limit" };
       }
-      if (superLikeBalance <= 0) {
+      if (MVP_MONETIZATION_ENABLED && superLikeBalance <= 0) {
         console.log("[profile-provider] superLike blocked: no balance");
         return { ok: false, reason: "superlikes" };
       }
 
-      const nextBalance = superLikeBalance - 1;
-      setSuperLikeBalance(nextBalance);
-      saveSuperLikeBalanceMutation.mutate(nextBalance);
-      const now = Date.now();
-      setSuperLikeLastUseAt(now);
-      saveSuperLikeLastUseMutation.mutate(now);
+      if (MVP_MONETIZATION_ENABLED) {
+        const nextBalance = superLikeBalance - 1;
+        setSuperLikeBalance(nextBalance);
+        saveSuperLikeBalanceMutation.mutate(nextBalance);
+        const now = Date.now();
+        setSuperLikeLastUseAt(now);
+        saveSuperLikeLastUseMutation.mutate(now);
+      }
 
       setSuperLikedIds((prev) => {
         const next = addUniqueId(prev, id);
