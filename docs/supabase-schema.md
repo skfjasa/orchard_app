@@ -31,10 +31,16 @@ The draft covers:
 - Reports are create-only from authenticated users in the mobile app.
 - Account deletion requests are user-created and user-readable.
 
+## Draft RPCs
+
+- `create_swipe(target_profile_id, swipe_decision)` persists like/pass decisions and creates an active match only when a reciprocal like exists.
+- `unmatch_match(target_match_id)` lets a match member mark an active match as unmatched.
+- `block_profile(blocked_profile_id)` creates a block and marks any existing match between the two users as blocked.
+
+These functions are granted to authenticated users only. They still need to be tested in a Supabase dev project before app runtime code depends on them.
+
 ## Known Gaps Before Applying
 
-- Mutual match creation should be implemented through a database function or trusted service path.
-- Unmatch/block match status updates should be implemented through reviewed RPCs or trusted service logic, not direct client table updates.
 - Storage bucket policies for `profile_photos` are not drafted yet.
 - Admin/moderation read policies are not included; use Supabase Studio/service role initially.
 - Exact relationship-structure enum values are not locked yet.

@@ -16,7 +16,8 @@ Last updated: 2026-06-19
 
 ## Latest Foundation Commits
 
-- This commit - Draft initial Supabase schema and RLS
+- This commit - Add core Supabase matching and safety RPC drafts
+- `9422c3a` - Draft initial Supabase schema and RLS
 - `c4a4efb` - Add auth/session provider foundation
 - `a4f57ea` - Add env-gated Supabase client skeleton
 - `3efd74a` - Update provider architecture status
@@ -48,14 +49,15 @@ Last updated: 2026-06-19
 - Supabase dependency and env-gated client skeleton exist.
 - Auth/session provider foundation exists and defaults to mock mode when Supabase env vars are absent.
 - Initial Supabase schema/RLS migration draft exists.
+- Draft RPCs exist for reciprocal swipe matching, unmatch, and block behavior.
 
 ## Current Task
 
-Draft initial Supabase schema/RLS migration and schema notes before wiring runtime behavior to backend tables.
+Add core Supabase matching and safety RPC drafts before wiring runtime behavior to backend tables.
 
 ## Next Planned Tasks
 
-1. Review Supabase schema/RLS before applying to a dev project.
+1. Review Supabase schema/RLS/RPCs before applying to a dev project.
 2. Decide production bundle ID and beta app identity.
 3. Add safety/legal surfaces required for TestFlight planning.
 4. Wire one low-risk service to backend/mock adapter boundary.

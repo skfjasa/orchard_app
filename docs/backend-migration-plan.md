@@ -96,7 +96,7 @@ Initial tables:
 
 1. Add env-gated Supabase client with mock fallback. Done.
 2. Add service interfaces while existing provider still owns behavior. Done.
-3. Draft initial Supabase schema and RLS. Done.
+3. Draft initial Supabase schema, RLS, and core matching/safety RPCs. Done.
 4. Move mock profile/discovery access behind adapters.
 5. Add real auth/session provider. Foundation done; onboarding/sign-in flow not wired yet.
 6. Persist onboarding/profile to backend.
