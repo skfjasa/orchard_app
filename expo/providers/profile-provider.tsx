@@ -4,6 +4,20 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { MOCK_PROFILES } from "@/mocks/profiles";
 import {
+  addUniqueId,
+  appendIncomingTextReply,
+  appendOutgoingPhotoRequest,
+  appendOutgoingTextMessage,
+  approvePendingPhoto,
+  ensureGreetingConversation,
+  makeSimulatedReply,
+  markConversationRead,
+  removeConversation,
+  removeId,
+  removeMessage,
+  updatePhotoStatus,
+} from "@/services/local-interaction-service";
+import {
   loadStoredProfileState,
   saveStoredBoost,
   saveStoredConversations,
@@ -23,7 +37,6 @@ import {
   DEFAULT_MATCH_SLOTS,
   DEFAULT_SUPER_LIKES,
   LinkedPartner,
-  Message,
   Profile,
   PurchaseId,
   SUBSCRIPTION_OPTIONS,
@@ -197,33 +210,16 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       }
 
       setLikedIds((prev) => {
-        if (prev.includes(id)) return prev;
-        const next = [...prev, id];
+        const next = addUniqueId(prev, id);
+        if (next === prev) return prev;
         saveLikesMutation.mutate(next);
         return next;
       });
 
       setConversations((prev) => {
-        if (prev.find((c) => c.profileId === id)) return prev;
         const other = MOCK_PROFILES.find((p) => p.id === id);
-        if (!other) return prev;
-        const greeting: Message = {
-          id: `m-${Date.now()}`,
-          fromMe: false,
-          authorName: other.people[0]?.name,
-          text:
-            other.accountType === "couple"
-              ? `Hey! ${other.people[0]?.name} & ${other.people[1]?.name} here. Loved your profile \u2014 how's your week going?`
-              : `Hi! I really liked your profile. What brings you to Orchard?`,
-          at: Date.now(),
-        };
-        const convo: Conversation = {
-          id: `c-${id}`,
-          profileId: id,
-          messages: [greeting],
-          unread: 1,
-        };
-        const next = [convo, ...prev];
+        const next = ensureGreetingConversation(prev, other, "like");
+        if (next === prev) return prev;
         saveConvosMutation.mutate(next);
         return next;
       });
@@ -236,12 +232,12 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const unmatch = useCallback(
     (id: string) => {
       setLikedIds((prev) => {
-        const next = prev.filter((x) => x !== id);
+        const next = removeId(prev, id);
         saveLikesMutation.mutate(next);
         return next;
       });
       setConversations((prev) => {
-        const next = prev.filter((c) => c.profileId !== id);
+        const next = removeConversation(prev, id);
         saveConvosMutation.mutate(next);
         return next;
       });
@@ -269,40 +265,23 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       saveSuperLikeLastUseMutation.mutate(now);
 
       setSuperLikedIds((prev) => {
-        if (prev.includes(id)) return prev;
-        const next = [...prev, id];
+        const next = addUniqueId(prev, id);
+        if (next === prev) return prev;
         saveSuperLikesMutation.mutate(next);
         return next;
       });
 
       setLikedIds((prev) => {
-        if (prev.includes(id)) return prev;
-        const next = [...prev, id];
+        const next = addUniqueId(prev, id);
+        if (next === prev) return prev;
         saveLikesMutation.mutate(next);
         return next;
       });
 
       setConversations((prev) => {
-        if (prev.find((c) => c.profileId === id)) return prev;
         const other = MOCK_PROFILES.find((p) => p.id === id);
-        if (!other) return prev;
-        const greeting: Message = {
-          id: `m-${Date.now()}`,
-          fromMe: false,
-          authorName: other.people[0]?.name,
-          text:
-            other.accountType === "couple"
-              ? `Whoa, a super like! ${other.people[0]?.name} & ${other.people[1]?.name} here \u2014 you definitely caught our eye.`
-              : `A super like?! You've got my attention. What's your story?`,
-          at: Date.now(),
-        };
-        const convo: Conversation = {
-          id: `c-${id}`,
-          profileId: id,
-          messages: [greeting],
-          unread: 1,
-        };
-        const next = [convo, ...prev];
+        const next = ensureGreetingConversation(prev, other, "super_like");
+        if (next === prev) return prev;
         saveConvosMutation.mutate(next);
         return next;
       });
@@ -326,8 +305,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const passProfile = useCallback(
     (id: string) => {
       setPassedIds((prev) => {
-        if (prev.includes(id)) return prev;
-        const next = [...prev, id];
+        const next = addUniqueId(prev, id);
+        if (next === prev) return prev;
         savePassesMutation.mutate(next);
         return next;
       });
@@ -339,65 +318,25 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     (profileId: string, text: string, authorName?: string) => {
       console.log("[profile-provider] sendMessage", { profileId, length: text.length });
       setConversations((prev) => {
-        const msg: Message = {
-          id: `m-${Date.now()}`,
-          fromMe: true,
-          authorName,
-          text,
-          at: Date.now(),
-          kind: "text",
-        };
         const exists = prev.find((c) => c.profileId === profileId);
-        let next: Conversation[];
-        if (exists) {
-          next = prev.map((c) =>
-            c.profileId === profileId
-              ? { ...c, messages: [...c.messages, msg] }
-              : c
-          );
-        } else {
+        if (!exists) {
           console.log(
             "[profile-provider] sendMessage: creating missing convo",
             profileId
           );
-          const convo: Conversation = {
-            id: `c-${profileId}`,
-            profileId,
-            messages: [msg],
-            unread: 0,
-          };
-          next = [convo, ...prev];
         }
+        const next = appendOutgoingTextMessage(prev, profileId, text, authorName);
         saveConvosMutation.mutate(next);
         return next;
       });
 
       const other = MOCK_PROFILES.find((p) => p.id === profileId);
       if (!other) return;
-      const replies = [
-        `Ha, love that — tell me more!`,
-        `Okay that's a vibe. What's your go-to weekend move?`,
-        `Totally feel you. Coffee or cocktails first?`,
-        `You're funny. What are you up to this week?`,
-        `Same energy. Favorite spot in ${other.location.city}?`,
-      ];
-      const reply = replies[Math.floor(Math.random() * replies.length)];
+      const reply = makeSimulatedReply(other);
       const delay = 1800 + Math.floor(Math.random() * 2500);
       setTimeout(() => {
         setConversations((prev) => {
-          const replyMsg: Message = {
-            id: `m-${Date.now()}-r`,
-            fromMe: false,
-            authorName: other.people[0]?.name,
-            text: reply,
-            at: Date.now(),
-            kind: "text",
-          };
-          const next = prev.map((c) =>
-            c.profileId === profileId
-              ? { ...c, messages: [...c.messages, replyMsg], unread: c.unread + 1 }
-              : c
-          );
+          const next = appendIncomingTextReply(prev, profileId, other, reply);
           saveConvosMutation.mutate(next);
           return next;
         });
@@ -410,11 +349,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     (profileId: string, messageId: string) => {
       console.log("[profile-provider] deleteMessage", { profileId, messageId });
       setConversations((prev) => {
-        const next = prev.map((c) =>
-          c.profileId === profileId
-            ? { ...c, messages: c.messages.filter((m) => m.id !== messageId) }
-            : c
-        );
+        const next = removeMessage(prev, profileId, messageId);
         saveConvosMutation.mutate(next);
         return next;
       });
@@ -436,33 +371,13 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     (profileId: string, photoUri: string, authorName?: string) => {
       const msgId = `m-${Date.now()}`;
       setConversations((prev) => {
-        const msg: Message = {
-          id: msgId,
-          fromMe: true,
-          authorName,
-          text: "Photo request",
-          at: Date.now(),
-          kind: "photo",
+        const next = appendOutgoingPhotoRequest(
+          prev,
+          profileId,
           photoUri,
-          photoStatus: "pending",
-        };
-        const exists = prev.find((c) => c.profileId === profileId);
-        let next: Conversation[];
-        if (exists) {
-          next = prev.map((c) =>
-            c.profileId === profileId
-              ? { ...c, messages: [...c.messages, msg] }
-              : c
-          );
-        } else {
-          const convo: Conversation = {
-            id: `c-${profileId}`,
-            profileId,
-            messages: [msg],
-            unread: 0,
-          };
-          next = [convo, ...prev];
-        }
+          msgId,
+          authorName
+        );
         saveConvosMutation.mutate(next);
         return next;
       });
@@ -471,18 +386,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       setTimeout(() => {
         console.log("[profile-provider] simulated photo approval", msgId);
         setConversations((prev) => {
-          const next = prev.map((c) =>
-            c.profileId === profileId
-              ? {
-                  ...c,
-                  messages: c.messages.map((m) =>
-                    m.id === msgId && m.photoStatus === "pending"
-                      ? { ...m, photoStatus: "approved" as const }
-                      : m
-                  ),
-                }
-              : c
-          );
+          const next = approvePendingPhoto(prev, profileId, msgId);
           saveConvosMutation.mutate(next);
           return next;
         });
@@ -494,18 +398,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const respondToPhoto = useCallback(
     (profileId: string, messageId: string, decision: "approved" | "declined") => {
       setConversations((prev) => {
-        const next = prev.map((c) =>
-          c.profileId === profileId
-            ? {
-                ...c,
-                messages: c.messages.map((m) =>
-                  m.id === messageId && m.kind === "photo"
-                    ? { ...m, photoStatus: decision }
-                    : m
-                ),
-              }
-            : c
-        );
+        const next = updatePhotoStatus(prev, profileId, messageId, decision);
         saveConvosMutation.mutate(next);
         return next;
       });
@@ -516,9 +409,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const markRead = useCallback(
     (profileId: string) => {
       setConversations((prev) => {
-        const next = prev.map((c) =>
-          c.profileId === profileId ? { ...c, unread: 0 } : c
-        );
+        const next = markConversationRead(prev, profileId);
         saveConvosMutation.mutate(next);
         return next;
       });

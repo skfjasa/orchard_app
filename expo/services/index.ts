@@ -73,3 +73,20 @@ export type {
   StoredProfileState,
   SubscriptionState,
 } from "./local-profile-storage";
+
+export {
+  addUniqueId,
+  appendIncomingTextReply,
+  appendOutgoingPhotoRequest,
+  appendOutgoingTextMessage,
+  approvePendingPhoto,
+  ensureGreetingConversation,
+  makeSimulatedReply,
+  markConversationRead,
+  removeConversation,
+  removeId,
+  removeMessage,
+  updatePhotoStatus,
+} from "./local-interaction-service";
+
+export type { LocalGreetingKind } from "./local-interaction-service";
