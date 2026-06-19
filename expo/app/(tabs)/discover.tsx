@@ -44,7 +44,6 @@ export default function DiscoverScreen() {
     likeProfile,
     passProfile,
     totalSlots,
-    slotsUsed,
     slotsRemaining,
     isAtMatchLimit,
     isBoosted,

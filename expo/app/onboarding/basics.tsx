@@ -80,7 +80,7 @@ export default function BasicsScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.step}>Step 2 of 6</Text>
-        <Text style={styles.title}>Let's get to the core</Text>
+        <Text style={styles.title}>Let&apos;s get to the core</Text>
         <Text style={styles.sub}>
           {isCouple
             ? "Spill the seeds — tell us about both of you."
@@ -297,7 +297,7 @@ function PersonBasics({
           )}
         </Pressable>
       </View>
-      <Text style={styles.hint}>You'll use these to sign back in.</Text>
+      <Text style={styles.hint}>You&apos;ll use these to sign back in.</Text>
     </View>
   );
 }

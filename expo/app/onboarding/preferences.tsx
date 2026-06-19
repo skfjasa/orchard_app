@@ -33,7 +33,7 @@ export default function PreferencesScreen() {
         <Text style={styles.step}>Step 5 of 6</Text>
         <Text style={styles.title}>Who makes you go bananas?</Text>
         <Text style={styles.sub}>
-          Pick the bunch you're ripe to meet — these mirror the identities from step 3. You can change this anytime.
+          Pick the bunch you&apos;re ripe to meet — these mirror the identities from step 3. You can change this anytime.
         </Text>
 
         <View style={{ height: 24 }} />

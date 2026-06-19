@@ -48,9 +48,9 @@ export default function InterestsScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.step}>Step 4 of 6</Text>
-        <Text style={styles.title}>What's your jam?</Text>
+        <Text style={styles.title}>What&apos;s your jam?</Text>
         <Text style={styles.sub}>
-          Pick the flavors you love and answer a prompt or two. Prompts are optional, but they're the zest that makes your profile pop.
+          Pick the flavors you love and answer a prompt or two. Prompts are optional, but they&apos;re the zest that makes your profile pop.
         </Text>
 
         <View style={{ height: 24 }} />

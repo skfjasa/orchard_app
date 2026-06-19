@@ -78,12 +78,6 @@ export default function ProfileScreen() {
   } = useProfile();
   const [inviteOpen, setInviteOpen] = React.useState<boolean>(false);
 
-  if (!profile) return null;
-
-  const isCouple = profile.accountType === "couple";
-  const socials = profile.socials ?? {};
-  const hasSocials = !!(socials.instagram || socials.twitter || socials.tiktok);
-
   const performSignOut = React.useCallback(() => {
     try {
       console.log("[profile] signing out");
@@ -153,6 +147,12 @@ export default function ProfileScreen() {
         day: "numeric",
       })
     : null;
+
+  if (!profile) return null;
+
+  const isCouple = profile.accountType === "couple";
+  const socials = profile.socials ?? {};
+  const hasSocials = !!(socials.instagram || socials.twitter || socials.tiktok);
 
   const confirmCancel = () => {
     Alert.alert(
@@ -978,10 +978,10 @@ function InvitePartnerModal({
           keyboardShouldPersistTaps="handled"
         >
           <Text style={styles.inviteBlurb}>
-            We'll email a secure link they can tap to connect to your account.
+            We&apos;ll email a secure link they can tap to connect to your account.
           </Text>
 
-          <Text style={styles.inviteLabel}>Partner's name (optional)</Text>
+          <Text style={styles.inviteLabel}>Partner&apos;s name (optional)</Text>
           <TextInput
             value={name}
             onChangeText={setName}
@@ -991,7 +991,7 @@ function InvitePartnerModal({
             autoCapitalize="words"
           />
 
-          <Text style={styles.inviteLabel}>Partner's email</Text>
+          <Text style={styles.inviteLabel}>Partner&apos;s email</Text>
           <TextInput
             value={email}
             onChangeText={setEmail}

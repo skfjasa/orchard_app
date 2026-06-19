@@ -48,15 +48,8 @@ export default function MatchDetail() {
   const other = useMemo(() => MOCK_PROFILES.find((p) => p.id === id), [id]);
   const { profile, likeProfile, passProfile, likedIds, superLikeProfile, superLikedIds } = useProfile();
 
-  if (!other || !profile) return null;
-
-  const score = scoreMatch(profile, other);
-  const pct = Math.round(score.total * 100);
-  const isMatched = likedIds.includes(other.id);
-  const isCouple = other.accountType === "couple";
-  const isBoosted = !!(other.boostedUntil && other.boostedUntil > Date.now());
-
   const allPhotos: string[] = useMemo(() => {
+    if (!other) return [];
     const list: string[] = [];
     for (const p of other.people) {
       const photos = p.photos && p.photos.length > 0 ? p.photos : [p.photo];
@@ -64,6 +57,15 @@ export default function MatchDetail() {
     }
     return list;
   }, [other]);
+  const [superBurstVisible, setSuperBurstVisible] = useState<boolean>(false);
+
+  if (!other || !profile) return null;
+
+  const score = scoreMatch(profile, other);
+  const pct = Math.round(score.total * 100);
+  const isMatched = likedIds.includes(other.id);
+  const isCouple = other.accountType === "couple";
+  const isBoosted = !!(other.boostedUntil && other.boostedUntil > Date.now());
 
   const handleLike = () => {
     const res = likeProfile(other.id);
@@ -108,8 +110,6 @@ export default function MatchDetail() {
     passProfile(other.id);
     router.back();
   };
-
-  const [superBurstVisible, setSuperBurstVisible] = useState<boolean>(false);
 
   const finalizeSuperLike = () => {
     const res = superLikeProfile(other.id);
