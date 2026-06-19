@@ -23,7 +23,7 @@ This app should not become a generic swipe clone. Preserve the working prototype
 - Onboarding provider: `expo/providers/onboarding-provider.tsx`
 - Mock data: `expo/mocks/profiles.ts`, `expo/mocks/fruit-profiles.ts`
 
-There is currently no backend implementation, no Supabase client, no migrations, no API client, no server functions, no real auth, no real storage, and no real chat backend.
+There is currently no backend implementation, no migrations, no API client, no server functions, no real auth, no real storage, and no real chat backend. A Supabase JS dependency and env-gated client skeleton exist, but no runtime app behavior is backed by Supabase yet.
 
 ## Actual Repo Structure
 

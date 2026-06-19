@@ -11,7 +11,7 @@ The current app is a local/mock Rork prototype.
 - Chat is local and simulated.
 - Paywall, boosts, subscriptions, and Super Likes are simulated.
 - No backend exists.
-- No Supabase client exists.
+- Supabase JS dependency and env-gated client skeleton exist.
 - No migrations exist.
 - No real auth, storage, reciprocal matching, or chat backend exists.
 
@@ -89,8 +89,8 @@ Initial tables:
 
 ## 7. Suggested Migration Order
 
-1. Add env-gated Supabase client with mock fallback.
-2. Add service interfaces while existing provider still owns behavior.
+1. Add env-gated Supabase client with mock fallback. Done.
+2. Add service interfaces while existing provider still owns behavior. Done.
 3. Move mock profile/discovery access behind adapters.
 4. Add real auth/session provider.
 5. Persist onboarding/profile to backend.
