@@ -13,7 +13,7 @@ The current app is a local/mock Rork prototype.
 - No backend exists.
 - Supabase JS dependency and env-gated client skeleton exist.
 - Auth/session provider foundation exists.
-- No migrations exist.
+- Initial Supabase schema migration draft exists.
 - No real onboarding/profile auth flow, storage, reciprocal matching, or chat backend exists.
 
 ## 2. Migration Principle
@@ -62,6 +62,10 @@ Prefer `supabase/migrations/` at the repo root unless later repo conventions mak
 
 ## 5. Initial Schema Concept
 
+Initial migration draft:
+
+- `supabase/migrations/202606190001_initial_mvp_schema.sql`
+
 Initial tables:
 
 - `profiles`
@@ -92,11 +96,12 @@ Initial tables:
 
 1. Add env-gated Supabase client with mock fallback. Done.
 2. Add service interfaces while existing provider still owns behavior. Done.
-3. Move mock profile/discovery access behind adapters.
-4. Add real auth/session provider. Foundation done; onboarding/sign-in flow not wired yet.
-5. Persist onboarding/profile to backend.
-6. Add photo upload through `StorageService`.
-7. Replace swipe persistence.
-8. Add reciprocal match creation.
-9. Replace local chat with match-scoped backend messages.
-10. Add safety service and enforce block/report/unmatch/account deletion flows.
+3. Draft initial Supabase schema and RLS. Done.
+4. Move mock profile/discovery access behind adapters.
+5. Add real auth/session provider. Foundation done; onboarding/sign-in flow not wired yet.
+6. Persist onboarding/profile to backend.
+7. Add photo upload through `StorageService`.
+8. Replace swipe persistence.
+9. Add reciprocal match creation.
+10. Replace local chat with match-scoped backend messages.
+11. Add safety service and enforce block/report/unmatch/account deletion flows.

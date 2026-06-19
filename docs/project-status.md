@@ -8,7 +8,7 @@ Last updated: 2026-06-19
 - App code: `expo/`
 - Runtime: Expo React Native with Expo Router and TypeScript
 - Package manager: Bun
-- Backend: Supabase client and auth/session provider skeleton only; no backend profile/matching/chat behavior wired yet
+- Backend: Supabase client, auth/session provider skeleton, and schema draft only; no backend profile/matching/chat behavior wired yet
 - Persistence: local `AsyncStorage`
 - Checks: `bun run lint` and `bun run typecheck`
 - Branch: `main`
@@ -16,7 +16,8 @@ Last updated: 2026-06-19
 
 ## Latest Foundation Commits
 
-- This commit - Add auth/session provider foundation
+- This commit - Draft initial Supabase schema and RLS
+- `c4a4efb` - Add auth/session provider foundation
 - `a4f57ea` - Add env-gated Supabase client skeleton
 - `3efd74a` - Update provider architecture status
 - `4ad31ef` - Demo-enable monetizable features without MVP paywalls
@@ -46,14 +47,15 @@ Last updated: 2026-06-19
 - Existing and possible future monetization surfaces are tracked in `docs/monetization-candidates.md`.
 - Supabase dependency and env-gated client skeleton exist.
 - Auth/session provider foundation exists and defaults to mock mode when Supabase env vars are absent.
+- Initial Supabase schema/RLS migration draft exists.
 
 ## Current Task
 
-Add auth/session provider foundation while preserving the current local/mock sign-in behavior.
+Draft initial Supabase schema/RLS migration and schema notes before wiring runtime behavior to backend tables.
 
 ## Next Planned Tasks
 
-1. Draft initial Supabase schema/migration plan.
+1. Review Supabase schema/RLS before applying to a dev project.
 2. Decide production bundle ID and beta app identity.
 3. Add safety/legal surfaces required for TestFlight planning.
 4. Wire one low-risk service to backend/mock adapter boundary.
