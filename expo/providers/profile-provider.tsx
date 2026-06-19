@@ -37,24 +37,21 @@ import {
   isLocalBoostActive,
 } from "@/services/local-monetization-service";
 import {
+  acceptPartnerLink as acceptLocalPartnerLink,
+  addPartnerInvite,
+  applyProfilePatch,
+  removePartnerLink as removeLocalPartnerLink,
+  resendPartnerInvite as resendLocalPartnerInvite,
+} from "@/services/local-profile-mutation-service";
+import {
   Conversation,
   DEFAULT_MATCH_SLOTS,
   DEFAULT_SUPER_LIKES,
-  LinkedPartner,
   Profile,
   PurchaseId,
   SUPER_LIKE_RECHARGE_MS,
   SubscriptionId,
 } from "@/types";
-
-function makeInviteCode(): string {
-  const alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
-  let out = "";
-  for (let i = 0; i < 6; i++) {
-    out += alphabet[Math.floor(Math.random() * alphabet.length)];
-  }
-  return out;
-}
 
 export type { SubscriptionState } from "@/services/local-profile-storage";
 
@@ -156,8 +153,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const updateProfile = useCallback(
     (patch: Partial<Profile>) => {
       setProfile((prev) => {
-        if (!prev) return prev;
-        const next: Profile = { ...prev, ...patch };
+        const next = applyProfilePatch(prev, patch);
+        if (!next) return prev;
         saveProfileMutation.mutate(next);
         return next;
       });
@@ -503,20 +500,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const invitePartner = useCallback(
     (email: string, displayName?: string) => {
       setProfile((prev) => {
-        if (!prev) return prev;
-        const lp: LinkedPartner = {
-          id: `lp-${Date.now()}`,
-          email: email.trim(),
-          displayName,
-          inviteCode: makeInviteCode(),
-          status: "pending",
-          invitedAt: Date.now(),
-          role: "partner",
-        };
-        const next: Profile = {
-          ...prev,
-          linkedPartners: [...(prev.linkedPartners ?? []), lp],
-        };
+        const next = addPartnerInvite(prev, email, displayName);
+        if (!next) return prev;
         saveProfileMutation.mutate(next);
         return next;
       });
@@ -527,13 +512,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const resendPartnerInvite = useCallback(
     (partnerId: string) => {
       setProfile((prev) => {
-        if (!prev) return prev;
-        const linked = (prev.linkedPartners ?? []).map((lp) =>
-          lp.id === partnerId
-            ? { ...lp, inviteCode: makeInviteCode(), invitedAt: Date.now() }
-            : lp
-        );
-        const next: Profile = { ...prev, linkedPartners: linked };
+        const next = resendLocalPartnerInvite(prev, partnerId);
+        if (!next) return prev;
         saveProfileMutation.mutate(next);
         return next;
       });
@@ -544,13 +524,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const acceptPartnerLink = useCallback(
     (partnerId: string) => {
       setProfile((prev) => {
-        if (!prev) return prev;
-        const linked = (prev.linkedPartners ?? []).map((lp) =>
-          lp.id === partnerId
-            ? { ...lp, status: "linked" as const, linkedAt: Date.now() }
-            : lp
-        );
-        const next: Profile = { ...prev, linkedPartners: linked };
+        const next = acceptLocalPartnerLink(prev, partnerId);
+        if (!next) return prev;
         saveProfileMutation.mutate(next);
         return next;
       });
@@ -561,14 +536,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const removePartnerLink = useCallback(
     (partnerId: string) => {
       setProfile((prev) => {
-        if (!prev) return prev;
-        const linked = (prev.linkedPartners ?? []).filter(
-          (lp) => lp.id !== partnerId
-        );
-        const next: Profile = {
-          ...prev,
-          linkedPartners: linked.length > 0 ? linked : undefined,
-        };
+        const next = removeLocalPartnerLink(prev, partnerId);
+        if (!next) return prev;
         saveProfileMutation.mutate(next);
         return next;
       });

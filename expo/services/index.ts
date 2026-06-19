@@ -101,3 +101,12 @@ export type {
   LocalPurchaseResult,
   LocalSubscriptionResult,
 } from "./local-monetization-service";
+
+export {
+  acceptPartnerLink,
+  addPartnerInvite,
+  applyProfilePatch,
+  makeInviteCode,
+  removePartnerLink,
+  resendPartnerInvite,
+} from "./local-profile-mutation-service";

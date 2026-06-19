@@ -67,8 +67,9 @@ Existing scripts:
 - `start-web`: `bunx rork start -p h12kndiz6neur3chkh3q1 --web --tunnel`
 - `start-web-dev`: `DEBUG=expo* bunx rork start -p h12kndiz6neur3chkh3q1 --web --tunnel`
 - `lint`: `expo lint`
+- `typecheck`: `tsc --noEmit`
 
-There is no configured typecheck script yet.
+Use `bun run lint` and `bun run typecheck` from `expo/` for code changes.
 
 ## Coding Rules
 
@@ -83,6 +84,7 @@ There is no configured typecheck script yet.
 - Do not add paid services without human approval.
 - Do not remove existing docs unless they are obsolete and replaced.
 - Do not implement production behavior in docs-only tasks.
+- Keep `docs/project-status.md` current when commits change status, plans, or blockers.
 
 ## MVP Priority Order
 
@@ -167,7 +169,8 @@ For code changes:
 - Change scope is small and clearly tied to the task.
 - Existing Rork UI and mock/demo behavior are preserved unless explicitly changed.
 - `bun run lint` is run from `expo/` when practical.
-- Typecheck is run if a script exists.
+- `bun run typecheck` is run from `expo/` when practical.
+- `docs/project-status.md` is updated when the change affects status, plans, or blockers.
 - Manual test steps are documented in the final response.
 - Risks/blockers are called out.
 
