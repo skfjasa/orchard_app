@@ -16,7 +16,8 @@ Last updated: 2026-06-19
 
 ## Latest Foundation Commits
 
-- This commit - Demo-enable monetizable features without MVP paywalls
+- This commit - Reassess remaining ProfileProvider responsibilities
+- `4ad31ef` - Demo-enable monetizable features without MVP paywalls
 - `b5aa1d0` - Extract local profile mutation helpers
 - `4a214e6` - Extract local monetization helpers
 - `b699432` - Extract local interaction helpers
@@ -44,15 +45,15 @@ Last updated: 2026-06-19
 
 ## Current Task
 
-Hide or bypass prototype monetization walls for the feedback MVP while tagging monetizable ideas for later. Features that could later be monetized should remain demoable when practical.
+Reassess remaining `ProfileProvider` responsibilities after helper extraction and update the repo architecture notes before Supabase work begins.
 
 ## Next Planned Tasks
 
-1. Reassess `ProfileProvider` for remaining local responsibilities.
-2. Add Supabase dependency and env-gated client skeleton.
-3. Add auth/session foundation while preserving mock mode.
-4. Draft initial Supabase schema/migration plan.
-5. Decide production bundle ID and beta app identity.
+1. Add Supabase dependency and env-gated client skeleton.
+2. Add auth/session foundation while preserving mock mode.
+3. Draft initial Supabase schema/migration plan.
+4. Decide production bundle ID and beta app identity.
+5. Add safety/legal surfaces required for TestFlight planning.
 
 ## Human Decisions Needed
 

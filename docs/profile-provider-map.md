@@ -6,9 +6,9 @@ Purpose: document the current provider before extracting services/adapters. This
 
 ## Current Role
 
-`ProfileProvider` is the central app-state provider for the Rork prototype. It owns local persistence, profile lifecycle, swipe state, local match creation, simulated chat, monetization counters, subscriptions, and partner-link invitations.
+`ProfileProvider` is the central app-state provider for the Rork prototype. It still owns UI-facing local state and coordinates persistence, but the first service boundaries have been extracted.
 
-Current persistence is local through AsyncStorage and React Query mutations. No backend is involved.
+Current persistence is local through `AsyncStorage` via `expo/services/local-profile-storage.ts` and React Query mutations. No backend is involved.
 
 ## Storage Keys
 
@@ -39,6 +39,8 @@ Current persistence is local through AsyncStorage and React Query mutations. No 
 - `drafts`
 - `typingProfileIds`
 
+The provider still owns React state for these values. Storage and several local mutation helpers now live in service modules.
+
 ## Derived State
 
 - `totalSlots`
@@ -47,6 +49,8 @@ Current persistence is local through AsyncStorage and React Query mutations. No 
 - `isAtMatchLimit`
 - `isBoosted`
 - `superLikeRechargeAt`
+
+When `MVP_MONETIZATION_ENABLED` is `false`, match slots are effectively unlimited for demo use.
 
 ## Public Actions
 
@@ -89,21 +93,21 @@ Partner-link prototype behavior:
 
 ### Hydration
 
-`loadAll` reads all local AsyncStorage keys and initializes provider state. Load failure resets state to local defaults.
+`loadStoredProfileState` in `expo/services/local-profile-storage.ts` reads all local AsyncStorage keys and initializes provider state. Load failure resets state to local defaults.
 
 ### Profile Lifecycle
 
-Onboarding stores a `Profile` object locally. Updating a profile patches the local profile object and persists it. Signing out clears local profile, conversation, swipe, monetization, and subscription state.
+Onboarding stores a `Profile` object locally. Updating a profile patches the local profile object through `applyProfilePatch` and persists it. Signing out clears local profile, conversation, swipe, monetization, and subscription state.
 
 ### Likes And Matches
 
-`likeProfile` checks local match slot limits. If allowed, it adds the profile ID to `likedIds` and immediately creates a local conversation with a synthetic greeting from `MOCK_PROFILES`.
+`likeProfile` checks local match slot limits only when monetization is enabled. If allowed, it adds the profile ID to `likedIds` and immediately creates a local conversation with a synthetic greeting from `MOCK_PROFILES` through `ensureGreetingConversation`.
 
 This is not true reciprocal matching. Backend migration must replace this with persisted swipes and mutual-match creation.
 
 ### Super Likes
 
-`superLikeProfile` checks slot limits and local Super Like balance. If allowed, it decrements the balance, records a super-like ID, adds a like, and immediately creates a local conversation with a synthetic greeting.
+`superLikeProfile` checks slot limits and local Super Like balance only when monetization is enabled. In the feedback MVP, Super Likes are demoable without paywall or balance blocking. It records a super-like ID, adds a like, and immediately creates a local conversation with a synthetic greeting.
 
 ### Passes
 
@@ -115,43 +119,54 @@ This is not true reciprocal matching. Backend migration must replace this with p
 
 ### Chat
 
-`sendMessage` appends a local outgoing message. It then schedules a fake auto-reply using `setTimeout`.
+`sendMessage` appends a local outgoing message through `appendOutgoingTextMessage`. It then schedules a fake auto-reply using `setTimeout` and `appendIncomingTextReply`.
 
-`sendPhoto` creates a local pending photo message, then simulates approval after a timeout.
+`sendPhoto` creates a local pending photo message through `appendOutgoingPhotoRequest`, then simulates approval after a timeout.
 
 No chat authorization, backend persistence, realtime, or moderation exists.
 
 ### Monetization
 
-`purchase`, `subscribe`, and `cancelSubscription` mutate local counters only. No App Store, Google Play, RevenueCat, or payment backend exists.
+`purchase`, `subscribe`, and `cancelSubscription` mutate local counters only through helper calculations in `expo/services/local-monetization-service.ts`. No App Store, Google Play, RevenueCat, or payment backend exists.
+
+Monetization is disabled for the feedback MVP through `expo/constants/features.ts`. Monetizable prototype features should remain demoable where useful and are tracked in `docs/monetization-candidates.md`.
 
 ### Partner Links
 
-Partner invite/link behavior is local profile metadata. Invite links/codes are generated locally and are not backed by email, auth, or a real account-linking backend.
+Partner invite/link behavior is local profile metadata through helpers in `expo/services/local-profile-mutation-service.ts`. Invite links/codes are generated locally and are not backed by email, auth, or a real account-linking backend.
 
 ## Extraction Risks
 
-- The provider combines multiple domains in one context.
+- The provider still combines multiple domains in one context.
 - Screens depend directly on provider actions and local state names.
-- Local match creation is coupled to mock profiles and conversations.
-- Chat simulation is coupled to `MOCK_PROFILES`.
-- Monetization counters are mixed with core matching limits.
-- AsyncStorage mutations are scattered across many local callbacks.
+- Local match creation is still coupled to mock profiles and conversations.
+- Chat simulation still depends on `MOCK_PROFILES`.
+- Local React state updates and persistence calls are still coupled in provider callbacks.
+- Provider actions are not yet backed by the service interfaces under `expo/services/`.
 
 ## Recommended Extraction Order
 
-1. Add read-only service interfaces and keep existing behavior.
-2. Extract storage/hydration helpers without changing keys or behavior.
-3. Extract mock profile lookup and discovery helpers.
-4. Extract swipe/match actions behind a `SwipeService` / `MatchService` interface.
-5. Extract chat actions behind a `ChatService` interface while preserving local fake replies in mock mode.
-6. Extract safety actions once block/report/unmatch backend concepts exist.
-7. Extract monetization/demo counters or hide them for beta.
-8. Add Supabase-backed implementations behind the same interfaces.
+1. Add read-only service interfaces and keep existing behavior. Done.
+2. Extract storage/hydration helpers without changing keys or behavior. Done.
+3. Extract local interaction helpers while preserving mock behavior. Done.
+4. Extract local monetization/demo calculations and disable MVP paywalls. Done.
+5. Extract local profile mutation helpers. Done.
+6. Reassess remaining provider responsibilities. Current step.
+7. Add Supabase client skeleton behind environment-gated mock mode.
+8. Move auth/session out of local prototype behavior.
+9. Replace swipe/match/chat behavior with service-backed mock/Supabase adapters incrementally.
+10. Extract safety actions once block/report/unmatch backend concepts exist.
 
 ## Future Service Boundaries
 
 Initial interface skeletons exist under `expo/services/`, with in-memory mock adapters under `expo/mocks/adapters/`. They are not wired into runtime behavior yet.
+
+Runtime local helper modules now exist:
+
+- `expo/services/local-profile-storage.ts`
+- `expo/services/local-interaction-service.ts`
+- `expo/services/local-monetization-service.ts`
+- `expo/services/local-profile-mutation-service.ts`
 
 - `ProfileService`: profile lifecycle and settings.
 - `DiscoveryService`: eligible profile listing.
