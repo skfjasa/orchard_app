@@ -1,0 +1,269 @@
+import { Image } from "expo-image";
+import { router } from "expo-router";
+import { Heart, MessageCircle, Users } from "lucide-react-native";
+import React, { useMemo } from "react";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import Colors from "@/constants/colors";
+import { MOCK_PROFILES } from "@/mocks/profiles";
+import { useProfile } from "@/providers/profile-provider";
+import { Conversation, Profile } from "@/types";
+
+function formatTime(t: number): string {
+  const diff = Date.now() - t;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "now";
+  if (mins < 60) return `${mins}m`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d`;
+}
+
+export default function InboxScreen() {
+  const { profile, conversations, typingProfileIds } = useProfile();
+  const isCouple = profile?.accountType === "couple";
+
+  const items = useMemo(() => {
+    return conversations
+      .map((c) => {
+        const other = MOCK_PROFILES.find((p) => p.id === c.profileId);
+        if (!other) return null;
+        return { convo: c, other };
+      })
+      .filter((x): x is { convo: Conversation; other: Profile } => !!x)
+      .sort((a, b) => {
+        const ta = a.convo.messages[a.convo.messages.length - 1]?.at ?? 0;
+        const tb = b.convo.messages[b.convo.messages.length - 1]?.at ?? 0;
+        return tb - ta;
+      });
+  }, [conversations]);
+
+  return (
+    <View style={styles.root}>
+      <SafeAreaView edges={["top"]} style={{ flex: 1 }}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Inbox</Text>
+          {isCouple && (
+            <View style={styles.mirrorPill}>
+              <Users size={12} color={Colors.light.accent} />
+              <Text style={styles.mirrorText}>Shared with {profile?.people[1]?.name ?? "partner"}</Text>
+            </View>
+          )}
+        </View>
+
+        {items.length === 0 ? (
+          <View style={styles.empty}>
+            <View style={styles.emptyIcon}>
+              <MessageCircle color={Colors.light.accent} size={28} />
+            </View>
+            <Text style={styles.emptyTitle}>No conversations yet</Text>
+            <Text style={styles.emptySub}>
+              Like a profile to start a new chat.
+            </Text>
+            <Pressable
+              onPress={() => router.push("/(tabs)/discover")}
+              style={({ pressed }) => [
+                styles.emptyCta,
+                pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+              ]}
+              testID="inbox-empty-cta"
+            >
+              <Heart color="#FFF" size={16} fill="#FFF" />
+              <Text style={styles.emptyCtaText}>Find someone to chat with</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <FlatList
+            data={items}
+            keyExtractor={(i) => i.convo.id}
+            contentContainerStyle={{ paddingBottom: 20 }}
+            renderItem={({ item }) => (
+              <Pressable
+                onPress={() => router.push(`/chat/${item.other.id}`)}
+                style={({ pressed }) => [
+                  styles.row,
+                  pressed && { backgroundColor: Colors.light.surfaceAlt },
+                ]}
+              >
+                <View style={styles.avatarWrap}>
+                  <Image
+                    source={{ uri: item.other.people[0].photo }}
+                    style={styles.avatar}
+                    contentFit="cover"
+                  />
+                  {item.other.people[1] && (
+                    <Image
+                      source={{ uri: item.other.people[1].photo }}
+                      style={[styles.avatar, styles.avatarSecond]}
+                      contentFit="cover"
+                    />
+                  )}
+                </View>
+                <View style={{ flex: 1 }}>
+                  <View style={styles.rowTop}>
+                    <Text style={styles.rowName} numberOfLines={1}>
+                      {item.other.accountType === "couple"
+                        ? `${item.other.people[0].name} & ${item.other.people[1]?.name}`
+                        : item.other.people[0].name}
+                    </Text>
+                    <Text style={styles.rowTime}>
+                      {formatTime(item.convo.messages[item.convo.messages.length - 1]?.at ?? 0)}
+                    </Text>
+                  </View>
+                  <View style={styles.rowBottom}>
+                    {typingProfileIds.includes(item.other.id) ? (
+                      <Text
+                        style={[styles.rowPreview, styles.rowTyping]}
+                        numberOfLines={1}
+                      >
+                        typing…
+                      </Text>
+                    ) : (
+                      <Text style={styles.rowPreview} numberOfLines={1}>
+                        {item.convo.messages[item.convo.messages.length - 1]?.kind === "photo"
+                          ? item.convo.messages[item.convo.messages.length - 1]?.fromMe
+                            ? "🔒 You sent a photo request"
+                            : "🔒 Sent you a photo request"
+                          : item.convo.messages[item.convo.messages.length - 1]?.text}
+                      </Text>
+                    )}
+                    {item.convo.unread > 0 && <View style={styles.unread} />}
+                  </View>
+                </View>
+              </Pressable>
+            )}
+          />
+        )}
+      </SafeAreaView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: Colors.light.background },
+  header: { paddingHorizontal: 24, paddingTop: 12, paddingBottom: 14 },
+  title: {
+    fontSize: 30,
+    fontWeight: "800" as const,
+    color: Colors.light.text,
+    letterSpacing: -0.8,
+  },
+  mirrorPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 8,
+    alignSelf: "flex-start",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: Colors.light.surfaceAlt,
+  },
+  mirrorText: {
+    fontSize: 11,
+    fontWeight: "700" as const,
+    color: Colors.light.accent,
+    letterSpacing: 0.3,
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    gap: 14,
+  },
+  avatarWrap: {
+    width: 56,
+    height: 56,
+    justifyContent: "center",
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: Colors.light.background,
+  },
+  avatarSecond: {
+    position: "absolute",
+    left: 16,
+    top: 8,
+  },
+  rowTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  rowName: {
+    fontSize: 16,
+    fontWeight: "700" as const,
+    color: Colors.light.text,
+    flex: 1,
+  },
+  rowTime: {
+    fontSize: 12,
+    color: Colors.light.textMuted,
+    fontWeight: "600" as const,
+  },
+  rowBottom: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 3,
+    gap: 8,
+  },
+  rowPreview: {
+    flex: 1,
+    fontSize: 14,
+    color: Colors.light.textMuted,
+  },
+  rowTyping: {
+    color: Colors.light.accent,
+    fontStyle: "italic",
+    fontWeight: "600" as const,
+  },
+  unread: {
+    width: 9,
+    height: 9,
+    borderRadius: 4.5,
+    backgroundColor: Colors.light.tint,
+  },
+  empty: { flex: 1, alignItems: "center", justifyContent: "center", padding: 40 },
+  emptyIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: Colors.light.surfaceAlt,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 14,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: "800" as const,
+    color: Colors.light.text,
+  },
+  emptySub: {
+    fontSize: 14,
+    color: Colors.light.textMuted,
+    marginTop: 6,
+    textAlign: "center",
+  },
+  emptyCta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 20,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 999,
+    backgroundColor: Colors.palette.coral,
+  },
+  emptyCtaText: {
+    color: "#FFF",
+    fontSize: 14,
+    fontWeight: "800" as const,
+    letterSpacing: 0.3,
+  },
+});
