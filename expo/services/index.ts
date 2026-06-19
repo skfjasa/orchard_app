@@ -90,3 +90,14 @@ export {
 } from "./local-interaction-service";
 
 export type { LocalGreetingKind } from "./local-interaction-service";
+
+export {
+  applyLocalPurchase,
+  createLocalSubscription,
+  isLocalBoostActive,
+} from "./local-monetization-service";
+
+export type {
+  LocalPurchaseResult,
+  LocalSubscriptionResult,
+} from "./local-monetization-service";

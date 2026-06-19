@@ -32,14 +32,17 @@ import {
 } from "@/services/local-profile-storage";
 import type { SubscriptionState } from "@/services/local-profile-storage";
 import {
-  BOOST_DURATION_MS,
+  applyLocalPurchase,
+  createLocalSubscription,
+  isLocalBoostActive,
+} from "@/services/local-monetization-service";
+import {
   Conversation,
   DEFAULT_MATCH_SLOTS,
   DEFAULT_SUPER_LIKES,
   LinkedPartner,
   Profile,
   PurchaseId,
-  SUBSCRIPTION_OPTIONS,
   SUPER_LIKE_RECHARGE_MS,
   SubscriptionId,
 } from "@/types";
@@ -420,39 +423,39 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const purchase = useCallback(
     (id: PurchaseId) => {
       console.log("[profile-provider] purchase", id);
-      if (id === "slots_5") {
+      const result = applyLocalPurchase(id, superLikeBalance);
+
+      if (typeof result.extraSlotsDelta === "number") {
+        const delta = result.extraSlotsDelta;
         setExtraSlots((v) => {
-          const n = v + 5;
+          const n = v + delta;
           saveExtraSlotsMutation.mutate(n);
           return n;
         });
-      } else if (id === "slots_15") {
-        setExtraSlots((v) => {
-          const n = v + 15;
-          saveExtraSlotsMutation.mutate(n);
-          return n;
-        });
-      } else if (id === "boost") {
-        const until = Date.now() + BOOST_DURATION_MS;
-        setBoostedUntil(until);
-        saveBoostMutation.mutate(until);
-      } else if (id === "superlikes_refill") {
+      }
+      if (typeof result.boostedUntil === "number") {
+        setBoostedUntil(result.boostedUntil);
+        saveBoostMutation.mutate(result.boostedUntil);
+      }
+      if (typeof result.superLikeBalance === "number") {
+        setSuperLikeBalance(result.superLikeBalance);
+        saveSuperLikeBalanceMutation.mutate(result.superLikeBalance);
+      }
+      if (typeof result.superLikeBalanceDelta === "number") {
+        const delta = result.superLikeBalanceDelta;
         setSuperLikeBalance((v) => {
-          const n = Math.max(v, DEFAULT_SUPER_LIKES);
-          saveSuperLikeBalanceMutation.mutate(n);
-          return n;
-        });
-        setSuperLikeLastUseAt(null);
-        saveSuperLikeLastUseMutation.mutate(null);
-      } else if (id === "superlikes_10") {
-        setSuperLikeBalance((v) => {
-          const n = v + 10;
+          const n = v + delta;
           saveSuperLikeBalanceMutation.mutate(n);
           return n;
         });
       }
+      if ("superLikeLastUseAt" in result) {
+        setSuperLikeLastUseAt(result.superLikeLastUseAt ?? null);
+        saveSuperLikeLastUseMutation.mutate(result.superLikeLastUseAt ?? null);
+      }
     },
     [
+      superLikeBalance,
       saveExtraSlotsMutation,
       saveBoostMutation,
       saveSuperLikeBalanceMutation,
@@ -463,33 +466,24 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const subscribe = useCallback(
     (id: SubscriptionId) => {
       console.log("[profile-provider] subscribe", id);
-      const plan = SUBSCRIPTION_OPTIONS.find((o) => o.id === id);
-      if (!plan) return;
-      const now = Date.now();
-      const renews = now + 30 * 24 * 60 * 60 * 1000;
-      const next: SubscriptionState = {
-        id,
-        startedAt: now,
-        renewsAt: renews,
-        lastGrantAt: now,
-      };
-      setSubscription(next);
-      saveSubscriptionMutation.mutate(next);
+      const result = createLocalSubscription(id);
+      if (!result) return;
+      setSubscription(result.subscription);
+      saveSubscriptionMutation.mutate(result.subscription);
 
       setExtraSlots((v) => {
-        const n = v + plan.monthlySlots;
+        const n = v + result.extraSlotsDelta;
         saveExtraSlotsMutation.mutate(n);
         return n;
       });
       setSuperLikeBalance((v) => {
-        const n = v + plan.monthlySuperLikes;
+        const n = v + result.superLikeBalanceDelta;
         saveSuperLikeBalanceMutation.mutate(n);
         return n;
       });
-      if (plan.includesBoost) {
-        const until = now + BOOST_DURATION_MS;
-        setBoostedUntil(until);
-        saveBoostMutation.mutate(until);
+      if (typeof result.boostedUntil === "number") {
+        setBoostedUntil(result.boostedUntil);
+        saveBoostMutation.mutate(result.boostedUntil);
       }
     },
     [
@@ -583,8 +577,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   );
 
   const isBoosted = useMemo(() => {
-    if (!boostedUntil) return false;
-    return boostedUntil > Date.now();
+    return isLocalBoostActive(boostedUntil);
   }, [boostedUntil]);
 
   const superLikeRechargeAt = useMemo(() => {
