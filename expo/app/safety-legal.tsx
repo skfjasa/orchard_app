@@ -21,17 +21,29 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Colors from "@/constants/colors";
+import { LEGAL_CONFIG } from "@/constants/legal";
 import { useProfile } from "@/providers/profile-provider";
-
-const SUPPORT_EMAIL = "support@example.com";
 
 export default function SafetyLegalScreen() {
   const { requestAccountDeletion } = useProfile();
   const [isDeleting, setIsDeleting] = React.useState(false);
 
   const openSupport = React.useCallback(() => {
-    Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=Orchard support`).catch(() =>
-      Alert.alert("Support", SUPPORT_EMAIL)
+    const target =
+      LEGAL_CONFIG.supportUrl ??
+      `mailto:${LEGAL_CONFIG.supportEmail}?subject=Orchard support`;
+    Linking.openURL(target).catch(() =>
+      Alert.alert("Support", LEGAL_CONFIG.supportEmail)
+    );
+  }, []);
+
+  const openOptionalUrl = React.useCallback((url: string | undefined) => {
+    if (!url) {
+      Alert.alert("Coming soon", "This public link is not configured yet.");
+      return;
+    }
+    Linking.openURL(url).catch(() =>
+      Alert.alert("Couldn't open link", "Try again in a moment.")
     );
   }, []);
 
@@ -98,6 +110,13 @@ export default function SafetyLegalScreen() {
               Harassment, impersonation, threats, coercion, spam, illegal
               content, and underage use are not allowed.
             </Text>
+            <PolicyLink
+              label="Open community standards"
+              configured={!!LEGAL_CONFIG.communityStandardsUrl}
+              onPress={() =>
+                openOptionalUrl(LEGAL_CONFIG.communityStandardsUrl)
+              }
+            />
           </Section>
 
           <Section icon={<FileText size={18} color={Colors.palette.evergreen} />} title="Privacy">
@@ -108,6 +127,11 @@ export default function SafetyLegalScreen() {
             <Text style={styles.body}>
               Final public privacy policy URL is still a launch decision.
             </Text>
+            <PolicyLink
+              label="Open privacy policy"
+              configured={!!LEGAL_CONFIG.privacyUrl}
+              onPress={() => openOptionalUrl(LEGAL_CONFIG.privacyUrl)}
+            />
           </Section>
 
           <Section icon={<FileText size={18} color={Colors.palette.evergreen} />} title="Terms">
@@ -116,6 +140,11 @@ export default function SafetyLegalScreen() {
               safety enforcement, reports, blocks, account deletion, and beta
               availability.
             </Text>
+            <PolicyLink
+              label="Open terms"
+              configured={!!LEGAL_CONFIG.termsUrl}
+              onPress={() => openOptionalUrl(LEGAL_CONFIG.termsUrl)}
+            />
           </Section>
 
           <Section icon={<LifeBuoy size={18} color={Colors.palette.evergreen} />} title="Support">
@@ -131,7 +160,9 @@ export default function SafetyLegalScreen() {
                 <Mail size={18} color={Colors.palette.evergreen} />
                 <Text style={styles.actionText}>Contact support</Text>
               </View>
-              <Text style={styles.actionValue}>{SUPPORT_EMAIL}</Text>
+              <Text style={styles.actionValue}>
+                {LEGAL_CONFIG.supportUrl ? "Open" : LEGAL_CONFIG.supportEmail}
+              </Text>
             </Pressable>
           </Section>
 
@@ -140,6 +171,11 @@ export default function SafetyLegalScreen() {
               You can request account deletion from inside the app. The local MVP
               records the request and signs you out.
             </Text>
+            <PolicyLink
+              label="Open account deletion help"
+              configured={!!LEGAL_CONFIG.accountDeletionUrl}
+              onPress={() => openOptionalUrl(LEGAL_CONFIG.accountDeletionUrl)}
+            />
             <Pressable
               onPress={confirmDeletion}
               disabled={isDeleting}
@@ -159,6 +195,31 @@ export default function SafetyLegalScreen() {
         </ScrollView>
       </SafeAreaView>
     </>
+  );
+}
+
+function PolicyLink({
+  configured,
+  label,
+  onPress,
+}: {
+  configured: boolean;
+  label: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.policyLink,
+        pressed && { backgroundColor: Colors.light.surfaceAlt },
+      ]}
+    >
+      <Text style={styles.policyLinkText}>{label}</Text>
+      <Text style={styles.policyStatus}>
+        {configured ? "Configured" : "Pending"}
+      </Text>
+    </Pressable>
   );
 }
 
@@ -243,6 +304,29 @@ const styles = StyleSheet.create({
     color: Colors.light.text,
     lineHeight: 20,
     fontWeight: "500" as const,
+  },
+  policyLink: {
+    marginTop: 2,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: Colors.light.surfaceAlt,
+  },
+  policyLinkText: {
+    flex: 1,
+    fontSize: 13,
+    color: Colors.palette.evergreen,
+    fontWeight: "800" as const,
+  },
+  policyStatus: {
+    fontSize: 11,
+    color: Colors.light.textMuted,
+    fontWeight: "800" as const,
+    textTransform: "uppercase",
   },
   actionRow: {
     flexDirection: "row",

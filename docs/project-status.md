@@ -74,14 +74,15 @@ Last updated: 2026-06-20
 - Profile detail and chat now expose report/block actions; chat also exposes unmatch and report-message actions. These use the existing safety service boundary and preserve mock mode.
 - Account deletion can be requested from the Safety & Legal screen; the local flow records the request through the safety service and signs out.
 - Onboarding now includes a pre-profile age/legal gate for 18+ confirmation, MVP terms, privacy notice, and community standards acceptance. Acceptance is stored on the local prototype profile.
+- Safety/legal links and support contact are env-configurable through `EXPO_PUBLIC_PRIVACY_POLICY_URL`, `EXPO_PUBLIC_TERMS_URL`, `EXPO_PUBLIC_COMMUNITY_STANDARDS_URL`, `EXPO_PUBLIC_SUPPORT_EMAIL`, `EXPO_PUBLIC_SUPPORT_URL`, and `EXPO_PUBLIC_ACCOUNT_DELETION_URL`.
 
 ## Current Task
 
-Continue safety/legal hardening by replacing placeholder policy/support copy with final public URLs and wiring persisted backend safety/legal acceptance once auth/profile persistence is live.
+Continue safety/legal hardening by filling final public policy/support env values and wiring persisted backend safety/legal acceptance once auth/profile persistence is live.
 
 ## Next Planned Tasks
 
-1. Decide public Privacy Policy, Terms, Support, and Account Deletion URLs/email, then replace the placeholder Safety & Legal and onboarding legal copy.
+1. Decide public Privacy Policy, Terms, Support, and Account Deletion URLs/email, then fill the legal/support env values.
 2. Review the hardened SQL and passing database/RLS tests before dev apply.
 3. Decide whether to apply the hardened migration to a dev project.
 4. Decide production bundle ID and beta app identity.

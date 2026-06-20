@@ -73,6 +73,7 @@ When these docs become large, compact them by preserving active state, blockers,
 - Initial in-app Safety & Legal surface exists and is linked from Profile.
 - Report profile, report message, block, unmatch, and account deletion request entry points exist in the mock/local app flow and call the service boundary.
 - Onboarding includes a required 18+ and legal acceptance screen before account type selection; acceptance is stored on the local prototype profile.
+- Safety/legal URLs and support contact are env-configurable via `expo/constants/legal.ts` and `expo/.env.example`; final public values are still human decisions.
 
 ## Current Backend State
 
@@ -122,8 +123,8 @@ As of the 2026-06-20 safety/legal checkpoint, before committing this doc refresh
 
 - Branch: `main`
 - Remote: `origin/main`
-- Current working tree contains onboarding age/legal gate changes plus status doc updates.
-- Runtime app code changed in `expo/app/onboarding/legal.tsx`, onboarding navigation/provider/profile creation, and `Profile` typing.
+- Current working tree contains legal/support env configuration changes plus status doc updates.
+- Runtime app code changed in `expo/constants/legal.ts`, `expo/app/safety-legal.tsx`, and `expo/app/onboarding/legal.tsx`.
 - Local Supabase database is running via Docker Desktop. Non-database Supabase services are stopped, which was sufficient for `supabase test db`.
 - `personal-os` already had unrelated dirty files before this handoff; do not revert them.
 
@@ -166,6 +167,7 @@ Latest handoff additions:
 - Wired report profile, report message, block, unmatch, and account deletion request entry points through the service boundary.
 - Preserved mock/local behavior; backend persistence still depends on auth/profile source-of-truth work.
 - Added onboarding 18+ and legal acceptance gate before profile creation.
+- Added env-backed legal/support configuration and wired Safety & Legal/onboarding policy links to it.
 
 Orchard files updated:
 
@@ -193,6 +195,8 @@ Orchard files updated:
 - `expo/app/onboarding/photos.tsx`
 - `expo/providers/onboarding-provider.tsx`
 - `expo/types/index.ts`
+- `expo/constants/legal.ts`
+- `expo/.env.example`
 
 Global/workspace files updated:
 
@@ -210,7 +214,7 @@ Existing unrelated dirty files in `personal-os` should be preserved and not reve
 
 ## Next Best Tasks
 
-1. Decide public Privacy Policy, Terms, Support, and Account Deletion URLs/email, then replace placeholder Safety & Legal and onboarding legal copy.
+1. Decide public Privacy Policy, Terms, Support, and Account Deletion URLs/email, then fill the legal/support env values.
 2. Review the hardened SQL and passing database/RLS tests before dev apply.
 3. Decide whether to apply the hardened Supabase migration to a dev project.
 4. Decide production bundle ID and beta app identity.

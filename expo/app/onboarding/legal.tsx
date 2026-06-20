@@ -2,6 +2,8 @@ import { router } from "expo-router";
 import { Check, FileText, Shield } from "lucide-react-native";
 import React from "react";
 import {
+  Alert,
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -11,6 +13,7 @@ import {
 
 import { Button } from "@/components/ui";
 import Colors from "@/constants/colors";
+import { LEGAL_CONFIG } from "@/constants/legal";
 import { useOnboarding } from "@/providers/onboarding-provider";
 
 export default function LegalGateScreen() {
@@ -26,6 +29,16 @@ export default function LegalGateScreen() {
   const continueOnboarding = () => {
     acceptLegal();
     router.push("/onboarding/account-type");
+  };
+
+  const openOptionalUrl = (url: string | undefined) => {
+    if (!url) {
+      Alert.alert("Coming soon", "This public link is not configured yet.");
+      return;
+    }
+    Linking.openURL(url).catch(() =>
+      Alert.alert("Couldn't open link", "Try again in a moment.")
+    );
   };
 
   return (
@@ -77,6 +90,26 @@ export default function LegalGateScreen() {
           />
         </View>
 
+        <View style={styles.linkRow}>
+          <PolicyLink
+            label="Terms"
+            configured={!!LEGAL_CONFIG.termsUrl}
+            onPress={() => openOptionalUrl(LEGAL_CONFIG.termsUrl)}
+          />
+          <PolicyLink
+            label="Privacy"
+            configured={!!LEGAL_CONFIG.privacyUrl}
+            onPress={() => openOptionalUrl(LEGAL_CONFIG.privacyUrl)}
+          />
+          <PolicyLink
+            label="Standards"
+            configured={!!LEGAL_CONFIG.communityStandardsUrl}
+            onPress={() =>
+              openOptionalUrl(LEGAL_CONFIG.communityStandardsUrl)
+            }
+          />
+        </View>
+
         <View style={styles.notice}>
           <FileText size={18} color={Colors.palette.evergreen} />
           <Text style={styles.noticeText}>
@@ -95,6 +128,31 @@ export default function LegalGateScreen() {
         />
       </View>
     </View>
+  );
+}
+
+function PolicyLink({
+  configured,
+  label,
+  onPress,
+}: {
+  configured: boolean;
+  label: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.policyLink,
+        pressed && { opacity: 0.85 },
+      ]}
+    >
+      <Text style={styles.policyLinkText}>{label}</Text>
+      <Text style={styles.policyLinkStatus}>
+        {configured ? "Open" : "Pending"}
+      </Text>
+    </Pressable>
   );
 }
 
@@ -213,6 +271,32 @@ const styles = StyleSheet.create({
     color: Colors.light.text,
     fontWeight: "700" as const,
     lineHeight: 19,
+  },
+  linkRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 12,
+  },
+  policyLink: {
+    flex: 1,
+    alignItems: "center",
+    gap: 3,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: Colors.light.surface,
+    borderWidth: 1,
+    borderColor: Colors.light.line,
+  },
+  policyLinkText: {
+    fontSize: 12,
+    color: Colors.palette.evergreen,
+    fontWeight: "800" as const,
+  },
+  policyLinkStatus: {
+    fontSize: 10,
+    color: Colors.light.textMuted,
+    fontWeight: "800" as const,
+    textTransform: "uppercase",
   },
   notice: {
     marginTop: 18,

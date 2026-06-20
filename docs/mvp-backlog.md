@@ -194,7 +194,7 @@ Current status:
 
 - Initial in-app Safety & Legal screen exists, with privacy, terms, community standards, support, and account deletion request sections.
 - Onboarding includes required 18+ confirmation and MVP terms/privacy/community standards acceptance.
-- Final public Privacy Policy, Terms, Support, and Account Deletion URLs/email are still human decisions.
+- Legal/support links are env-configurable; final public Privacy Policy, Terms, Support, and Account Deletion URLs/email are still human decisions.
 
 Tasks:
 
