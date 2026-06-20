@@ -13,10 +13,11 @@ The current app is a local/mock Rork prototype.
 - No backend exists.
 - Supabase JS dependency and env-gated client skeleton exist.
 - Auth/session provider foundation exists.
-- Initial Supabase schema migration draft exists.
+- Initial Supabase schema migration draft exists and has been hardened before dev-project apply.
 - Initial Supabase service adapters exist for swipes, matches, and safety flows.
 - Backend/mock service factory exists with explicit per-service capabilities.
 - Swipe persistence has a gated, non-blocking provider hook for Supabase mode only when the local profile id matches the authenticated user id.
+- Safety service report and account deletion calls use RPCs so the database derives actor identity from `auth.uid()`.
 - No real onboarding/profile auth flow, storage, reciprocal matching, or chat backend exists.
 
 ## 2. Migration Principle
@@ -69,6 +70,10 @@ Initial migration draft:
 
 - `supabase/migrations/202606190001_initial_mvp_schema.sql`
 
+Hardening plan:
+
+- `docs/supabase-hardening-plan.md`
+
 Initial tables:
 
 - `profiles`
@@ -85,13 +90,15 @@ Initial tables:
 
 - Users can read eligible visible profiles only.
 - Users can update only their own profile.
-- Users can only create swipes as themselves.
+- Users can update only user-owned profile columns from the mobile client.
+- Users can only create swipes as themselves through the swipe RPC.
 - Mutual matches must be created without duplicate rows.
 - Users can only read messages for active matches they belong to.
 - Users can only send messages into active matches they belong to.
 - Blocks must be respected server-side.
-- Reports can be created by authenticated users.
+- Reports and account deletion requests must derive actor identity server-side.
 - Suspended users are hidden from discovery.
+- Suspended users cannot swipe or message.
 - Invisible users are hidden from discovery.
 - Service role never ships to the app.
 
@@ -105,9 +112,11 @@ Initial tables:
 6. Add Supabase swipe, match, and safety service adapters. Done; provider/UI not wired yet.
 7. Add backend/mock service factory. Done; runtime provider/UI not wired yet.
 8. Add gated swipe persistence hook through service factory. Done; local state remains source of truth.
-9. Persist onboarding/profile to backend.
-10. Add photo upload through `StorageService`.
-11. Replace swipe persistence as source of truth.
-12. Add reciprocal match creation.
-13. Replace local chat with match-scoped backend messages.
-14. Add safety service and enforce block/report/unmatch/account deletion flows.
+9. Harden initial schema, RLS, grants, and safety RPC boundaries before dev apply. Done.
+10. Add database/RLS tests for the hardened migration.
+11. Persist onboarding/profile to backend.
+12. Add photo upload through `StorageService`.
+13. Replace swipe persistence as source of truth.
+14. Add reciprocal match creation.
+15. Replace local chat with match-scoped backend messages.
+16. Add safety service and enforce block/report/unmatch/account deletion flows.

@@ -8,7 +8,7 @@ Last updated: 2026-06-20
 - App code: `expo/`
 - Runtime: Expo React Native with Expo Router and TypeScript
 - Package manager: Bun
-- Backend: Supabase client, auth/session provider skeleton, schema/RPC drafts, initial Supabase service adapters, backend/mock service factory, and gated swipe persistence hook; no backend profile/matching/chat behavior is fully wired yet
+- Backend: Supabase client, auth/session provider skeleton, hardened schema/RLS/RPC draft, initial Supabase service adapters, backend/mock service factory, and gated swipe persistence hook; no backend profile/matching/chat behavior is fully wired yet
 - Persistence: local `AsyncStorage`
 - Checks: `bun run lint` and `bun run typecheck`
 - Branch: `main`
@@ -56,18 +56,25 @@ Last updated: 2026-06-20
 - Supabase service adapters exist for swipe, match, and safety behavior. Swipe persistence is lightly wired into the provider as a gated, non-blocking hook; match and safety adapters are not wired into UI/provider flows yet.
 - Backend/mock service factory exists and exposes per-service capabilities so partial Supabase support is explicit.
 - `ProfileProvider` can now call the swipe service factory as a non-blocking persistence hook when Supabase mode has a real authenticated profile id. Local state remains the UI source of truth.
+- Supabase hardening is tracked in `docs/supabase-hardening-plan.md`.
+- The initial Supabase migration draft has been hardened with authenticated-only RLS policies, private eligibility helpers, column-scoped profile/photo grants, RPC-only report/account-deletion writes, actor eligibility checks for swipes/messages, and the missing account deletion `reason` column.
+- The Supabase safety adapter now uses RPCs for report and account deletion requests so actor identity is derived server-side.
+- Supabase CLI is installed as an Expo dev dependency (`supabase@2.107.0`), and local Supabase config exists at `supabase/config.toml`.
+- Initial pgTAP-style database/RLS tests exist at `supabase/tests/database/202606200001_mvp_security.sql`, but they have not been run because Docker Desktop is not installed/running.
 
 ## Current Task
 
-Refresh session handoff/context docs so the next session can resume without relying on chat history.
+Install/start Docker Desktop and run the database/RLS tests for the hardened migration before applying it to a shared development project.
 
 ## Next Planned Tasks
 
-1. Decide whether to apply the Supabase migration to a dev project now or keep building local safety/legal surfaces first.
-2. Review Supabase schema/RLS/RPCs before applying to a dev project.
-3. Decide production bundle ID and beta app identity.
-4. Add safety/legal surfaces required for TestFlight planning.
-5. Start wiring real auth into onboarding/sign-in once schema decisions are made.
+1. Install and start Docker Desktop, then run `expo\node_modules\.bin\supabase start` from the repo root.
+2. Run `expo\node_modules\.bin\supabase test db` from the repo root.
+3. Fix any database test failures and review the hardened SQL before dev apply.
+4. Decide whether to apply the hardened migration to a dev project or keep building local safety/legal surfaces first.
+5. Decide production bundle ID and beta app identity.
+6. Add safety/legal surfaces required for TestFlight planning.
+7. Start wiring real auth into onboarding/sign-in once schema decisions are made.
 
 ## Human Decisions Needed
 

@@ -112,6 +112,21 @@ export interface Database {
         };
         Returns: string;
       };
+      submit_report: {
+        Args: {
+          reported_profile_id: string;
+          report_reason: string;
+          report_details?: string | null;
+          reported_message_id?: string | null;
+        };
+        Returns: string;
+      };
+      request_account_deletion: {
+        Args: {
+          deletion_reason?: string | null;
+        };
+        Returns: string;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

@@ -40,10 +40,14 @@ If the user says `status report` in any capitalization, treat it as the standard
 - Service interfaces and mock adapters exist.
 - Supabase client skeleton exists and is env-gated.
 - Auth provider foundation exists and defaults to mock mode when Supabase env vars are absent.
-- Initial Supabase schema/RLS/RPC migration draft exists.
+- Hardened Supabase schema/RLS/RPC migration draft exists.
 - Supabase service adapters exist for swipe, match, and safety.
 - Backend/mock service factory exists.
 - Swipe persistence has a gated, non-blocking hook through the service factory. Local UI state remains the source of truth.
+- Supabase hardening is tracked in `docs/supabase-hardening-plan.md`.
+- Supabase safety report and account deletion calls now use RPCs, with actor identity derived by the database.
+- Supabase CLI is installed as an Expo dev dependency (`supabase@2.107.0`), and local Supabase config exists at `supabase/config.toml`.
+- Initial pgTAP-style database/RLS tests exist at `supabase/tests/database/202606200001_mvp_security.sql`, but they have not been run because Docker Desktop is not installed/running.
 
 ## Current Backend State
 
@@ -68,6 +72,8 @@ Draft RPCs:
 - `create_swipe(target_profile_id, swipe_decision)`
 - `unmatch_match(target_match_id)`
 - `block_profile(blocked_profile_id)`
+- `submit_report(reported_profile_id, report_reason, report_details, reported_message_id)`
+- `request_account_deletion(deletion_reason)`
 
 The migration has not been applied to a live Supabase project yet.
 
@@ -103,14 +109,17 @@ Both passed after the latest runtime code change (`f9859fa`).
 
 ## Next Best Tasks
 
-1. Decide whether to apply the Supabase migration to a dev project now or build local safety/legal surfaces first.
-2. Review Supabase schema/RLS/RPCs before applying them to a dev project.
-3. Decide production bundle ID and beta app identity.
-4. Add required safety/legal surfaces: privacy, terms, community standards, support, report, block, unmatch, account deletion.
-5. Wire real auth into onboarding/sign-in once schema decisions are made.
-6. Persist onboarding/profile to Supabase.
-7. Add photo upload through `StorageService`.
-8. Replace swipe/match/chat local state as source of truth only after auth/profile persistence works.
+1. Install/start Docker Desktop.
+2. Run `expo\node_modules\.bin\supabase start` from the repo root.
+3. Run `expo\node_modules\.bin\supabase test db` from the repo root.
+4. Fix any database test failures and review the hardened SQL before dev apply.
+5. Decide whether to apply the hardened Supabase migration to a dev project now or build local safety/legal surfaces first.
+6. Decide production bundle ID and beta app identity.
+7. Add required safety/legal surfaces: privacy, terms, community standards, support, report, block, unmatch, account deletion.
+8. Wire real auth into onboarding/sign-in once schema decisions are made.
+9. Persist onboarding/profile to Supabase.
+10. Add photo upload through `StorageService`.
+11. Replace swipe/match/chat local state as source of truth only after auth/profile persistence works.
 
 ## Human Decisions Needed
 
