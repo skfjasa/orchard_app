@@ -134,6 +134,8 @@ The storage migration `202606200002` has been applied locally and pushed to host
 
 ## Latest Commits
 
+- `6100fc5` - Add Supabase profile photo storage
+- `0b5570c` - Refresh Supabase handoff status
 - `e87e9f0` - Wire Supabase auth and profile persistence
 - `1be95cd` - project review gemini
 - `b9110df` - Record MVP decisions and handoff context
@@ -162,7 +164,7 @@ As of the 2026-06-20 Supabase auth/profile persistence handoff:
 
 - Branch: `main`
 - Remote: `origin/main`
-- Latest pushed commit: `e87e9f0` - Wire Supabase auth and profile persistence.
+- Latest pushed commit: `6100fc5` - Add Supabase profile photo storage.
 - Working tree should contain only this handoff doc refresh before the handoff commit.
 - Local-only ignored files exist for Supabase credentials/env: `.local/`, `expo/.env`, and `supabase/.temp/`.
 - Local Supabase database is running via Docker Desktop. Non-database Supabase services are stopped, which was sufficient for `supabase test db`.
@@ -170,7 +172,7 @@ As of the 2026-06-20 Supabase auth/profile persistence handoff:
 
 ## Checks Used
 
-Run from `expo/` after `e87e9f0`:
+Run from `expo/` after `6100fc5`:
 
 ```bash
 bun run lint
@@ -217,6 +219,7 @@ All passed; `supabase test db` reports 1 file, 25 tests.
 
 Latest implementation checkpoint:
 
+- `6100fc5` adds Supabase profile photo storage, a private `profile-photos` bucket migration, owner-scoped storage object policies, `profile_photos.member_id` metadata writes, signed current-profile photo hydration, and expanded local database tests.
 - `e87e9f0` wires Supabase email/password sign-in and account creation while preserving mock mode.
 - Adds Supabase profile/member persistence through `expo/services/supabase-profile-service.ts`.
 - Extends the initial migration with `profile_members` and member-scoped `profile_photos`.

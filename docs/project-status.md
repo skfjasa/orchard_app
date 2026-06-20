@@ -19,6 +19,7 @@ Last updated: 2026-06-20
 
 ## Latest Foundation Commits
 
+- `6100fc5` - Add Supabase profile photo storage
 - `e87e9f0` - Wire Supabase auth and profile persistence
 - `1be95cd` - Add Gemini project review
 - `b9110df` - Record MVP decisions and handoff context
@@ -107,7 +108,7 @@ Last updated: 2026-06-20
 - After the storage migration, `expo\node_modules\.bin\supabase db reset` and `expo\node_modules\.bin\supabase test db` pass locally: 1 file, 25 tests.
 - The storage migration `202606200002_profile_photo_storage.sql` has been pushed to hosted `orchard-dev`; follow-up dry run reports the remote database is up to date. A full app smoke test with a selected local photo is still pending.
 - Project review recommendations remain relevant: avoid a broad `ProfileProvider` rewrite, keep moving behavior behind services, and add CI/database automation after the auth/profile path has a little more coverage.
-- Latest implementation checkpoint `e87e9f0` is pushed to `origin/main`.
+- Latest implementation checkpoint `6100fc5` is pushed to `origin/main`.
 
 ## Current Task
 
