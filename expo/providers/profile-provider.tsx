@@ -458,6 +458,12 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
   const sendMessage = useCallback(
     (profileId: string, text: string, authorName?: string) => {
+      if (!likedIds.includes(profileId)) {
+        console.log("[profile-provider] sendMessage blocked: no active match", {
+          profileId,
+        });
+        return;
+      }
       console.log("[profile-provider] sendMessage", { profileId, length: text.length });
       setConversations((prev) => {
         const exists = prev.find((c) => c.profileId === profileId);
@@ -484,7 +490,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         });
       }, delay);
     },
-    [saveConvosMutation]
+    [likedIds, saveConvosMutation]
   );
 
   const deleteMessage = useCallback(
@@ -511,6 +517,12 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
   const sendPhoto = useCallback(
     (profileId: string, photoUri: string, authorName?: string) => {
+      if (!likedIds.includes(profileId)) {
+        console.log("[profile-provider] sendPhoto blocked: no active match", {
+          profileId,
+        });
+        return;
+      }
       const msgId = `m-${Date.now()}`;
       setConversations((prev) => {
         const next = appendOutgoingPhotoRequest(
@@ -534,7 +546,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         });
       }, delay);
     },
-    [saveConvosMutation]
+    [likedIds, saveConvosMutation]
   );
 
   const respondToPhoto = useCallback(

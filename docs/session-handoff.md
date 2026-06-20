@@ -73,7 +73,7 @@ When these docs become large, compact them by preserving active state, blockers,
 - Initial in-app Safety & Legal surface exists and is linked from Profile.
 - Report profile, report message, block, unmatch, and account deletion request entry points exist in the mock/local app flow and call the service boundary.
 - Report profile/message now routes through a dedicated reason/details form before submission.
-- Direct chat routes are guarded so the local app only shows chat for active local matches.
+- Direct chat routes and provider send helpers are guarded so the local app only shows/writes chat for active local matches.
 - Onboarding includes a required 18+ and legal acceptance screen before account type selection; acceptance is stored on the local prototype profile.
 - Safety/legal URLs and support contact are env-configurable via `expo/constants/legal.ts` and `expo/.env.example`; final public values are still human decisions.
 
@@ -125,8 +125,8 @@ As of the 2026-06-20 safety/legal checkpoint, before committing this doc refresh
 
 - Branch: `main`
 - Remote: `origin/main`
-- Current working tree contains active-match-only chat guard changes plus status doc updates.
-- Runtime app code changed in `expo/app/chat/[id].tsx`.
+- Current working tree contains provider-level active-match-only chat write guard changes plus status doc updates.
+- Runtime app code changed in `expo/providers/profile-provider.tsx`.
 - Local Supabase database is running via Docker Desktop. Non-database Supabase services are stopped, which was sufficient for `supabase test db`.
 - `personal-os` already had unrelated dirty files before this handoff; do not revert them.
 
@@ -171,7 +171,7 @@ Latest handoff additions:
 - Added onboarding 18+ and legal acceptance gate before profile creation.
 - Added env-backed legal/support configuration and wired Safety & Legal/onboarding policy links to it.
 - Added report reason/details form for profile and message reports.
-- Added a local active-match guard for direct chat routes.
+- Added local active-match guards for direct chat routes and provider message/photo send helpers.
 
 Orchard files updated:
 

@@ -74,7 +74,7 @@ Last updated: 2026-06-20
 - Profile detail and chat now expose report/block actions; chat also exposes unmatch and report-message actions. These use the existing safety service boundary and preserve mock mode.
 - Report profile and report message actions now open a reason/details form before submitting through the safety service.
 - Account deletion can be requested from the Safety & Legal screen; the local flow records the request through the safety service and signs out.
-- Direct chat routes now require an active local match before showing the conversation.
+- Direct chat routes and local message/photo send helpers now require an active local match before showing or writing conversation content.
 - Onboarding now includes a pre-profile age/legal gate for 18+ confirmation, MVP terms, privacy notice, and community standards acceptance. Acceptance is stored on the local prototype profile.
 - Safety/legal links and support contact are env-configurable through `EXPO_PUBLIC_PRIVACY_POLICY_URL`, `EXPO_PUBLIC_TERMS_URL`, `EXPO_PUBLIC_COMMUNITY_STANDARDS_URL`, `EXPO_PUBLIC_SUPPORT_EMAIL`, `EXPO_PUBLIC_SUPPORT_URL`, and `EXPO_PUBLIC_ACCOUNT_DELETION_URL`.
 
