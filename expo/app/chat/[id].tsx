@@ -9,6 +9,7 @@ import {
   ImagePlus,
   Lock,
   MessageCircle,
+  MoreHorizontal,
   Send,
   Users,
   X as XIcon,
@@ -81,6 +82,9 @@ export default function ChatScreen() {
     sendPhoto,
     respondToPhoto,
     markRead,
+    unmatch,
+    reportProfile,
+    blockProfile,
     drafts,
     setDraft,
     typingProfileIds,
@@ -157,6 +161,76 @@ export default function ChatScreen() {
     setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50);
   }, [text, id, sendMessage, isCouple, activeName, setDraft]);
 
+  const reportConversation = useCallback(
+    async (reportedMessageId?: string) => {
+      if (!id) return;
+      const result = await reportProfile(
+        id,
+        "unsafe_behavior",
+        undefined,
+        reportedMessageId
+      );
+      Alert.alert(
+        result.ok ? "Report submitted" : "Report failed",
+        result.ok
+          ? "Thanks. This has been flagged for review."
+          : result.error ?? "Try again in a moment."
+      );
+    },
+    [id, reportProfile]
+  );
+
+  const blockConversation = useCallback(async () => {
+    if (!id) return;
+    const result = await blockProfile(id);
+    if (!result.ok) {
+      Alert.alert("Block failed", result.error ?? "Try again in a moment.");
+      return;
+    }
+    Alert.alert("Profile blocked", "The conversation was removed.", [
+      { text: "OK", onPress: () => router.replace("/(tabs)/inbox") },
+    ]);
+  }, [id, blockProfile]);
+
+  const unmatchConversation = useCallback(() => {
+    if (!id) return;
+    unmatch(id);
+    Alert.alert("Unmatched", "The conversation was removed.", [
+      { text: "OK", onPress: () => router.replace("/(tabs)/inbox") },
+    ]);
+  }, [id, unmatch]);
+
+  const openSafetyActions = useCallback(() => {
+    if (!id) return;
+    Alert.alert("Conversation safety", undefined, [
+      {
+        text: "Report or block",
+        style: "destructive",
+        onPress: () => {
+          Alert.alert("Report or block", undefined, [
+            {
+              text: "Report profile",
+              style: "destructive",
+              onPress: () => void reportConversation(),
+            },
+            {
+              text: "Block profile",
+              style: "destructive",
+              onPress: () => void blockConversation(),
+            },
+            { text: "Cancel", style: "cancel" },
+          ]);
+        },
+      },
+      {
+        text: "Unmatch",
+        style: "destructive",
+        onPress: unmatchConversation,
+      },
+      { text: "Cancel", style: "cancel" },
+    ]);
+  }, [id, reportConversation, blockConversation, unmatchConversation]);
+
   const onLongPressMessage = useCallback(
     (m: Message) => {
       if (!id) return;
@@ -173,6 +247,13 @@ export default function ChatScreen() {
           },
         },
       ];
+      if (!m.fromMe) {
+        options.push({
+          text: "Report message",
+          style: "destructive" as const,
+          onPress: () => void reportConversation(m.id),
+        });
+      }
       if (m.fromMe) {
         options.push({
           text: "Delete",
@@ -183,7 +264,7 @@ export default function ChatScreen() {
       options.push({ text: "Cancel", style: "cancel" as const });
       Alert.alert("Message", undefined, options);
     },
-    [id, deleteMessage]
+    [id, deleteMessage, reportConversation]
   );
 
   const pickPhoto = useCallback(async () => {
@@ -283,6 +364,19 @@ export default function ChatScreen() {
                 <Text style={styles.headerCity}>{other.location.city}</Text>
               </View>
             </View>
+          ),
+          headerRight: () => (
+            <Pressable
+              onPress={openSafetyActions}
+              hitSlop={10}
+              style={({ pressed }) => [
+                styles.headerAction,
+                pressed && { opacity: 0.7 },
+              ]}
+              testID="chat-safety"
+            >
+              <MoreHorizontal size={22} color={Colors.light.text} />
+            </Pressable>
           ),
         }}
       />
@@ -648,6 +742,14 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: Colors.light.textMuted,
     fontWeight: "600" as const,
+  },
+  headerAction: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.light.surface,
   },
   list: { padding: 16, gap: 6, flexGrow: 1 },
   emptyMsg: {

@@ -5,7 +5,7 @@ Last updated: 2026-06-20
 ## Current Repo State
 
 - Repo: `skfjasa/orchard_app`
-- Handoff checkpoint: 2026-06-20 post-Docker verification
+- Handoff checkpoint: 2026-06-20 safety/legal surfaces
 - App code: `expo/`
 - Runtime: Expo React Native with Expo Router and TypeScript
 - Package manager: Bun
@@ -70,17 +70,20 @@ Last updated: 2026-06-20
 - Docker Desktop was installed manually during the 2026-06-20 session and is now operational after firmware virtualization was enabled.
 - Diagnostics captured after enabling virtualization on 2026-06-20: AMD Ryzen 5 5600X, `VirtualizationFirmwareEnabled: True`, `HypervisorPresent: True`, Docker Desktop server running Docker Engine 29.5.3 on Linux, WSL default distribution `docker-desktop`, WSL default version 2.
 - The first database test run exposed pgTAP assertion argument mistakes, which were fixed in `supabase/tests/database/202606200001_mvp_security.sql`; the suite then passed 19/19.
+- Initial in-app Safety & Legal surface exists at `expo/app/safety-legal.tsx`, linked from Profile.
+- Profile detail and chat now expose report/block actions; chat also exposes unmatch and report-message actions. These use the existing safety service boundary and preserve mock mode.
+- Account deletion can be requested from the Safety & Legal screen; the local flow records the request through the safety service and signs out.
 
 ## Current Task
 
-Review the passing hardened Supabase migration and decide whether to apply it to a shared development project now or build local safety/legal surfaces first.
+Continue safety/legal hardening by replacing placeholder policy/support copy with final public URLs and wiring persisted backend safety flows once auth/profile persistence is live.
 
 ## Next Planned Tasks
 
-1. Review the hardened SQL and passing database/RLS tests before dev apply.
-2. Decide whether to apply the hardened migration to a dev project or keep building local safety/legal surfaces first.
-3. Decide production bundle ID and beta app identity.
-4. Add safety/legal surfaces required for TestFlight planning.
+1. Decide public Privacy Policy, Terms, Support, and Account Deletion URLs/email, then replace the placeholder Safety & Legal copy.
+2. Review the hardened SQL and passing database/RLS tests before dev apply.
+3. Decide whether to apply the hardened migration to a dev project.
+4. Decide production bundle ID and beta app identity.
 5. Start wiring real auth into onboarding/sign-in once schema decisions are made.
 
 ## Human Decisions Needed

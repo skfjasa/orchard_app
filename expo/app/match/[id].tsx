@@ -3,6 +3,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import {
   Heart,
+  Flag,
   Instagram,
   MapPin,
   MessageCircle,
@@ -11,6 +12,7 @@ import {
   Play,
   Quote,
   Sparkles,
+  ShieldOff,
   Twitter,
   Users,
   X,
@@ -46,7 +48,16 @@ const { width: W } = Dimensions.get("window");
 export default function MatchDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const other = useMemo(() => MOCK_PROFILES.find((p) => p.id === id), [id]);
-  const { profile, likeProfile, passProfile, likedIds, superLikeProfile, superLikedIds } = useProfile();
+  const {
+    profile,
+    likeProfile,
+    passProfile,
+    likedIds,
+    superLikeProfile,
+    superLikedIds,
+    reportProfile,
+    blockProfile,
+  } = useProfile();
 
   const allPhotos: string[] = useMemo(() => {
     if (!other) return [];
@@ -164,6 +175,56 @@ export default function MatchDetail() {
     Linking.openURL(url).catch(() =>
       Alert.alert("Couldn't open link", "Try again in a moment.")
     );
+  };
+
+  const reportOther = async () => {
+    const result = await reportProfile(other.id, "unsafe_behavior");
+    Alert.alert(
+      result.ok ? "Report submitted" : "Report failed",
+      result.ok
+        ? "Thanks. This profile has been flagged for review."
+        : result.error ?? "Try again in a moment."
+    );
+  };
+
+  const confirmReport = () => {
+    const message = `Report ${other.people[0].name}'s profile for review?`;
+    if (Platform.OS === "web") {
+      if (typeof window !== "undefined" && window.confirm(message)) {
+        void reportOther();
+      }
+      return;
+    }
+    Alert.alert("Report profile?", message, [
+      { text: "Cancel", style: "cancel" },
+      { text: "Report", style: "destructive", onPress: () => void reportOther() },
+    ]);
+  };
+
+  const blockOther = async () => {
+    const result = await blockProfile(other.id);
+    if (!result.ok) {
+      Alert.alert("Block failed", result.error ?? "Try again in a moment.");
+      return;
+    }
+    Alert.alert("Profile blocked", "You won't see each other here.", [
+      { text: "OK", onPress: () => router.back() },
+    ]);
+  };
+
+  const confirmBlock = () => {
+    const message =
+      "Blocking removes any local match or conversation with this profile.";
+    if (Platform.OS === "web") {
+      if (typeof window !== "undefined" && window.confirm(message)) {
+        void blockOther();
+      }
+      return;
+    }
+    Alert.alert("Block profile?", message, [
+      { text: "Cancel", style: "cancel" },
+      { text: "Block", style: "destructive", onPress: () => void blockOther() },
+    ]);
   };
 
   const socials = other.socials ?? {};
@@ -345,6 +406,33 @@ export default function MatchDetail() {
                 </Section>
               );
             })}
+
+            <Section title="Safety">
+              <View style={styles.safetyRow}>
+                <Pressable
+                  onPress={confirmReport}
+                  style={({ pressed }) => [
+                    styles.safetyBtn,
+                    pressed && { backgroundColor: Colors.light.surfaceAlt },
+                  ]}
+                  testID="report-profile"
+                >
+                  <Flag size={16} color={Colors.palette.danger} />
+                  <Text style={styles.safetyBtnText}>Report</Text>
+                </Pressable>
+                <Pressable
+                  onPress={confirmBlock}
+                  style={({ pressed }) => [
+                    styles.safetyBtn,
+                    pressed && { backgroundColor: Colors.light.surfaceAlt },
+                  ]}
+                  testID="block-profile"
+                >
+                  <ShieldOff size={16} color={Colors.palette.danger} />
+                  <Text style={styles.safetyBtnText}>Block</Text>
+                </Pressable>
+              </View>
+            </Section>
           </View>
         </ScrollView>
 
@@ -1083,6 +1171,27 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
+  },
+  safetyRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  safetyBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 14,
+    backgroundColor: Colors.light.surface,
+    borderWidth: 1,
+    borderColor: Colors.light.line,
+  },
+  safetyBtnText: {
+    fontSize: 13,
+    fontWeight: "800" as const,
+    color: Colors.palette.danger,
   },
   interestChip: {
     flexDirection: "row",

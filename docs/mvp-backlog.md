@@ -166,8 +166,9 @@ Acceptance:
 
 Current status:
 
-- Local unmatch exists.
-- Block/report/account deletion/moderation do not exist.
+- Local unmatch exists and is exposed from chat safety actions.
+- Report profile, report message, block, and account deletion request entry points exist and call the safety service boundary.
+- Backend persistence for safety actions depends on real auth/profile source-of-truth wiring.
 
 Tasks:
 
@@ -190,7 +191,8 @@ Acceptance:
 
 Current status:
 
-- Privacy/legal surfaces are documented but not implemented in app.
+- Initial in-app Safety & Legal screen exists, with privacy, terms, community standards, support, and account deletion request sections.
+- Final public Privacy Policy, Terms, Support, and Account Deletion URLs/email are still human decisions.
 
 Tasks:
 

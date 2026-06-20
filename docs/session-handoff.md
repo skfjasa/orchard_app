@@ -70,6 +70,8 @@ When these docs become large, compact them by preserving active state, blockers,
   - Docker Desktop server running Docker Engine 29.5.3 on Linux
   - `wsl --status`: default distribution `docker-desktop`, default version 2
 - The first database test run exposed pgTAP assertion argument mistakes; those were fixed in `supabase/tests/database/202606200001_mvp_security.sql`, and the suite then passed 19/19.
+- Initial in-app Safety & Legal surface exists and is linked from Profile.
+- Report profile, report message, block, unmatch, and account deletion request entry points exist in the mock/local app flow and call the service boundary.
 
 ## Current Backend State
 
@@ -115,12 +117,12 @@ The migration has not been applied to a live Supabase project yet.
 
 ## Current Repo Status
 
-As of this post-Docker checkpoint on 2026-06-20, before committing this doc refresh:
+As of the 2026-06-20 safety/legal checkpoint, before committing this doc refresh:
 
 - Branch: `main`
 - Remote: `origin/main`
-- Current working tree contains docs/status edits from the prior checkpoint, current Docker/test status edits, and a database test-file fix.
-- No runtime app code is dirty.
+- Current working tree contains runtime safety/legal UI/provider changes plus status doc updates.
+- Runtime app code changed in `expo/app/safety-legal.tsx`, profile, match detail, chat, root layout, and `ProfileProvider`.
 - Local Supabase database is running via Docker Desktop. Non-database Supabase services are stopped, which was sufficient for `supabase test db`.
 - `personal-os` already had unrelated dirty files before this handoff; do not revert them.
 
@@ -142,7 +144,16 @@ expo/node_modules/.bin/supabase start
 expo/node_modules/.bin/supabase test db
 ```
 
-`supabase test db` now passes locally: 1 file, 19 tests.
+`supabase test db` passed locally after the Docker checkpoint: 1 file, 19 tests.
+
+After the safety/legal UI changes, run from `expo/`:
+
+```bash
+bun run lint
+bun run typecheck
+```
+
+Both passed.
 
 ## 2026-06-20 Handoff Scope
 
@@ -150,9 +161,9 @@ This handoff intentionally updated continuity/status docs only.
 
 Latest handoff additions:
 
-- Captured that Docker Desktop is operational after enabling firmware virtualization.
-- Ran local Supabase database/RLS tests and fixed pgTAP assertion argument ordering.
-- Updated restart/resume steps to make migration review/dev apply the next backend action.
+- Added initial Safety & Legal screen linked from Profile.
+- Wired report profile, report message, block, unmatch, and account deletion request entry points through the service boundary.
+- Preserved mock/local behavior; backend persistence still depends on auth/profile source-of-truth work.
 
 Orchard files updated:
 
@@ -168,6 +179,12 @@ Orchard files updated:
 - `docs/profile-provider-map.md`
 - `docs/codex-operating-guide.md`
 - `supabase/tests/database/202606200001_mvp_security.sql`
+- `expo/app/safety-legal.tsx`
+- `expo/app/_layout.tsx`
+- `expo/app/(tabs)/profile.tsx`
+- `expo/app/match/[id].tsx`
+- `expo/app/chat/[id].tsx`
+- `expo/providers/profile-provider.tsx`
 
 Global/workspace files updated:
 
@@ -185,10 +202,10 @@ Existing unrelated dirty files in `personal-os` should be preserved and not reve
 
 ## Next Best Tasks
 
-1. Review the hardened SQL and passing database/RLS tests before dev apply.
-2. Decide whether to apply the hardened Supabase migration to a dev project now or build local safety/legal surfaces first.
-3. Decide production bundle ID and beta app identity.
-4. Add required safety/legal surfaces: privacy, terms, community standards, support, report, block, unmatch, account deletion.
+1. Decide public Privacy Policy, Terms, Support, and Account Deletion URLs/email, then replace placeholder Safety & Legal copy.
+2. Review the hardened SQL and passing database/RLS tests before dev apply.
+3. Decide whether to apply the hardened Supabase migration to a dev project.
+4. Decide production bundle ID and beta app identity.
 5. Wire real auth into onboarding/sign-in once schema decisions are made.
 6. Persist onboarding/profile to Supabase.
 7. Add photo upload through `StorageService`.

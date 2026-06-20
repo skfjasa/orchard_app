@@ -55,6 +55,7 @@ import {
   SUPER_LIKE_RECHARGE_MS,
   SubscriptionId,
 } from "@/types";
+import type { ReportReason } from "@/services/safety-service";
 
 export type { SubscriptionState } from "@/services/local-profile-storage";
 
@@ -283,6 +284,97 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       });
     },
     [saveLikesMutation, saveConvosMutation]
+  );
+
+  const reportProfile = useCallback(
+    async (
+      reportedProfileId: string,
+      reason: ReportReason = "other",
+      details?: string,
+      reportedMessageId?: string
+    ): Promise<{ ok: boolean; error?: string }> => {
+      if (!profile) {
+        return { ok: false, error: "Create a profile before reporting." };
+      }
+
+      const result = await appServices.safety.reportUser({
+        reporterId: profile.id,
+        reportedUserId: reportedProfileId,
+        reportedMessageId,
+        reason,
+        details,
+      });
+
+      if (!result.ok) {
+        return { ok: false, error: result.error.message };
+      }
+
+      return { ok: true };
+    },
+    [appServices, profile]
+  );
+
+  const blockProfile = useCallback(
+    async (blockedProfileId: string): Promise<{ ok: boolean; error?: string }> => {
+      if (!profile) {
+        return { ok: false, error: "Create a profile before blocking." };
+      }
+
+      const result = await appServices.safety.blockUser({
+        blockerId: profile.id,
+        blockedId: blockedProfileId,
+      });
+
+      if (!result.ok) {
+        return { ok: false, error: result.error.message };
+      }
+
+      setLikedIds((prev) => {
+        const next = removeId(prev, blockedProfileId);
+        saveLikesMutation.mutate(next);
+        return next;
+      });
+      setPassedIds((prev) => {
+        const next = addUniqueId(prev, blockedProfileId);
+        savePassesMutation.mutate(next);
+        return next;
+      });
+      setConversations((prev) => {
+        const next = removeConversation(prev, blockedProfileId);
+        saveConvosMutation.mutate(next);
+        return next;
+      });
+
+      return { ok: true };
+    },
+    [
+      appServices,
+      profile,
+      saveConvosMutation,
+      saveLikesMutation,
+      savePassesMutation,
+    ]
+  );
+
+  const requestAccountDeletion = useCallback(
+    async (reason?: string): Promise<{ ok: boolean; error?: string }> => {
+      if (!profile) {
+        return { ok: false, error: "No profile is signed in." };
+      }
+
+      const result = await appServices.safety.requestAccountDeletion({
+        profileId: profile.id,
+        reason,
+      });
+
+      if (!result.ok) {
+        return { ok: false, error: result.error.message };
+      }
+
+      signOut();
+      return { ok: true };
+    },
+    [appServices, profile, signOut]
   );
 
   const superLikeProfile = useCallback(
@@ -651,6 +743,9 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       likeProfile,
       superLikeProfile,
       unmatch,
+      reportProfile,
+      blockProfile,
+      requestAccountDeletion,
       passProfile,
       sendMessage,
       deleteMessage,
@@ -693,6 +788,9 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       likeProfile,
       superLikeProfile,
       unmatch,
+      reportProfile,
+      blockProfile,
+      requestAccountDeletion,
       passProfile,
       sendMessage,
       deleteMessage,

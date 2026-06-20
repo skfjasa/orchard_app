@@ -55,6 +55,13 @@ function RootLayoutNav() {
           headerShadowVisible: false,
         }}
       />
+      <Stack.Screen
+        name="safety-legal"
+        options={{
+          title: "Safety & Legal",
+          headerShadowVisible: false,
+        }}
+      />
     </Stack>
   );
 }

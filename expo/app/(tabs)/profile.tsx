@@ -6,6 +6,7 @@ import {
   ChevronRight,
   Copy,
   Crown,
+  FileText,
   Flame,
   Heart,
   Instagram,
@@ -20,6 +21,7 @@ import {
   Plus,
   Quote,
   Send,
+  Shield,
   Sparkles,
   Trash2,
   Twitter,
@@ -677,6 +679,21 @@ export default function ProfileScreen() {
                 />
               </View>
             ))}
+          </Section>
+
+          <Section title="Safety & legal">
+            <Row
+              label="Policies and account controls"
+              value="Open"
+              icon={<Shield size={16} color={Colors.palette.evergreen} />}
+              onPress={() => router.push("/safety-legal")}
+            />
+            <Row
+              label="Privacy, terms, support"
+              value="MVP"
+              icon={<FileText size={16} color={Colors.palette.evergreen} />}
+              onPress={() => router.push("/safety-legal")}
+            />
           </Section>
 
           <Pressable
