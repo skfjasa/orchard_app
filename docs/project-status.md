@@ -8,7 +8,7 @@ Last updated: 2026-06-19
 - App code: `expo/`
 - Runtime: Expo React Native with Expo Router and TypeScript
 - Package manager: Bun
-- Backend: Supabase client, auth/session provider skeleton, schema/RPC drafts, initial Supabase service adapters, and backend/mock service factory; no backend profile/matching/chat behavior wired yet
+- Backend: Supabase client, auth/session provider skeleton, schema/RPC drafts, initial Supabase service adapters, backend/mock service factory, and gated swipe persistence hook; no backend profile/matching/chat behavior is fully wired yet
 - Persistence: local `AsyncStorage`
 - Checks: `bun run lint` and `bun run typecheck`
 - Branch: `main`
@@ -16,7 +16,8 @@ Last updated: 2026-06-19
 
 ## Latest Foundation Commits
 
-- This commit - Add backend/mock service factory
+- This commit - Gate swipe persistence through backend service factory
+- `8d1c023` - Add backend/mock service factory
 - `525df94` - Add Supabase swipe, match, and safety service adapters
 - `9cf5b94` - Add core Supabase matching and safety RPC drafts
 - `9422c3a` - Draft initial Supabase schema and RLS
@@ -54,17 +55,18 @@ Last updated: 2026-06-19
 - Draft RPCs exist for reciprocal swipe matching, unmatch, and block behavior.
 - Supabase service adapters exist for swipe, match, and safety behavior, but they are not wired into the provider/UI yet.
 - Backend/mock service factory exists and exposes per-service capabilities so partial Supabase support is explicit.
+- `ProfileProvider` can now call the swipe service factory as a non-blocking persistence hook when Supabase mode has a real authenticated profile id. Local state remains the UI source of truth.
 
 ## Current Task
 
-Add backend/mock service factory while preserving current local/mock runtime behavior.
+Gate swipe persistence through the backend/mock service factory while preserving current local/mock runtime behavior.
 
 ## Next Planned Tasks
 
 1. Review Supabase schema/RLS/RPCs before applying to a dev project.
 2. Decide production bundle ID and beta app identity.
 3. Add safety/legal surfaces required for TestFlight planning.
-4. Wire one low-risk flow through the backend/mock service factory.
+4. Decide whether to apply the Supabase migration to a dev project now or keep building local safety/legal surfaces first.
 5. Start wiring real auth into onboarding/sign-in once schema decisions are made.
 
 ## Human Decisions Needed

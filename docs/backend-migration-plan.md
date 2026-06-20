@@ -16,6 +16,7 @@ The current app is a local/mock Rork prototype.
 - Initial Supabase schema migration draft exists.
 - Initial Supabase service adapters exist for swipes, matches, and safety flows.
 - Backend/mock service factory exists with explicit per-service capabilities.
+- Swipe persistence has a gated, non-blocking provider hook for Supabase mode only when the local profile id matches the authenticated user id.
 - No real onboarding/profile auth flow, storage, reciprocal matching, or chat backend exists.
 
 ## 2. Migration Principle
@@ -103,9 +104,10 @@ Initial tables:
 5. Add real auth/session provider. Foundation done; onboarding/sign-in flow not wired yet.
 6. Add Supabase swipe, match, and safety service adapters. Done; provider/UI not wired yet.
 7. Add backend/mock service factory. Done; runtime provider/UI not wired yet.
-8. Persist onboarding/profile to backend.
-9. Add photo upload through `StorageService`.
-10. Replace swipe persistence.
-11. Add reciprocal match creation.
-12. Replace local chat with match-scoped backend messages.
-13. Add safety service and enforce block/report/unmatch/account deletion flows.
+8. Add gated swipe persistence hook through service factory. Done; local state remains source of truth.
+9. Persist onboarding/profile to backend.
+10. Add photo upload through `StorageService`.
+11. Replace swipe persistence as source of truth.
+12. Add reciprocal match creation.
+13. Replace local chat with match-scoped backend messages.
+14. Add safety service and enforce block/report/unmatch/account deletion flows.

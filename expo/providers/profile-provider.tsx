@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { MOCK_PROFILES } from "@/mocks/profiles";
 import { MVP_MONETIZATION_ENABLED } from "@/constants/features";
+import { useAuth } from "@/providers/auth-provider";
+import { createAppServices } from "@/services/app-services";
 import {
   addUniqueId,
   appendIncomingTextReply,
@@ -57,6 +59,8 @@ import {
 export type { SubscriptionState } from "@/services/local-profile-storage";
 
 export const [ProfileProvider, useProfile] = createContextHook(() => {
+  const { mode, userId } = useAuth();
+  const appServices = useMemo(() => createAppServices(), []);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [likedIds, setLikedIds] = useState<string[]>([]);
@@ -204,6 +208,30 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const slotsRemaining = Math.max(0, totalSlots - slotsUsed);
   const isAtMatchLimit = slotsRemaining <= 0;
 
+  const persistBackendSwipe = useCallback(
+    (targetId: string, decision: "like" | "pass" | "super_like") => {
+      if (mode !== "supabase") return;
+      if (appServices.capabilities.swipes !== "supabase") return;
+      if (!profile || !userId || profile.id !== userId) return;
+
+      void appServices.swipes
+        .recordSwipe({
+          swiperId: userId,
+          targetId,
+          decision,
+        })
+        .then((result) => {
+          if (!result.ok) {
+            console.log("[profile-provider] backend swipe failed", {
+              code: result.error.code,
+              message: result.error.message,
+            });
+          }
+        });
+    },
+    [appServices, mode, profile, userId]
+  );
+
   const likeProfile = useCallback(
     (id: string): { ok: boolean; reason?: "limit" } => {
       if (likedIds.includes(id)) return { ok: true };
@@ -227,9 +255,18 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         return next;
       });
 
+      persistBackendSwipe(id, "like");
+
       return { ok: true };
     },
-    [likedIds, slotsUsed, totalSlots, saveLikesMutation, saveConvosMutation]
+    [
+      likedIds,
+      slotsUsed,
+      totalSlots,
+      saveLikesMutation,
+      saveConvosMutation,
+      persistBackendSwipe,
+    ]
   );
 
   const unmatch = useCallback(
@@ -295,6 +332,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         return next;
       });
 
+      persistBackendSwipe(id, "super_like");
+
       return { ok: true };
     },
     [
@@ -308,6 +347,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       saveConvosMutation,
       saveSuperLikeBalanceMutation,
       saveSuperLikeLastUseMutation,
+      persistBackendSwipe,
     ]
   );
 
@@ -319,8 +359,9 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         savePassesMutation.mutate(next);
         return next;
       });
+      persistBackendSwipe(id, "pass");
     },
-    [savePassesMutation]
+    [savePassesMutation, persistBackendSwipe]
   );
 
   const sendMessage = useCallback(
