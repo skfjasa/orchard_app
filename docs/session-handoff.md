@@ -36,6 +36,19 @@ When these docs become large, compact them by preserving active state, blockers,
 
 ## Important Product Decisions
 
+- App name: Orchard.
+- iOS bundle ID: `com.orchardapp.ios`.
+- Apple Developer account: needs to be created.
+- Supabase dev project: `orchard-dev`.
+- Supabase production project later: `orchard-prod`.
+- Supabase region: East US (North Virginia) / `us-east-1`.
+- Placeholder Privacy Policy URL: `https://yourdomain.com/privacy`.
+- Placeholder Terms URL: `https://yourdomain.com/terms`.
+- Placeholder Community Standards URL: `https://yourdomain.com/community`.
+- Placeholder support email: `support@yourdomain.com`.
+- Placeholder Support URL: `https://yourdomain.com/support`.
+- Placeholder Account Deletion URL: `https://yourdomain.com/delete`.
+- MVP account deletion process: user requests deletion in app, request is stored, admin reviews/completes deletion in Supabase, and deletion/anonymization follows the policy.
 - User monetization is out of MVP scope.
 - Monetizable features should remain demoable without payment walls during the feedback MVP.
 - Existing and future monetization surfaces are tracked in `docs/monetization-candidates.md`.
@@ -76,6 +89,8 @@ When these docs become large, compact them by preserving active state, blockers,
 - Direct chat routes and provider send helpers are guarded so the local app only shows/writes chat for active local matches.
 - Onboarding includes a required 18+ and legal acceptance screen before account type selection; acceptance is stored on the local prototype profile.
 - Safety/legal URLs and support contact are env-configurable via `expo/constants/legal.ts` and `expo/.env.example`; final public values are still human decisions.
+- MVP prototype gap assessment is recorded in `docs/mvp-prototype-gap-assessment.md`.
+- Current distance estimate: local demo prototype is close, real backend MVP is roughly 2-4 focused weeks after hosted Supabase setup, and TestFlight beta is roughly 4-6+ weeks depending on Apple/Supabase/legal/build readiness.
 
 ## Current Backend State
 
@@ -121,12 +136,12 @@ The migration has not been applied to a live Supabase project yet.
 
 ## Current Repo Status
 
-As of the 2026-06-20 safety/legal checkpoint, before committing this doc refresh:
+As of the 2026-06-20 MVP decision handoff, before committing this doc refresh:
 
 - Branch: `main`
 - Remote: `origin/main`
-- Current working tree contains provider-level active-match-only chat write guard changes plus status doc updates.
-- Runtime app code changed in `expo/providers/profile-provider.tsx`.
+- Current working tree contains docs/config handoff updates for recorded product/backend/release decisions.
+- Runtime config changed in `expo/app.json`, `expo/.env.example`, and `expo/constants/legal.ts`.
 - Local Supabase database is running via Docker Desktop. Non-database Supabase services are stopped, which was sufficient for `supabase test db`.
 - `personal-os` already had unrelated dirty files before this handoff; do not revert them.
 
@@ -172,6 +187,7 @@ Latest handoff additions:
 - Added env-backed legal/support configuration and wired Safety & Legal/onboarding policy links to it.
 - Added report reason/details form for profile and message reports.
 - Added local active-match guards for direct chat routes and provider message/photo send helpers.
+- Recorded MVP prototype gap assessment and user decisions for app identity, Supabase project/region, and placeholder legal/support URLs.
 
 Orchard files updated:
 
@@ -202,6 +218,8 @@ Orchard files updated:
 - `expo/constants/legal.ts`
 - `expo/.env.example`
 - `expo/app/report.tsx`
+- `expo/app.json`
+- `docs/mvp-prototype-gap-assessment.md`
 
 Global/workspace files updated:
 
@@ -219,25 +237,20 @@ Existing unrelated dirty files in `personal-os` should be preserved and not reve
 
 ## Next Best Tasks
 
-1. Decide public Privacy Policy, Terms, Support, and Account Deletion URLs/email, then fill the legal/support env values.
-2. Review the hardened SQL and passing database/RLS tests before dev apply.
-3. Decide whether to apply the hardened Supabase migration to a dev project.
-4. Decide production bundle ID and beta app identity.
-5. Wire real auth into onboarding/sign-in once schema decisions are made.
-6. Persist onboarding/profile to Supabase.
-7. Add photo upload through `StorageService`.
-8. Replace swipe/match/chat local state as source of truth only after auth/profile persistence works.
+1. Create Apple Developer Program account.
+2. Create Supabase project `orchard-dev` in East US (North Virginia) / `us-east-1`.
+3. Apply and verify the hardened Supabase migration in `orchard-dev`.
+4. Wire real Supabase Auth into onboarding/sign-in.
+5. Persist onboarding/profile rows to Supabase.
+6. Add photo upload through `StorageService`.
+7. Replace swipe/match/chat local state as source of truth only after auth/profile persistence works.
+8. Add EAS build config and TestFlight metadata when backend/legal placeholders are acceptable.
 
 ## Human Decisions Needed
 
-- Production bundle ID.
-- Apple Developer account availability.
-- Supabase project name and region.
-- Public Privacy Policy URL.
-- Public Terms URL.
-- Public Support URL or email.
-- Public Account Deletion URL or documented support process.
-- Whether to keep `Orchard` as the final app name.
+- Apple Developer account creation.
+- Hosted Supabase project creation.
+- Real public domain/legal URLs before productionization.
 
 ## Cautions
 

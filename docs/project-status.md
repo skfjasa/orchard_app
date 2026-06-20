@@ -5,7 +5,7 @@ Last updated: 2026-06-20
 ## Current Repo State
 
 - Repo: `skfjasa/orchard_app`
-- Handoff checkpoint: 2026-06-20 safety/legal surfaces
+- Handoff checkpoint: 2026-06-20 MVP decision handoff
 - App code: `expo/`
 - Runtime: Expo React Native with Expo Router and TypeScript
 - Package manager: Bun
@@ -77,26 +77,25 @@ Last updated: 2026-06-20
 - Direct chat routes and local message/photo send helpers now require an active local match before showing or writing conversation content.
 - Onboarding now includes a pre-profile age/legal gate for 18+ confirmation, MVP terms, privacy notice, and community standards acceptance. Acceptance is stored on the local prototype profile.
 - Safety/legal links and support contact are env-configurable through `EXPO_PUBLIC_PRIVACY_POLICY_URL`, `EXPO_PUBLIC_TERMS_URL`, `EXPO_PUBLIC_COMMUNITY_STANDARDS_URL`, `EXPO_PUBLIC_SUPPORT_EMAIL`, `EXPO_PUBLIC_SUPPORT_URL`, and `EXPO_PUBLIC_ACCOUNT_DELETION_URL`.
+- MVP prototype gap assessment is recorded in `docs/mvp-prototype-gap-assessment.md`.
+- Product/release decisions recorded: app name `Orchard`, iOS bundle ID `com.orchardapp.ios`, Supabase dev project `orchard-dev`, production project later `orchard-prod`, Supabase region East US (North Virginia) / `us-east-1`, and placeholder public legal/support URLs under `https://yourdomain.com`.
 
 ## Current Task
 
-Continue safety/legal hardening by filling final public policy/support env values and wiring persisted backend safety/legal/report flows once auth/profile persistence is live.
+Create the Apple Developer account and hosted Supabase dev project, then apply/verify the hardened migration before wiring real auth/profile persistence.
 
 ## Next Planned Tasks
 
-1. Decide public Privacy Policy, Terms, Support, and Account Deletion URLs/email, then fill the legal/support env values.
-2. Review the hardened SQL and passing database/RLS tests before dev apply.
-3. Decide whether to apply the hardened migration to a dev project.
-4. Decide production bundle ID and beta app identity.
-5. Start wiring real auth into onboarding/sign-in once schema decisions are made.
+1. Create Apple Developer Program account.
+2. Create Supabase project `orchard-dev` in East US (North Virginia) / `us-east-1`.
+3. Apply and verify the hardened Supabase migration in `orchard-dev`.
+4. Wire real Supabase Auth into onboarding/sign-in.
+5. Persist onboarding/profile rows to Supabase.
 
 ## Human Decisions Needed
 
-- Production bundle ID.
-- Apple Developer account availability.
-- Supabase project name and region.
-- Public Privacy Policy, Terms, Support, and Account Deletion URLs.
-- Whether to keep `Orchard` as final app name.
+- Apple Developer account creation.
+- Real domain for public legal/support URLs before productionization.
 
 ## Status Tracking Rule
 

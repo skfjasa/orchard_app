@@ -4,15 +4,15 @@
 
 Required accounts and setup:
 
-- Apple Developer Program required.
+- Apple Developer Program required; account still needs to be created.
 - App Store Connect app required.
 - Expo account required if using EAS.
-- Decide whether to replace current Rork bundle ID: `app.rork.h12kndiz6neur3chkh3q1`.
+- Current iOS bundle ID decision: `com.orchardapp.ios`.
 
 App config:
 
-- App name confirmed.
-- Bundle ID confirmed.
+- App name confirmed: Orchard.
+- Bundle ID confirmed: `com.orchardapp.ios`.
 - Version/build number set.
 - Icon reviewed.
 - Splash reviewed.
@@ -22,11 +22,11 @@ App config:
 
 Legal and safety URLs:
 
-- Privacy Policy URL.
-- Terms URL.
-- Account deletion URL or support process.
-- Support URL/email.
-- Community standards link.
+- Privacy Policy URL placeholder: `https://yourdomain.com/privacy`.
+- Terms URL placeholder: `https://yourdomain.com/terms`.
+- Account deletion URL placeholder: `https://yourdomain.com/delete`.
+- Support URL/email placeholders: `https://yourdomain.com/support`, `support@yourdomain.com`.
+- Community standards link placeholder: `https://yourdomain.com/community`.
 
 Beta review:
 

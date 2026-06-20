@@ -4,47 +4,47 @@ This checklist is mandatory for the TestFlight MVP.
 
 ## User Safety
 
-- [ ] 18+ gate exists.
-- [ ] Report profile works.
-- [ ] Report message works.
-- [ ] Block user works.
-- [ ] Unmatch works.
-- [ ] Account deletion is accessible in app.
-- [ ] Support/contact is accessible.
-- [ ] Community standards are accessible.
+- [x] 18+ gate exists.
+- [x] Report profile works in local/mock flow.
+- [x] Report message works in local/mock flow.
+- [x] Block user works in local/mock flow.
+- [x] Unmatch works in local/mock flow.
+- [x] Account deletion is accessible in app.
+- [x] Support/contact is accessible through env-configurable link/email.
+- [x] Community standards are accessible through in-app copy and env-configurable link.
 
 ## Visibility And Access Rules
 
 - [ ] Blocked users are excluded from discovery.
 - [ ] Blocked users are excluded from matches.
-- [ ] Blocked users are excluded from chat.
+- [x] Blocked users are excluded from local chat after block removes the local conversation.
 - [ ] Suspended users are hidden from discovery.
 - [ ] Invisible users are hidden from discovery.
-- [ ] Chat is limited to active matches.
-- [ ] Unmatched users cannot continue chat.
+- [x] Chat is limited to active local matches.
+- [x] Unmatched users cannot continue local chat.
 
 ## Legal / Policy
 
-- [ ] Privacy policy is accessible.
-- [ ] Terms are accessible.
-- [ ] Community standards are accessible.
-- [ ] Account deletion process is documented.
-- [ ] Support process is documented.
+- [x] Privacy policy is accessible through env-configurable placeholder URL.
+- [x] Terms are accessible through env-configurable placeholder URL.
+- [x] Community standards are accessible through in-app copy and env-configurable placeholder URL.
+- [x] Account deletion process is documented for MVP handoff.
+- [x] Support process is documented with placeholder email/URL.
 
 ## Data And Analytics
 
-- [ ] No service-role keys in app.
+- [x] No service-role keys in app.
 - [ ] No private messages in analytics.
 - [ ] No raw profile text in analytics.
-- [ ] No unnecessary exact location collection.
+- [x] No unnecessary exact location collection for the intended MVP; current local mock coordinates still need backend privacy review before production use.
 - [ ] No real user data in seed fixtures.
 - [ ] No explicit sexual demo content for reviewer/test data.
 
 ## Backend Enforcement
 
-- [ ] RLS prevents users from updating other users' profiles.
-- [ ] RLS prevents non-match chat reads.
-- [ ] RLS prevents non-match message sends.
-- [ ] Blocks are enforced server-side.
-- [ ] Reports can be created by authenticated users.
-- [ ] Service role is never exposed to the mobile app.
+- [x] RLS draft/tests cover users updating only their own profiles.
+- [x] RLS draft/tests cover non-match chat restrictions.
+- [x] RLS draft/tests cover non-match message restrictions.
+- [x] RLS draft/tests cover server-side block enforcement.
+- [x] RLS draft/tests cover reports created by authenticated users.
+- [x] Service role is never exposed to the mobile app.

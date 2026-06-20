@@ -56,6 +56,7 @@ Current status:
 - Supabase client, auth/session provider foundation, hardened schema/RLS/RPC migration draft, local Supabase config, service adapters, and initial database/RLS tests exist.
 - Docker Desktop is operational after enabling firmware virtualization, and local Supabase database/RLS tests pass.
 - No live Supabase project has been applied as the app source of truth.
+- Dev project decision: create `orchard-dev` in East US (North Virginia) / `us-east-1`; production project later should be `orchard-prod`.
 
 Tasks:
 
@@ -257,7 +258,8 @@ Acceptance:
 Current status:
 
 - `expo/app.json` exists.
-- Bundle ID currently uses Rork-generated ID.
+- iOS bundle ID is `com.orchardapp.ios`.
+- Apple Developer Program account still needs to be created.
 - No `eas.json`.
 - No App Store metadata.
 

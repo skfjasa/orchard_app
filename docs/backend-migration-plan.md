@@ -20,6 +20,7 @@ The current app is a local/mock Rork prototype.
 - Safety service report and account deletion calls use RPCs so the database derives actor identity from `auth.uid()`.
 - Initial database/RLS tests exist and pass against the local Supabase database.
 - Docker Desktop is operational after enabling firmware virtualization.
+- Hosted dev project decision: create `orchard-dev` in East US (North Virginia) / `us-east-1`; later production project should be `orchard-prod`.
 - No real onboarding/profile auth flow, storage, reciprocal matching, or chat backend exists.
 
 ## 2. Migration Principle

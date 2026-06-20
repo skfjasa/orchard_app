@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "app.rork.h12kndiz6neur3chkh3q1"
+      "bundleIdentifier": "com.orchardapp.ios"
     },
     "android": {
       "adaptiveIcon": {
