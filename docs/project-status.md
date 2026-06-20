@@ -107,12 +107,14 @@ Last updated: 2026-06-20
 - New local migration `202606200002_profile_photo_storage.sql` creates the private storage bucket, owner-scoped storage object policies, and the `profile_photos(profile_id, member_id, sort_order)` unique constraint needed for metadata upserts.
 - After the storage migration, `expo\node_modules\.bin\supabase db reset` and `expo\node_modules\.bin\supabase test db` pass locally: 1 file, 25 tests.
 - The storage migration `202606200002_profile_photo_storage.sql` has been pushed to hosted `orchard-dev`; follow-up dry run reports the remote database is up to date. A full app smoke test with a selected local photo is still pending.
+- Hosted SQL verification on 2026-06-20 confirmed `202606200002` is recorded in `supabase_migrations.schema_migrations`, the `profile-photos` bucket is private, four owner-scoped storage object policies exist, and `profile_photos_profile_member_sort_unique` exists.
+- A hosted anon-client smoke test attempted to create a fresh test auth user and was blocked by Supabase's email rate limit before a session was returned. Retest after the rate limit clears or with an existing confirmed dev account.
 - Project review recommendations remain relevant: avoid a broad `ProfileProvider` rewrite, keep moving behavior behind services, and add CI/database automation after the auth/profile path has a little more coverage.
 - Latest implementation checkpoint `6100fc5` is pushed to `origin/main`.
 
 ## Current Task
 
-Smoke-test the Supabase Storage-backed profile photo path in hosted `orchard-dev`.
+Smoke-test the Supabase Storage-backed profile photo path in hosted `orchard-dev` with an existing confirmed dev account or after the email rate limit clears.
 
 ## Next Planned Tasks
 

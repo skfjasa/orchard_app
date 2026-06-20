@@ -132,6 +132,15 @@ The initial migration was applied to hosted `orchard-dev` with `expo/node_module
 
 The storage migration `202606200002` has been applied locally and pushed to hosted `orchard-dev`. A follow-up `supabase db push --dry-run` reported the remote database is up to date. `supabase migration list` verification timed out once after the push, but the dry-run confirmed no pending migrations.
 
+Hosted SQL verification on 2026-06-20 confirmed:
+
+- `202606200002` is recorded in `supabase_migrations.schema_migrations`.
+- The `profile-photos` bucket is private.
+- Four owner-scoped `profile_photos_storage_%` policies exist on `storage.objects`.
+- `profile_photos_profile_member_sort_unique` exists.
+
+A hosted anon-client smoke test attempted to create a fresh test auth user but Supabase returned `email rate limit exceeded` before a session was returned. Retest the app photo upload flow after the hosted auth email rate limit clears or with an existing confirmed dev account.
+
 ## Latest Commits
 
 - `6100fc5` - Add Supabase profile photo storage
@@ -256,7 +265,7 @@ Existing unrelated dirty files in `personal-os` should be preserved and not reve
 ## Next Best Tasks
 
 1. Create Apple Developer Program account.
-2. Smoke-test onboarding in Supabase mode with a selected local photo.
+2. Smoke-test onboarding in Supabase mode with a selected local photo using an existing confirmed dev account or after the hosted auth email rate limit clears.
 3. Add focused CI for lint, typecheck, and database tests once remote/local DB command reliability is confirmed.
 4. Replace swipe/match/chat local state as source of truth only after auth/profile persistence works.
 5. Add EAS build config and TestFlight metadata when backend/legal placeholders are acceptable.
