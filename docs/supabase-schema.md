@@ -2,9 +2,10 @@
 
 This is the first MVP schema draft for Orchard. It is not yet applied to a live Supabase project.
 
-Migration file:
+Migration files:
 
 - `supabase/migrations/202606190001_initial_mvp_schema.sql`
+- `supabase/migrations/202606200002_profile_photo_storage.sql`
 
 ## Scope
 
@@ -20,6 +21,12 @@ The draft covers:
 - Reports
 - User settings
 - Account deletion requests
+
+Storage migration `202606200002_profile_photo_storage.sql` adds:
+
+- Private `profile-photos` Supabase Storage bucket.
+- Owner-scoped storage object select/insert/update/delete policies keyed by the first path segment.
+- `profile_photos(profile_id, member_id, sort_order)` unique constraint for metadata upserts.
 
 ## Key Product Rules Represented
 
@@ -42,17 +49,16 @@ The draft covers:
 - `submit_report(reported_profile_id, report_reason, report_details, reported_message_id)` derives reporter identity from `auth.uid()` and creates a moderation report.
 - `request_account_deletion(deletion_reason)` derives profile identity from `auth.uid()` and creates an account deletion request.
 
-These functions are granted to authenticated users only. Initial database/RLS tests exist at `supabase/tests/database/202606200001_mvp_security.sql` and pass against the local Supabase database: 1 file, 22 tests.
+These functions are granted to authenticated users only. Initial database/RLS tests exist at `supabase/tests/database/202606200001_mvp_security.sql` and pass against the local Supabase database: 1 file, 25 tests.
 
 ## Known Gaps Before Applying
 
-- Storage bucket policies for `profile_photos` are not drafted yet.
+- Storage bucket policies for profile photos are drafted, pass local tests, and have been pushed to hosted `orchard-dev`; app smoke testing with a selected photo is still pending.
 - Admin/moderation read policies are not included; use Supabase Studio/service role initially.
 - Exact relationship-structure enum values are not locked yet.
 - Birthdate/age handling needs product/legal review.
 - Approximate location approach needs product/privacy review.
 - Message body moderation strategy is not defined.
-- App adapters still need to map onboarding `Profile.people[]` to `profile_members` before Supabase profile persistence is enabled.
 
 ## RLS Review Required
 

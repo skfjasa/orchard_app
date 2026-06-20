@@ -9,9 +9,9 @@ Last updated: 2026-06-20
 - App code: `expo/`
 - Runtime: Expo React Native with Expo Router and TypeScript
 - Package manager: Bun
-- Backend: Supabase client, email/password auth wiring, hosted profile/member persistence, hardened schema/RLS/RPC draft with single/couple profile member support, initial Supabase service adapters, backend/mock service factory, gated swipe persistence hook, and hosted `orchard-dev` project linked/applied; discovery/matching/chat behavior is not fully backend source-of-truth yet
+- Backend: Supabase client, email/password auth wiring, hosted profile/member persistence, Supabase Storage-backed profile photo upload, hardened schema/RLS/RPC draft with single/couple profile member support, initial Supabase service adapters, backend/mock service factory, gated swipe persistence hook, and hosted `orchard-dev` project linked/applied through migration `202606200002`; discovery/matching/chat behavior is not fully backend source-of-truth yet
 - Persistence: local `AsyncStorage`
-- Checks: `bun run lint`, `bun run typecheck`, and `expo\node_modules\.bin\supabase test db`
+- Checks: `bun run typecheck`, `bun run lint`, `expo\node_modules\.bin\supabase db reset`, and `expo\node_modules\.bin\supabase test db`
 - Branch: `main`
 - MVP monetization: disabled
 - Local Docker: Docker Desktop is operational after enabling firmware virtualization. `docker version` reports Docker Desktop with a Linux engine, and WSL default distribution is `docker-desktop`.
@@ -102,18 +102,21 @@ Last updated: 2026-06-20
 - Final onboarding creates a Supabase auth user first and uses the Supabase user id as the local prototype profile id when a session is returned.
 - Profile/account-deletion sign-out now clears both local prototype state and the Supabase auth session.
 - A Supabase `ProfileService` now persists onboarding/profile rows to `profiles` and `profile_members`, and the provider can hydrate a signed-in user's local prototype profile from those backend rows.
-- Profile photos are still local/default placeholders; Supabase Storage and `profile_photos.member_id` writes are still the next backend storage task.
+- A Supabase `StorageService` now uploads selected local profile photos to the private `profile-photos` bucket, writes `profile_photos` rows with `member_id`, and hydrates signed photo URLs for the current profile.
+- New local migration `202606200002_profile_photo_storage.sql` creates the private storage bucket, owner-scoped storage object policies, and the `profile_photos(profile_id, member_id, sort_order)` unique constraint needed for metadata upserts.
+- After the storage migration, `expo\node_modules\.bin\supabase db reset` and `expo\node_modules\.bin\supabase test db` pass locally: 1 file, 25 tests.
+- The storage migration `202606200002_profile_photo_storage.sql` has been pushed to hosted `orchard-dev`; follow-up dry run reports the remote database is up to date. A full app smoke test with a selected local photo is still pending.
 - Project review recommendations remain relevant: avoid a broad `ProfileProvider` rewrite, keep moving behavior behind services, and add CI/database automation after the auth/profile path has a little more coverage.
 - Latest implementation checkpoint `e87e9f0` is pushed to `origin/main`.
 
 ## Current Task
 
-Add Supabase Storage-backed photo upload and `profile_photos` persistence.
+Smoke-test the Supabase Storage-backed profile photo path in hosted `orchard-dev`.
 
 ## Next Planned Tasks
 
 1. Create Apple Developer Program account.
-2. Add photo upload through `StorageService`, writing `profile_photos.member_id`.
+2. Smoke-test onboarding in Supabase mode with a real selected photo.
 3. Add a focused CI workflow for `bun run lint`, `bun run typecheck`, and database tests once remote/local DB command reliability is confirmed.
 4. Continue reducing `ProfileProvider` responsibility by moving backend-backed behavior behind services.
 

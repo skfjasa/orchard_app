@@ -13,6 +13,7 @@ import type { SwipeService } from "./swipe-service";
 import { createSupabaseMatchService } from "./supabase-match-service";
 import { createSupabaseProfileService } from "./supabase-profile-service";
 import { createSupabaseSafetyService } from "./supabase-safety-service";
+import { createSupabaseStorageService } from "./supabase-storage-service";
 import { createSupabaseSwipeService } from "./supabase-swipe-service";
 
 export interface AppServiceCapabilities {
@@ -64,6 +65,7 @@ function createSupabaseCapabilities(): AppServiceCapabilities {
     matches: "supabase",
     profiles: "supabase",
     safety: "supabase",
+    storage: "supabase",
     swipes: "supabase",
   };
 }
@@ -91,6 +93,7 @@ export function createAppServices(
     matches: createSupabaseMatchService(),
     profiles: createSupabaseProfileService(),
     safety: createSupabaseSafetyService(),
+    storage: createSupabaseStorageService(),
     swipes: createSupabaseSwipeService(),
   };
 }

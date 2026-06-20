@@ -13,14 +13,22 @@ import type {
   ProfileService,
   ProfileUpdateInput,
 } from "./profile-service";
+import type { ServiceResponse } from "./service-types";
 import { fail, ok, requireSupabase } from "./supabase-service-response";
+import {
+  createSupabaseStorageService,
+  signedUrlForPath,
+} from "./supabase-storage-service";
 
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
 type ProfileMemberRow = Database["public"]["Tables"]["profile_members"]["Row"];
+type ProfilePhotoRow = Database["public"]["Tables"]["profile_photos"]["Row"];
 type ProfileInsert = Database["public"]["Tables"]["profiles"]["Insert"];
 type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
 type ProfileMemberInsert =
   Database["public"]["Tables"]["profile_members"]["Insert"];
+type ProfilePhotoInsert =
+  Database["public"]["Tables"]["profile_photos"]["Insert"];
 
 const DEFAULT_PHOTO =
   "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=900&q=80";
@@ -103,19 +111,23 @@ function toProfileUpdate(patch: Partial<Profile>): ProfileUpdate {
 
 function toAppProfile(
   row: ProfileRow,
-  members: ProfileMemberRow[]
+  members: ProfileMemberRow[],
+  photosByMemberId: Record<string, string[]> = {}
 ): Profile {
   const sortedMembers = [...members].sort((a, b) => a.sort_order - b.sort_order);
   const people: PersonProfile[] = sortedMembers.length
-    ? sortedMembers.map((member) => ({
-        name: member.display_name,
-        age: ageFromBirthdate(member.birthdate),
-        gender: (member.gender ?? "Other") as Gender,
-        race: "Prefer not to say",
-        photo: DEFAULT_PHOTO,
-        photos: [DEFAULT_PHOTO],
-        interests: [],
-      }))
+    ? sortedMembers.map((member) => {
+        const memberPhotos = photosByMemberId[member.id] ?? [DEFAULT_PHOTO];
+        return {
+          name: member.display_name,
+          age: ageFromBirthdate(member.birthdate),
+          gender: (member.gender ?? "Other") as Gender,
+          race: "Prefer not to say",
+          photo: memberPhotos[0] ?? DEFAULT_PHOTO,
+          photos: memberPhotos,
+          interests: [],
+        };
+      })
     : [
         {
           name: row.display_name ?? "Orchard user",
@@ -145,6 +157,117 @@ function toAppProfile(
     createdAt: Date.parse(row.created_at) || Date.now(),
     ageConfirmed: row.age_confirmed,
   };
+}
+
+function isUploadablePhotoUri(uri: string | undefined): uri is string {
+  if (!uri) return false;
+  return !uri.startsWith("http://") && !uri.startsWith("https://");
+}
+
+async function buildPhotosByMemberId(
+  photoRows: ProfilePhotoRow[]
+): Promise<Record<string, string[]>> {
+  const grouped: Record<string, string[]> = {};
+  const sortedRows = [...photoRows].sort((a, b) => a.sort_order - b.sort_order);
+
+  for (const row of sortedRows) {
+    const signedUrl = await signedUrlForPath(row.storage_path);
+    if (!signedUrl) continue;
+    grouped[row.member_id] = [...(grouped[row.member_id] ?? []), signedUrl];
+  }
+
+  return grouped;
+}
+
+function applyUploadedPhotosToProfile(
+  profile: Profile,
+  uploadedPhotosByPersonIndex: Record<number, Record<number, string>>
+): Profile {
+  return {
+    ...profile,
+    people: profile.people.map((person, personIndex) => {
+      const uploadedBySlot = uploadedPhotosByPersonIndex[personIndex] ?? {};
+      const photos = (person.photos ?? [person.photo]).map((uri, photoIndex) =>
+        uploadedBySlot[photoIndex] ?? uri
+      );
+      return {
+        ...person,
+        photo: photos[0] ?? person.photo,
+        photos,
+      };
+    }),
+  };
+}
+
+async function persistProfilePhotos(
+  profile: Profile,
+  members: ProfileMemberRow[]
+): Promise<ServiceResponse<Profile>> {
+  const storage = createSupabaseStorageService();
+  const photoRows: ProfilePhotoInsert[] = [];
+  const uploadedPaths: string[] = [];
+  const uploadedPhotosByPersonIndex: Record<number, Record<number, string>> = {};
+
+  for (const member of members) {
+    const person = profile.people[member.sort_order];
+    const photos = person?.photos ?? (person?.photo ? [person.photo] : []);
+
+    for (const [photoIndex, photoUri] of photos.entries()) {
+      if (!isUploadablePhotoUri(photoUri)) continue;
+
+      const uploadResult = await storage.upload({
+        profileId: profile.id,
+        localUri: photoUri,
+        purpose: "profile_photo",
+      });
+
+      if (!uploadResult.ok) {
+        for (const storagePath of uploadedPaths) {
+          void storage.remove(storagePath);
+        }
+        return { ok: false, error: uploadResult.error };
+      }
+
+      uploadedPaths.push(uploadResult.value.storagePath);
+      if (uploadResult.value.publicUrl) {
+        uploadedPhotosByPersonIndex[member.sort_order] = {
+          ...(uploadedPhotosByPersonIndex[member.sort_order] ?? {}),
+          [photoIndex]: uploadResult.value.publicUrl,
+        };
+      }
+
+      photoRows.push({
+        profile_id: profile.id,
+        member_id: member.id,
+        storage_path: uploadResult.value.storagePath,
+        sort_order: photoIndex,
+      });
+    }
+  }
+
+  if (photoRows.length === 0) {
+    return ok(profile);
+  }
+
+  const clientResult = requireSupabase(supabase);
+  if (!clientResult.ok) return clientResult;
+
+  const { error } = await clientResult.value
+    .from("profile_photos")
+    .upsert(photoRows, { onConflict: "profile_id,member_id,sort_order" });
+
+  if (error) {
+    for (const storagePath of uploadedPaths) {
+      void storage.remove(storagePath);
+    }
+    return fail(
+      "profile_photos_write_failed",
+      "Unable to save profile photos.",
+      error
+    );
+  }
+
+  return ok(applyUploadedPhotosToProfile(profile, uploadedPhotosByPersonIndex));
 }
 
 export function createSupabaseProfileService(): ProfileService {
@@ -184,7 +307,22 @@ export function createSupabaseProfileService(): ProfileService {
         );
       }
 
-      return ok(toAppProfile(profileRow, members ?? []));
+      const { data: photos, error: photosError } = await client
+        .from("profile_photos")
+        .select("*")
+        .eq("profile_id", userId)
+        .order("sort_order", { ascending: true });
+
+      if (photosError) {
+        return fail(
+          "profile_photos_read_failed",
+          "Unable to read profile photos.",
+          photosError
+        );
+      }
+
+      const photosByMemberId = await buildPhotosByMemberId(photos ?? []);
+      return ok(toAppProfile(profileRow, members ?? [], photosByMemberId));
     },
 
     async completeOnboarding(input: ProfileDraftInput) {
@@ -202,10 +340,12 @@ export function createSupabaseProfileService(): ProfileService {
       }
 
       const memberRows = toMemberInserts(profile);
+      let savedMembers: ProfileMemberRow[] = [];
       if (memberRows.length > 0) {
-        const { error: membersError } = await client
+        const { data: membersData, error: membersError } = await client
           .from("profile_members")
-          .upsert(memberRows, { onConflict: "profile_id,sort_order" });
+          .upsert(memberRows, { onConflict: "profile_id,sort_order" })
+          .select("*");
 
         if (membersError) {
           return fail(
@@ -214,9 +354,13 @@ export function createSupabaseProfileService(): ProfileService {
             membersError
           );
         }
+        savedMembers = membersData ?? [];
       }
 
-      return ok(profile);
+      const photoResult = await persistProfilePhotos(profile, savedMembers);
+      if (!photoResult.ok) return photoResult;
+
+      return ok(photoResult.value);
     },
 
     async updateProfile(input: ProfileUpdateInput) {

@@ -201,6 +201,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
   const completeOnboarding = useCallback(
     async (p: Profile): Promise<{ ok: boolean; error?: string }> => {
+      let profileToStore = p;
+
       if (mode === "supabase" && appServices.capabilities.profiles === "supabase") {
         const result = await appServices.profiles.completeOnboarding({
           profile: p,
@@ -209,11 +211,13 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         if (!result.ok) {
           return { ok: false, error: result.error.message };
         }
+
+        profileToStore = result.value;
       }
 
-      console.log("[profile-provider] completeOnboarding", p.id);
-      setProfile(p);
-      saveProfileMutation.mutate(p);
+      console.log("[profile-provider] completeOnboarding", profileToStore.id);
+      setProfile(profileToStore);
+      saveProfileMutation.mutate(profileToStore);
       setBackendProfileHydrated(true);
       return { ok: true };
     },

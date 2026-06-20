@@ -94,7 +94,8 @@ When these docs become large, compact them by preserving active state, blockers,
 - Safety/legal URLs and support contact are env-configurable via `expo/constants/legal.ts` and `expo/.env.example`; final public values are still human decisions.
 - In Supabase mode, the root route requires an active Supabase session before entering the tab app. Final onboarding creates a Supabase auth user first and uses the Supabase user id as the local prototype profile id when a session is returned.
 - A Supabase profile adapter persists onboarding/profile rows to `profiles` and `profile_members`; the provider can hydrate a signed-in user's local prototype profile from those backend rows.
-- Profile photos are still local/default placeholders; Supabase Storage and `profile_photos.member_id` writes are next.
+- A Supabase storage adapter now uploads selected local onboarding profile photos to a private `profile-photos` bucket, writes `profile_photos.member_id` metadata rows, and hydrates signed current-profile photo URLs locally.
+- New migration `202606200002_profile_photo_storage.sql` adds the storage bucket, owner-scoped storage object policies, and the `profile_photos(profile_id, member_id, sort_order)` unique constraint required for upserts. It passes local reset/tests and has been pushed to hosted `orchard-dev`; app smoke testing with a selected photo is still pending.
 - The project review's `ProfileProvider` and CI/CD recommendations are noted: keep extracting through services instead of rewriting the provider, and add lint/typecheck/database CI after the backend auth/profile path stabilizes.
 - MVP prototype gap assessment is recorded in `docs/mvp-prototype-gap-assessment.md`.
 - Current distance estimate: local demo prototype is close, real backend MVP is roughly 2-4 focused weeks after hosted Supabase setup, and TestFlight beta is roughly 4-6+ weeks depending on Apple/Supabase/legal/build readiness.
@@ -104,6 +105,7 @@ When these docs become large, compact them by preserving active state, blockers,
 Migration draft:
 
 - `supabase/migrations/202606190001_initial_mvp_schema.sql`
+- `supabase/migrations/202606200002_profile_photo_storage.sql`
 
 Tables covered:
 
@@ -127,6 +129,8 @@ Draft RPCs:
 - `request_account_deletion(deletion_reason)`
 
 The initial migration was applied to hosted `orchard-dev` with `expo/node_modules/.bin/supabase db push`. `supabase migration list` shows `202606190001` aligned locally and remotely. Supabase Dashboard verification confirmed the hosted Orchard tables exist, RLS is enabled on public Orchard tables, and `supabase_migrations.schema_migrations` contains `202606190001`. CLI dry-run verification was temporarily blocked by Supabase's auth circuit breaker after temporary-role auth failures, but dashboard verification completed the hosted setup check.
+
+The storage migration `202606200002` has been applied locally and pushed to hosted `orchard-dev`. A follow-up `supabase db push --dry-run` reported the remote database is up to date. `supabase migration list` verification timed out once after the push, but the dry-run confirmed no pending migrations.
 
 ## Latest Commits
 
@@ -198,6 +202,17 @@ expo/node_modules/.bin/supabase test db
 
 passed locally: 1 file, 22 tests.
 
+After adding profile photo storage, local verification used:
+
+```bash
+bun run typecheck
+bun run lint
+expo/node_modules/.bin/supabase db reset
+expo/node_modules/.bin/supabase test db
+```
+
+All passed; `supabase test db` reports 1 file, 25 tests.
+
 ## 2026-06-20 Handoff Scope
 
 Latest implementation checkpoint:
@@ -238,7 +253,7 @@ Existing unrelated dirty files in `personal-os` should be preserved and not reve
 ## Next Best Tasks
 
 1. Create Apple Developer Program account.
-2. Add photo upload through `StorageService`.
+2. Smoke-test onboarding in Supabase mode with a selected local photo.
 3. Add focused CI for lint, typecheck, and database tests once remote/local DB command reliability is confirmed.
 4. Replace swipe/match/chat local state as source of truth only after auth/profile persistence works.
 5. Add EAS build config and TestFlight metadata when backend/legal placeholders are acceptable.

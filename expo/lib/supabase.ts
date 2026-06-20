@@ -124,6 +124,32 @@ export interface Database {
         };
         Relationships: [];
       };
+      profile_photos: {
+        Row: {
+          id: string;
+          profile_id: string;
+          member_id: string;
+          storage_path: string;
+          sort_order: number;
+          moderation_status: "pending" | "approved" | "rejected";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          profile_id: string;
+          member_id: string;
+          storage_path: string;
+          sort_order?: number;
+          moderation_status?: "pending" | "approved" | "rejected";
+        };
+        Update: {
+          member_id?: string;
+          storage_path?: string;
+          sort_order?: number;
+          moderation_status?: "pending" | "approved" | "rejected";
+        };
+        Relationships: [];
+      };
       matches: {
         Row: {
           id: string;

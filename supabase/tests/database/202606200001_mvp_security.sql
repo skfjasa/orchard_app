@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(22);
+select plan(25);
 
 insert into auth.users (
   id,
@@ -228,6 +228,39 @@ values
     0,
     'approved'
   );
+
+select is(
+  (
+    select public
+    from storage.buckets
+    where id = 'profile-photos'
+  ),
+  false,
+  'profile photos storage bucket is private'
+);
+
+select is(
+  (
+    select count(*)::int
+    from pg_policies
+    where schemaname = 'storage'
+      and tablename = 'objects'
+      and policyname like 'profile_photos_storage_%'
+  ),
+  4,
+  'profile photo storage has owner-scoped object policies'
+);
+
+select is(
+  (
+    select count(*)::int
+    from pg_constraint
+    where conname = 'profile_photos_profile_member_sort_unique'
+      and conrelid = 'public.profile_photos'::regclass
+  ),
+  1,
+  'profile photos can be upserted by profile member and sort order'
+);
 
 set local role anon;
 select throws_ok(

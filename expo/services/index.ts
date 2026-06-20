@@ -131,4 +131,5 @@ export {
 export { createSupabaseMatchService } from "./supabase-match-service";
 export { createSupabaseProfileService } from "./supabase-profile-service";
 export { createSupabaseSafetyService } from "./supabase-safety-service";
+export { createSupabaseStorageService } from "./supabase-storage-service";
 export { createSupabaseSwipeService } from "./supabase-swipe-service";
