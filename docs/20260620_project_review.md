@@ -4,6 +4,8 @@ This document provides a comprehensive technical review of the Orchard repositor
 
 **Audit Date:** 2026-06-20
 
+**Follow-up:** The couple-profile schema mismatch called out below has been addressed in the draft migration by adding `public.profile_members` and requiring `public.profile_photos.member_id` to reference a member on the same profile. App profile persistence still needs to map `Profile.people[]` to those rows before Supabase profile storage is enabled.
+
 ---
 
 ## 1. Executive Summary
@@ -13,7 +15,7 @@ Orchard’s core product wedge—**structured relationship-context matching**—
 ### Current Phase Assessment (As of 2026-06-20)
 The project is in the **pre-integration transition phase**:
 *   **Frontend UI:** Mostly complete and highly functional local prototype utilizing `AsyncStorage` and simulated interactions (like simulated chat auto-replies).
-*   **Backend Foundation:** Robust Supabase schema draft, security-hardened RLS policies, custom PostgreSQL RPC functions, and a pgTAP-based local database testing suite (19/19 tests passing).
+*   **Backend Foundation:** Robust Supabase schema draft, security-hardened RLS policies, custom PostgreSQL RPC functions, and a pgTAP-based local database testing suite. After the profile-member follow-up, the suite passes 22/22 tests.
 *   **Adapter Layer:** Service boundaries (`SwipeService`, `SafetyService`, etc.) are established, allowing the client to consume mock adapters or Supabase adapters via an environment-gated factory.
 
 ---

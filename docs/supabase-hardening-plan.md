@@ -31,8 +31,9 @@ The database should enforce Orchard's core safety rules server-side:
 Preferred long-term shape:
 
 - `profiles`: user-editable display and preference fields.
+- `profile_members`: one or two people represented by a profile, including per-person display name, birthdate, gender, orientation, and bio.
 - `profile_moderation`: trusted profile state such as `age_verified`, `is_suspended`, suspension reason, and review state.
-- `profile_photos`: user-owned photo metadata.
+- `profile_photos`: user-owned photo metadata tied to a specific `profile_members` row.
 - `profile_photo_moderation`: trusted photo moderation state.
 
 For the MVP migration, it is acceptable to keep trusted columns in the existing tables if RLS and RPCs prevent clients from setting unsafe values.
@@ -56,6 +57,7 @@ Every mobile-client policy should:
 Required policy behavior:
 
 - Users can read and update their own profile.
+- Users can read eligible profile members and update only members on their own profile.
 - Users can read eligible discovery profiles only.
 - Users can read eligible profile photos only.
 - Users can read active matches they belong to unless blocked.
@@ -96,10 +98,11 @@ Required RPC behavior:
   - Store optional reason.
   - Default workflow status to `requested`.
 
-### 6. Fix Current Schema/App Mismatch
+### 6. Fix Current Schema/App Mismatches
 
 - Add `reason text` to `account_deletion_requests`, or remove `reason` from the app adapter.
 - Preferred MVP fix: add `reason text` because the app service interface already models it.
+- Add `profile_members` and require `profile_photos.member_id` so Supabase can represent the app's `Profile.people[]` model for singles and couples.
 
 ### 7. Add Database Tests Before Shared Dev Apply
 
@@ -128,7 +131,8 @@ Add SQL/RLS tests covering:
 ## Current Status
 
 - `supabase/migrations/202606190001_initial_mvp_schema.sql` has been hardened before any shared dev apply.
+- The migration now includes `profile_members` and member-scoped `profile_photos` so couple profiles can be represented before hosted dev apply.
 - Initial database/RLS tests exist at `supabase/tests/database/202606200001_mvp_security.sql`.
 - Docker Desktop is operational after enabling firmware virtualization.
-- `expo\node_modules\.bin\supabase start` runs the local database, and `expo\node_modules\.bin\supabase test db` passes locally.
-- Next step: review the passing hardened migration before applying it to a shared development Supabase project.
+- `expo\node_modules\.bin\supabase start` runs the local database, and `expo\node_modules\.bin\supabase test db` passes locally after resetting the local database to apply the profile-member migration update: 1 file, 22 tests.
+- Next step: apply the passing hardened migration to a shared development Supabase project.

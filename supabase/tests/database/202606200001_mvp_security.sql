@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(19);
+select plan(22);
 
 insert into auth.users (
   id,
@@ -177,10 +177,53 @@ values
     true
   );
 
-insert into public.profile_photos (profile_id, storage_path, sort_order, moderation_status)
+insert into public.profile_members (
+  id,
+  profile_id,
+  display_name,
+  birthdate,
+  gender,
+  orientation,
+  bio,
+  sort_order
+)
+values
+  (
+    '10000000-0000-0000-0000-000000000001',
+    '00000000-0000-0000-0000-000000000001',
+    'Active A',
+    '1990-01-01',
+    'nonbinary',
+    'queer',
+    'A test profile member',
+    0
+  ),
+  (
+    '10000000-0000-0000-0000-000000000002',
+    '00000000-0000-0000-0000-000000000002',
+    'Active B',
+    '1991-01-01',
+    'woman',
+    'bisexual',
+    'B test profile member',
+    0
+  ),
+  (
+    '10000000-0000-0000-0000-000000000003',
+    '00000000-0000-0000-0000-000000000003',
+    'Invisible',
+    '1992-01-01',
+    null,
+    null,
+    null,
+    0
+  );
+
+insert into public.profile_photos (profile_id, member_id, storage_path, sort_order, moderation_status)
 values
   (
     '00000000-0000-0000-0000-000000000002',
+    '10000000-0000-0000-0000-000000000002',
     'profiles/b/photo.jpg',
     0,
     'approved'
@@ -241,6 +284,56 @@ select is(
   ),
   1,
   'eligible profile photos are readable'
+);
+
+select is(
+  (
+    select count(*)::int
+    from public.profile_members
+    where profile_id = '00000000-0000-0000-0000-000000000002'
+  ),
+  1,
+  'eligible profile members are readable'
+);
+
+select throws_ok(
+  $$
+    insert into public.profile_members (
+      profile_id,
+      display_name,
+      birthdate,
+      sort_order
+    )
+    values (
+      '00000000-0000-0000-0000-000000000002',
+      'Not Mine',
+      '1990-01-01',
+      1
+    )
+  $$,
+  '42501',
+  'new row violates row-level security policy for table "profile_members"',
+  'client cannot insert profile members for another profile'
+);
+
+select throws_ok(
+  $$
+    insert into public.profile_photos (
+      profile_id,
+      member_id,
+      storage_path,
+      sort_order
+    )
+    values (
+      '00000000-0000-0000-0000-000000000001',
+      '10000000-0000-0000-0000-000000000002',
+      'profiles/a/wrong-member.jpg',
+      1
+    )
+  $$,
+  '23503',
+  'insert or update on table "profile_photos" violates foreign key constraint "profile_photos_member_id_profile_id_fkey"',
+  'profile photos must reference a member on the same profile'
 );
 
 select throws_ok(

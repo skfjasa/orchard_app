@@ -19,6 +19,7 @@ export interface AuthState {
 export interface AuthResult {
   mode: BackendMode;
   session: Session | null;
+  userId: string | null;
 }
 
 export interface AuthService {

@@ -33,14 +33,33 @@ create table if not exists public.profiles (
   last_active_at timestamptz
 );
 
+create table if not exists public.profile_members (
+  id uuid primary key default gen_random_uuid(),
+  profile_id uuid not null references public.profiles(id) on delete cascade,
+  display_name text not null check (length(trim(display_name)) > 0),
+  birthdate date,
+  gender text,
+  orientation text,
+  bio text,
+  sort_order int not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (id, profile_id),
+  unique (profile_id, sort_order)
+);
+
 create table if not exists public.profile_photos (
   id uuid primary key default gen_random_uuid(),
   profile_id uuid not null references public.profiles(id) on delete cascade,
+  member_id uuid not null,
   storage_path text not null,
   sort_order int not null default 0,
   moderation_status text not null default 'pending'
     check (moderation_status in ('pending', 'approved', 'rejected')),
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  foreign key (member_id, profile_id)
+    references public.profile_members(id, profile_id)
+    on delete cascade
 );
 
 create table if not exists public.swipes (
@@ -127,6 +146,9 @@ create table if not exists public.account_deletion_requests (
 create index if not exists profile_photos_profile_id_sort_idx
   on public.profile_photos(profile_id, sort_order);
 
+create index if not exists profile_members_profile_id_sort_idx
+  on public.profile_members(profile_id, sort_order);
+
 create index if not exists swipes_swiper_id_idx
   on public.swipes(swiper_id);
 
@@ -161,6 +183,11 @@ $$;
 drop trigger if exists profiles_set_updated_at on public.profiles;
 create trigger profiles_set_updated_at
 before update on public.profiles
+for each row execute function public.set_updated_at();
+
+drop trigger if exists profile_members_set_updated_at on public.profile_members;
+create trigger profile_members_set_updated_at
+before update on public.profile_members
 for each row execute function public.set_updated_at();
 
 drop trigger if exists user_settings_set_updated_at on public.user_settings;
@@ -605,10 +632,29 @@ grant update (
   last_active_at
 ) on public.profiles to authenticated;
 
+grant select on public.profile_members to authenticated;
+grant insert (
+  profile_id,
+  display_name,
+  birthdate,
+  gender,
+  orientation,
+  bio,
+  sort_order
+) on public.profile_members to authenticated;
+grant update (
+  display_name,
+  birthdate,
+  gender,
+  orientation,
+  bio,
+  sort_order
+) on public.profile_members to authenticated;
+
 grant select on public.profile_photos to authenticated;
-grant insert (profile_id, storage_path, sort_order)
+grant insert (profile_id, member_id, storage_path, sort_order)
   on public.profile_photos to authenticated;
-grant update (storage_path, sort_order)
+grant update (member_id, storage_path, sort_order)
   on public.profile_photos to authenticated;
 
 grant select on public.swipes to authenticated;
@@ -622,6 +668,7 @@ grant select on public.account_deletion_requests to authenticated;
 grant select, insert, update on public.user_settings to authenticated;
 
 alter table public.profiles enable row level security;
+alter table public.profile_members enable row level security;
 alter table public.profile_photos enable row level security;
 alter table public.swipes enable row level security;
 alter table public.matches enable row level security;
@@ -652,6 +699,28 @@ for update
 to authenticated
 using (id = (select auth.uid()))
 with check (id = (select auth.uid()));
+
+create policy "profile_members_select_visible_or_own"
+on public.profile_members
+for select
+to authenticated
+using (
+  profile_id = (select auth.uid())
+  or private.is_discoverable_profile((select auth.uid()), profile_id)
+);
+
+create policy "profile_members_insert_own"
+on public.profile_members
+for insert
+to authenticated
+with check (profile_id = (select auth.uid()));
+
+create policy "profile_members_update_own"
+on public.profile_members
+for update
+to authenticated
+using (profile_id = (select auth.uid()))
+with check (profile_id = (select auth.uid()));
 
 create policy "profile_photos_select_visible_or_own"
 on public.profile_photos

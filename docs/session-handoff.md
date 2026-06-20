@@ -67,13 +67,16 @@ When these docs become large, compact them by preserving active state, blockers,
 - Service interfaces and mock adapters exist.
 - Supabase client skeleton exists and is env-gated.
 - Auth provider foundation exists and defaults to mock mode when Supabase env vars are absent.
+- Supabase email/password auth is wired into sign-in and final onboarding completion when Supabase env vars are present.
 - Hardened Supabase schema/RLS/RPC migration draft exists.
+- The migration includes `profile_members` and requires member-scoped `profile_photos`, so the backend can represent the app's single/couple `Profile.people[]` shape.
 - Supabase service adapters exist for swipe, match, and safety.
 - Backend/mock service factory exists.
 - Swipe persistence has a gated, non-blocking hook through the service factory. Local UI state remains the source of truth.
 - Supabase hardening is tracked in `docs/supabase-hardening-plan.md`.
 - Supabase safety report and account deletion calls now use RPCs, with actor identity derived by the database.
 - Supabase CLI is installed as an Expo dev dependency (`supabase@2.107.0`), and local Supabase config exists at `supabase/config.toml`.
+- Hosted Supabase dev project `orchard-dev` exists at project ref `cvvavwuksygahezzhmqp`; local CLI is linked to it.
 - Initial pgTAP-style database/RLS tests exist at `supabase/tests/database/202606200001_mvp_security.sql` and pass locally.
 - Docker Desktop was installed manually during the 2026-06-20 session and is now operational after enabling firmware virtualization.
 - Post-fix diagnostics on 2026-06-20:
@@ -82,13 +85,17 @@ When these docs become large, compact them by preserving active state, blockers,
   - `HypervisorPresent: True`
   - Docker Desktop server running Docker Engine 29.5.3 on Linux
   - `wsl --status`: default distribution `docker-desktop`, default version 2
-- The first database test run exposed pgTAP assertion argument mistakes; those were fixed in `supabase/tests/database/202606200001_mvp_security.sql`, and the suite then passed 19/19.
+- The first database test run exposed pgTAP assertion argument mistakes; those were fixed in `supabase/tests/database/202606200001_mvp_security.sql`. After the profile-member schema update and local database reset, the suite passes 22/22.
 - Initial in-app Safety & Legal surface exists and is linked from Profile.
 - Report profile, report message, block, unmatch, and account deletion request entry points exist in the mock/local app flow and call the service boundary.
 - Report profile/message now routes through a dedicated reason/details form before submission.
 - Direct chat routes and provider send helpers are guarded so the local app only shows/writes chat for active local matches.
 - Onboarding includes a required 18+ and legal acceptance screen before account type selection; acceptance is stored on the local prototype profile.
 - Safety/legal URLs and support contact are env-configurable via `expo/constants/legal.ts` and `expo/.env.example`; final public values are still human decisions.
+- In Supabase mode, the root route requires an active Supabase session before entering the tab app. Final onboarding creates a Supabase auth user first and uses the Supabase user id as the local prototype profile id when a session is returned.
+- A Supabase profile adapter persists onboarding/profile rows to `profiles` and `profile_members`; the provider can hydrate a signed-in user's local prototype profile from those backend rows.
+- Profile photos are still local/default placeholders; Supabase Storage and `profile_photos.member_id` writes are next.
+- The project review's `ProfileProvider` and CI/CD recommendations are noted: keep extracting through services instead of rewriting the provider, and add lint/typecheck/database CI after the backend auth/profile path stabilizes.
 - MVP prototype gap assessment is recorded in `docs/mvp-prototype-gap-assessment.md`.
 - Current distance estimate: local demo prototype is close, real backend MVP is roughly 2-4 focused weeks after hosted Supabase setup, and TestFlight beta is roughly 4-6+ weeks depending on Apple/Supabase/legal/build readiness.
 
@@ -101,6 +108,7 @@ Migration draft:
 Tables covered:
 
 - `profiles`
+- `profile_members`
 - `profile_photos`
 - `swipes`
 - `matches`
@@ -118,10 +126,19 @@ Draft RPCs:
 - `submit_report(reported_profile_id, report_reason, report_details, reported_message_id)`
 - `request_account_deletion(deletion_reason)`
 
-The migration has not been applied to a live Supabase project yet.
+The initial migration was applied to hosted `orchard-dev` with `expo/node_modules/.bin/supabase db push`. `supabase migration list` shows `202606190001` aligned locally and remotely. Supabase Dashboard verification confirmed the hosted Orchard tables exist, RLS is enabled on public Orchard tables, and `supabase_migrations.schema_migrations` contains `202606190001`. CLI dry-run verification was temporarily blocked by Supabase's auth circuit breaker after temporary-role auth failures, but dashboard verification completed the hosted setup check.
 
 ## Latest Commits
 
+- `1be95cd` - project review gemini
+- `b9110df` - Record MVP decisions and handoff context
+- `034e254` - Enforce active match for local sends
+- `b56039c` - Guard chat behind active local matches
+- `2834c55` - Add report reason details flow
+- `e9bff32` - Configure legal and support links
+- `5424577` - Add onboarding age and legal gate
+- `e402633` - Add initial safety and legal surfaces
+- `915bc88` - Verify local Supabase database tests
 - `a29e3c4` - Harden Supabase MVP migration
 - `2b73a97` - Document status report shortcut
 - `3a39dbc` - Refresh session handoff context
@@ -164,6 +181,20 @@ expo/node_modules/.bin/supabase test db
 ```
 
 `supabase test db` passed locally after the Docker checkpoint: 1 file, 19 tests.
+
+After the profile-member schema update, the local database was reset with:
+
+```bash
+expo/node_modules/.bin/supabase db reset
+```
+
+Then:
+
+```bash
+expo/node_modules/.bin/supabase test db
+```
+
+passed locally: 1 file, 22 tests.
 
 After the safety/legal UI changes, run from `expo/`:
 
@@ -238,18 +269,15 @@ Existing unrelated dirty files in `personal-os` should be preserved and not reve
 ## Next Best Tasks
 
 1. Create Apple Developer Program account.
-2. Create Supabase project `orchard-dev` in East US (North Virginia) / `us-east-1`.
-3. Apply and verify the hardened Supabase migration in `orchard-dev`.
-4. Wire real Supabase Auth into onboarding/sign-in.
-5. Persist onboarding/profile rows to Supabase.
-6. Add photo upload through `StorageService`.
-7. Replace swipe/match/chat local state as source of truth only after auth/profile persistence works.
-8. Add EAS build config and TestFlight metadata when backend/legal placeholders are acceptable.
+2. Add photo upload through `StorageService`.
+3. Add focused CI for lint, typecheck, and database tests once remote/local DB command reliability is confirmed.
+4. Replace swipe/match/chat local state as source of truth only after auth/profile persistence works.
+5. Add EAS build config and TestFlight metadata when backend/legal placeholders are acceptable.
 
 ## Human Decisions Needed
 
 - Apple Developer account creation.
-- Hosted Supabase project creation.
+- Apple Developer account creation.
 - Real public domain/legal URLs before productionization.
 
 ## Cautions

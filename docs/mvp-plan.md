@@ -149,6 +149,7 @@ Blocked users must not:
 Initial Supabase tables:
 
 - `profiles`
+- `profile_members`
 - `profile_photos`
 - `swipes`
 - `matches`
@@ -184,10 +185,24 @@ Initial Supabase tables:
 - `updated_at timestamptz`
 - `last_active_at timestamptz`
 
+### profile_members
+
+- `id uuid primary key`
+- `profile_id uuid references profiles(id)`
+- `display_name text`
+- `birthdate date`
+- `gender text`
+- `orientation text`
+- `bio text`
+- `sort_order int`
+- `created_at timestamptz`
+- `updated_at timestamptz`
+
 ### profile_photos
 
 - `id uuid primary key`
 - `profile_id uuid references profiles(id)`
+- `member_id uuid references profile_members(id)`
 - `storage_path text`
 - `sort_order int`
 - `moderation_status text`

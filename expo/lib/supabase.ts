@@ -19,6 +19,111 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      profiles: {
+        Row: {
+          id: string;
+          display_name: string | null;
+          birthdate: string | null;
+          age_confirmed: boolean;
+          age_verified: boolean;
+          city: string | null;
+          region: string | null;
+          country: string | null;
+          latitude_approx: number | null;
+          longitude_approx: number | null;
+          gender: string | null;
+          orientation: string | null;
+          relationship_structure: string[];
+          partnered_status: string | null;
+          dating_mode: string | null;
+          looking_for: string[];
+          boundaries: string[];
+          bio: string | null;
+          is_visible: boolean;
+          is_suspended: boolean;
+          onboarding_completed: boolean;
+          created_at: string;
+          updated_at: string;
+          last_active_at: string | null;
+        };
+        Insert: {
+          id: string;
+          display_name?: string | null;
+          birthdate?: string | null;
+          age_confirmed?: boolean;
+          city?: string | null;
+          region?: string | null;
+          country?: string | null;
+          latitude_approx?: number | null;
+          longitude_approx?: number | null;
+          gender?: string | null;
+          orientation?: string | null;
+          relationship_structure?: string[];
+          partnered_status?: string | null;
+          dating_mode?: string | null;
+          looking_for?: string[];
+          boundaries?: string[];
+          bio?: string | null;
+          is_visible?: boolean;
+          onboarding_completed?: boolean;
+          last_active_at?: string | null;
+        };
+        Update: {
+          display_name?: string | null;
+          birthdate?: string | null;
+          age_confirmed?: boolean;
+          city?: string | null;
+          region?: string | null;
+          country?: string | null;
+          latitude_approx?: number | null;
+          longitude_approx?: number | null;
+          gender?: string | null;
+          orientation?: string | null;
+          relationship_structure?: string[];
+          partnered_status?: string | null;
+          dating_mode?: string | null;
+          looking_for?: string[];
+          boundaries?: string[];
+          bio?: string | null;
+          is_visible?: boolean;
+          onboarding_completed?: boolean;
+          last_active_at?: string | null;
+        };
+        Relationships: [];
+      };
+      profile_members: {
+        Row: {
+          id: string;
+          profile_id: string;
+          display_name: string;
+          birthdate: string | null;
+          gender: string | null;
+          orientation: string | null;
+          bio: string | null;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          profile_id: string;
+          display_name: string;
+          birthdate?: string | null;
+          gender?: string | null;
+          orientation?: string | null;
+          bio?: string | null;
+          sort_order?: number;
+        };
+        Update: {
+          display_name?: string;
+          birthdate?: string | null;
+          gender?: string | null;
+          orientation?: string | null;
+          bio?: string | null;
+          sort_order?: number;
+        };
+        Relationships: [];
+      };
       matches: {
         Row: {
           id: string;

@@ -60,7 +60,7 @@ import type { ReportReason } from "@/services/safety-service";
 export type { SubscriptionState } from "@/services/local-profile-storage";
 
 export const [ProfileProvider, useProfile] = createContextHook(() => {
-  const { mode, userId } = useAuth();
+  const { mode, signOut: signOutAuth, userId } = useAuth();
   const appServices = useMemo(() => createAppServices(), []);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -79,6 +79,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     null
   );
   const [hydrated, setHydrated] = useState<boolean>(false);
+  const [backendProfileHydrated, setBackendProfileHydrated] =
+    useState<boolean>(false);
 
   const loadQuery = useQuery({
     queryKey: ["duet-storage"],
@@ -147,13 +149,75 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     mutationFn: saveStoredSubscription,
   });
 
+  useEffect(() => {
+    if (mode !== "supabase") return;
+    if (!hydrated || !userId) return;
+    if (!profile || profile.id === userId) return;
+
+    console.log("[profile-provider] clearing profile for signed-in user", {
+      localProfileId: profile.id,
+      userId,
+    });
+    setProfile(null);
+    saveProfileMutation.mutate(null);
+    setBackendProfileHydrated(false);
+  }, [hydrated, mode, profile, saveProfileMutation, userId]);
+
+  useEffect(() => {
+    if (mode !== "supabase") return;
+    if (appServices.capabilities.profiles !== "supabase") return;
+    if (!hydrated || backendProfileHydrated || !userId || profile) return;
+
+    let cancelled = false;
+    void appServices.profiles.getCurrentProfile().then((result) => {
+      if (cancelled) return;
+      setBackendProfileHydrated(true);
+
+      if (!result.ok) {
+        console.log("[profile-provider] backend profile load failed", {
+          code: result.error.code,
+          message: result.error.message,
+        });
+        return;
+      }
+
+      if (!result.value) return;
+      setProfile(result.value);
+      saveProfileMutation.mutate(result.value);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    appServices,
+    backendProfileHydrated,
+    hydrated,
+    mode,
+    profile,
+    saveProfileMutation,
+    userId,
+  ]);
+
   const completeOnboarding = useCallback(
-    (p: Profile) => {
+    async (p: Profile): Promise<{ ok: boolean; error?: string }> => {
+      if (mode === "supabase" && appServices.capabilities.profiles === "supabase") {
+        const result = await appServices.profiles.completeOnboarding({
+          profile: p,
+        });
+
+        if (!result.ok) {
+          return { ok: false, error: result.error.message };
+        }
+      }
+
       console.log("[profile-provider] completeOnboarding", p.id);
       setProfile(p);
       saveProfileMutation.mutate(p);
+      setBackendProfileHydrated(true);
+      return { ok: true };
     },
-    [saveProfileMutation]
+    [appServices, mode, saveProfileMutation]
   );
 
   const updateProfile = useCallback(
@@ -161,14 +225,32 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       setProfile((prev) => {
         const next = applyProfilePatch(prev, patch);
         if (!next) return prev;
+        if (
+          mode === "supabase" &&
+          appServices.capabilities.profiles === "supabase"
+        ) {
+          void appServices.profiles
+            .updateProfile({ profileId: next.id, patch })
+            .then((result) => {
+              if (!result.ok) {
+                console.log("[profile-provider] backend profile update failed", {
+                  code: result.error.code,
+                  message: result.error.message,
+                });
+              }
+            });
+        }
         saveProfileMutation.mutate(next);
         return next;
       });
     },
-    [saveProfileMutation]
+    [appServices, mode, saveProfileMutation]
   );
 
   const signOut = useCallback(() => {
+    if (mode === "supabase") {
+      void signOutAuth();
+    }
     setProfile(null);
     setConversations([]);
     setLikedIds([]);
@@ -179,6 +261,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     setSuperLikeBalance(DEFAULT_SUPER_LIKES);
     setSuperLikeLastUseAt(null);
     setSubscription(null);
+    setBackendProfileHydrated(false);
     saveProfileMutation.mutate(null);
     saveConvosMutation.mutate([]);
     saveLikesMutation.mutate([]);
@@ -190,6 +273,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     saveSuperLikeLastUseMutation.mutate(null);
     saveSubscriptionMutation.mutate(null);
   }, [
+    mode,
+    signOutAuth,
     saveProfileMutation,
     saveConvosMutation,
     saveLikesMutation,

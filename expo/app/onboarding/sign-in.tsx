@@ -17,6 +17,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Button } from "@/components/ui";
+import { useAuth } from "@/providers/auth-provider";
 import { useProfile } from "@/providers/profile-provider";
 
 type SocialProvider = "google" | "instagram" | "tiktok" | "twitter";
@@ -80,18 +81,48 @@ function SocialButton({ provider, onPress }: SocialButtonProps) {
 }
 
 export default function SignInScreen() {
+  const {
+    loading: authLoading,
+    mode,
+    signInWithEmail,
+  } = useAuth();
   const { profile } = useProfile();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const onEmailSignIn = () => {
+  const onEmailSignIn = async () => {
     const id = email.trim();
     if (!id || !password) {
       Alert.alert("Missing info", "Please enter your username/email and password.");
       return;
     }
+
+    if (mode === "supabase") {
+      if (!id.includes("@")) {
+        Alert.alert("Use your email", "Supabase sign-in uses your email address.");
+        return;
+      }
+
+      const result = await signInWithEmail({ email: id, password });
+      if (!result.ok) {
+        Alert.alert("Sign in failed", result.error);
+        return;
+      }
+
+      if (!result.session) {
+        Alert.alert(
+          "Check your email",
+          "Confirm your email address, then sign in again."
+        );
+        return;
+      }
+
+      router.replace(profile ? "/(tabs)/discover" : "/onboarding/legal");
+      return;
+    }
+
     console.log("[sign-in] attempt", id);
     setLoading(true);
     setTimeout(() => {
@@ -218,7 +249,7 @@ export default function SignInScreen() {
               <Button
                 label="Sign in"
                 onPress={onEmailSignIn}
-                loading={loading}
+                loading={loading || authLoading}
                 backgroundColor="#FFD36B"
                 textColor="#1F1320"
                 testID="email-sign-in-btn"
@@ -239,7 +270,7 @@ export default function SignInScreen() {
 
             <View style={styles.footer}>
               <Text style={styles.footerText}>New to Orchard? </Text>
-              <Pressable onPress={() => router.push("/onboarding/account-type")} testID="create-account-link">
+              <Pressable onPress={() => router.push("/onboarding/legal")} testID="create-account-link">
                 <Text style={styles.footerLink}>Create a profile</Text>
               </Pressable>
             </View>

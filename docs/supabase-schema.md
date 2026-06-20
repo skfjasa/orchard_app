@@ -11,6 +11,7 @@ Migration file:
 The draft covers:
 
 - Profiles
+- Profile members
 - Profile photos
 - Swipes
 - Matches
@@ -22,7 +23,9 @@ The draft covers:
 
 ## Key Product Rules Represented
 
-- Users own one profile row keyed by `auth.users.id`.
+- Users own one account-level profile row keyed by `auth.users.id`.
+- Each profile stores one or two user-facing people in `profile_members`, matching the app's single/couple profile model.
+- Profile photos are tied to both the owning profile and a specific profile member.
 - Discovery should only expose visible, non-suspended, unblocked profiles.
 - Swipes are unique per swiper/target pair.
 - Matches are unique per user pair and only chat when `status = 'active'`.
@@ -39,7 +42,7 @@ The draft covers:
 - `submit_report(reported_profile_id, report_reason, report_details, reported_message_id)` derives reporter identity from `auth.uid()` and creates a moderation report.
 - `request_account_deletion(deletion_reason)` derives profile identity from `auth.uid()` and creates an account deletion request.
 
-These functions are granted to authenticated users only. Initial database/RLS tests exist at `supabase/tests/database/202606200001_mvp_security.sql` and pass against the local Supabase database.
+These functions are granted to authenticated users only. Initial database/RLS tests exist at `supabase/tests/database/202606200001_mvp_security.sql` and pass against the local Supabase database: 1 file, 22 tests.
 
 ## Known Gaps Before Applying
 
@@ -49,6 +52,7 @@ These functions are granted to authenticated users only. Initial database/RLS te
 - Birthdate/age handling needs product/legal review.
 - Approximate location approach needs product/privacy review.
 - Message body moderation strategy is not defined.
+- App adapters still need to map onboarding `Profile.people[]` to `profile_members` before Supabase profile persistence is enabled.
 
 ## RLS Review Required
 

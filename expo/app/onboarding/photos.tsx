@@ -18,6 +18,7 @@ import {
 import { Button, SectionLabel } from "@/components/ui";
 import Colors from "@/constants/colors";
 import { useOnboarding } from "@/providers/onboarding-provider";
+import { useAuth } from "@/providers/auth-provider";
 import { useProfile } from "@/providers/profile-provider";
 import {
   AccountCredentials,
@@ -48,8 +49,16 @@ const DEFAULT_PHOTOS = [
 export default function PhotosScreen() {
   const { draft, addPhoto, removePhoto, setBio, setSocial, reset } =
     useOnboarding();
+  const {
+    loading: authLoading,
+    mode,
+    session,
+    signUpWithEmail,
+    userId,
+  } = useAuth();
   const { completeOnboarding } = useProfile();
   const isCouple = draft.accountType === "couple";
+  const [finishing, setFinishing] = React.useState(false);
 
   const pick = useCallback(
     async (index: number) => {
@@ -71,7 +80,10 @@ export default function PhotosScreen() {
     [addPhoto]
   );
 
-  const finish = useCallback(() => {
+  const finish = useCallback(async () => {
+    if (finishing || authLoading) return;
+    setFinishing(true);
+
     const people: PersonProfile[] = draft.people.map((p, i) => {
       const photos = (p.photos && p.photos.length > 0
         ? p.photos
@@ -89,6 +101,7 @@ export default function PhotosScreen() {
     });
 
     const ownerEmail = draft.emails[0]?.trim() || undefined;
+    const primaryPassword = draft.passwords[0] ?? "";
     const credentials: AccountCredentials[] = draft.usernames
       .map((u, idx) => ({
         username: (u ?? "").trim(),
@@ -120,8 +133,44 @@ export default function PhotosScreen() {
       }
     }
 
+    let profileId = `me-${Date.now()}`;
+
+    if (mode === "supabase") {
+      if (!ownerEmail || !primaryPassword) {
+        Alert.alert("Missing account info", "Add your email and password before finishing.");
+        setFinishing(false);
+        return;
+      }
+
+      if (session && userId) {
+        profileId = userId;
+      } else {
+        const result = await signUpWithEmail({
+          email: ownerEmail,
+          password: primaryPassword,
+        });
+
+        if (!result.ok) {
+          Alert.alert("Account could not be created", result.error);
+          setFinishing(false);
+          return;
+        }
+
+        if (!result.session || !result.userId) {
+          Alert.alert(
+            "Check your email",
+            "Confirm your email address, then sign in to finish your profile."
+          );
+          setFinishing(false);
+          return;
+        }
+
+        profileId = result.userId;
+      }
+    }
+
     const profile: Profile = {
-      id: `me-${Date.now()}`,
+      id: profileId,
       accountType: draft.accountType as AccountType,
       people,
       location: {
@@ -149,8 +198,18 @@ export default function PhotosScreen() {
     console.log("[photos] completing onboarding", profile.id, {
       linkedPartners: linkedPartners.length,
     });
-    completeOnboarding(profile);
+    const completeResult = await completeOnboarding(profile);
+    if (!completeResult.ok) {
+      Alert.alert(
+        "Profile could not be saved",
+        completeResult.error ?? "Try again in a moment."
+      );
+      setFinishing(false);
+      return;
+    }
+
     reset();
+    setFinishing(false);
 
     if (isCouple && linkedPartners[0]) {
       const lp = linkedPartners[0];
@@ -167,7 +226,17 @@ export default function PhotosScreen() {
     } else {
       router.replace("/(tabs)/discover");
     }
-  }, [draft, completeOnboarding, reset]);
+  }, [
+    authLoading,
+    completeOnboarding,
+    draft,
+    finishing,
+    mode,
+    reset,
+    session,
+    signUpWithEmail,
+    userId,
+  ]);
 
   return (
     <KeyboardAvoidingView
@@ -309,6 +378,7 @@ export default function PhotosScreen() {
         <Button
           label="Finish & pull up a chair"
           onPress={finish}
+          loading={finishing || authLoading}
           testID="finish-onboarding"
         />
       </View>

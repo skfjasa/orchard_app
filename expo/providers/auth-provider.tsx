@@ -41,7 +41,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
 
   const signInWithEmail = useCallback(async (credentials: AuthCredentials) => {
     if (!supabase) {
-      return { ok: true as const, session: null };
+      return { ok: true as const, session: null, userId: null };
     }
     setLoading(true);
     try {
@@ -51,7 +51,11 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       });
       if (error) throw error;
       setSession(data.session ?? null);
-      return { ok: true as const, session: data.session ?? null };
+      return {
+        ok: true as const,
+        session: data.session ?? null,
+        userId: data.user?.id ?? data.session?.user.id ?? null,
+      };
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Unable to sign in.";
@@ -64,7 +68,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
 
   const signUpWithEmail = useCallback(async (credentials: AuthCredentials) => {
     if (!supabase) {
-      return { ok: true as const, session: null };
+      return { ok: true as const, session: null, userId: null };
     }
     setLoading(true);
     try {
@@ -74,7 +78,11 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       });
       if (error) throw error;
       setSession(data.session ?? null);
-      return { ok: true as const, session: data.session ?? null };
+      return {
+        ok: true as const,
+        session: data.session ?? null,
+        userId: data.user?.id ?? data.session?.user.id ?? null,
+      };
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Unable to create account.";

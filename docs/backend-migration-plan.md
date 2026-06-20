@@ -13,6 +13,7 @@ The current app is a local/mock Rork prototype.
 - No production backend is wired as the source of truth.
 - Supabase JS dependency and env-gated client skeleton exist.
 - Auth/session provider foundation exists.
+- Supabase email/password auth is wired into sign-in and final onboarding completion when Supabase env vars are present.
 - Initial Supabase schema migration draft exists and has been hardened before dev-project apply.
 - Initial Supabase service adapters exist for swipes, matches, and safety flows.
 - Backend/mock service factory exists with explicit per-service capabilities.
@@ -21,7 +22,12 @@ The current app is a local/mock Rork prototype.
 - Initial database/RLS tests exist and pass against the local Supabase database.
 - Docker Desktop is operational after enabling firmware virtualization.
 - Hosted dev project decision: create `orchard-dev` in East US (North Virginia) / `us-east-1`; later production project should be `orchard-prod`.
-- No real onboarding/profile auth flow, storage, reciprocal matching, or chat backend exists.
+- Hosted dev project `orchard-dev` exists and the local CLI is linked to project ref `cvvavwuksygahezzhmqp`.
+- The migration now includes `profile_members` and requires profile photos to reference a member on the same profile, matching the app's single/couple `Profile.people[]` shape before hosted apply. Local database/RLS tests pass against this shape.
+- The initial migration was pushed to hosted `orchard-dev`; migration history shows `202606190001` on both local and remote. Supabase Dashboard verification confirmed the hosted tables exist and RLS is enabled on public Orchard tables. CLI dry-run verification was temporarily blocked by Supabase auth throttling, but dashboard verification completed the hosted setup check.
+- Real Supabase auth flow exists for email/password sign-in and account creation, and onboarding/profile rows persist to `profiles` and `profile_members`.
+- Profile photos, reciprocal matching source of truth, and chat backend are not fully wired yet.
+- The project review's `ProfileProvider` concern should be handled incrementally by continuing to move behavior behind service adapters; avoid a one-pass provider rewrite.
 
 ## 2. Migration Principle
 
@@ -80,6 +86,7 @@ Hardening plan:
 Initial tables:
 
 - `profiles`
+- `profile_members`
 - `profile_photos`
 - `swipes`
 - `matches`
@@ -118,9 +125,11 @@ Initial tables:
 9. Harden initial schema, RLS, grants, and safety RPC boundaries before dev apply. Done.
 10. Add database/RLS tests for the hardened migration. Done; tests pass locally.
 11. Enable firmware virtualization, start Docker Desktop, run `expo\node_modules\.bin\supabase start`, and run `expo\node_modules\.bin\supabase test db`. Done.
-12. Persist onboarding/profile to backend.
-13. Add photo upload through `StorageService`.
-14. Replace swipe persistence as source of truth.
-15. Add reciprocal match creation.
-16. Replace local chat with match-scoped backend messages.
-17. Add safety service and enforce block/report/unmatch/account deletion flows.
+12. Fix the profile schema to support single/couple member records before hosted apply. Done and tested locally.
+13. Persist onboarding/profile to backend by mapping `Profile.people[]` to `profile_members`. Done.
+14. Add photo upload through `StorageService`, writing `profile_photos.member_id`.
+15. Add CI for lint, typecheck, and database tests after DB command reliability is confirmed.
+16. Replace swipe persistence as source of truth.
+17. Add reciprocal match creation.
+18. Replace local chat with match-scoped backend messages.
+19. Add safety service and enforce block/report/unmatch/account deletion flows.

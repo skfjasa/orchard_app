@@ -66,7 +66,7 @@ Tasks:
 - Add auth/session provider.
 - Add migration folder.
 - Keep mock mode when Supabase env vars are missing.
-- Add initial schema draft for profiles, profile_photos, swipes, matches, messages, blocks, reports, user_settings, account_deletion_requests.
+- Add initial schema draft for profiles, profile_members, profile_photos, swipes, matches, messages, blocks, reports, user_settings, account_deletion_requests.
 
 Acceptance:
 

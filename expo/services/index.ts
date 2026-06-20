@@ -129,5 +129,6 @@ export {
 } from "./local-profile-mutation-service";
 
 export { createSupabaseMatchService } from "./supabase-match-service";
+export { createSupabaseProfileService } from "./supabase-profile-service";
 export { createSupabaseSafetyService } from "./supabase-safety-service";
 export { createSupabaseSwipeService } from "./supabase-swipe-service";
