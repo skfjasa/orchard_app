@@ -147,6 +147,7 @@ Acceptance:
 Current status:
 
 - Chat is local/simulated.
+- Direct chat routes require an active local match before the conversation is shown.
 
 Tasks:
 

@@ -77,6 +77,7 @@ export default function ChatScreen() {
   const {
     profile,
     conversations,
+    likedIds,
     sendMessage,
     deleteMessage,
     sendPhoto,
@@ -100,6 +101,7 @@ export default function ChatScreen() {
   const isCouple = profile?.accountType === "couple";
   const activeName = profile?.people[activePersonIdx]?.name;
   const isTyping = !!id && typingProfileIds.includes(id);
+  const hasActiveLocalMatch = !!id && likedIds.includes(id);
 
   useEffect(() => {
     if (id) markRead(id);
@@ -295,7 +297,7 @@ export default function ChatScreen() {
     [id, respondToPhoto]
   );
 
-  if (!other) {
+  if (!other || !hasActiveLocalMatch) {
     return (
       <>
         <Stack.Screen options={{ title: "Chat" }} />
@@ -305,7 +307,7 @@ export default function ChatScreen() {
           </View>
           <Text style={styles.notFoundTitle}>Conversation unavailable</Text>
           <Text style={styles.notFoundSub}>
-            This profile isn&apos;t available right now. Try again from your matches.
+            Chat is only available after an active match.
           </Text>
           <Pressable
             onPress={() => {
