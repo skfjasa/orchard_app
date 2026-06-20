@@ -73,14 +73,15 @@ Last updated: 2026-06-20
 - Initial in-app Safety & Legal surface exists at `expo/app/safety-legal.tsx`, linked from Profile.
 - Profile detail and chat now expose report/block actions; chat also exposes unmatch and report-message actions. These use the existing safety service boundary and preserve mock mode.
 - Account deletion can be requested from the Safety & Legal screen; the local flow records the request through the safety service and signs out.
+- Onboarding now includes a pre-profile age/legal gate for 18+ confirmation, MVP terms, privacy notice, and community standards acceptance. Acceptance is stored on the local prototype profile.
 
 ## Current Task
 
-Continue safety/legal hardening by replacing placeholder policy/support copy with final public URLs and wiring persisted backend safety flows once auth/profile persistence is live.
+Continue safety/legal hardening by replacing placeholder policy/support copy with final public URLs and wiring persisted backend safety/legal acceptance once auth/profile persistence is live.
 
 ## Next Planned Tasks
 
-1. Decide public Privacy Policy, Terms, Support, and Account Deletion URLs/email, then replace the placeholder Safety & Legal copy.
+1. Decide public Privacy Policy, Terms, Support, and Account Deletion URLs/email, then replace the placeholder Safety & Legal and onboarding legal copy.
 2. Review the hardened SQL and passing database/RLS tests before dev apply.
 3. Decide whether to apply the hardened migration to a dev project.
 4. Decide production bundle ID and beta app identity.

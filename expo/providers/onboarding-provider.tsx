@@ -24,6 +24,8 @@ export interface Draft {
   emails: string[];
   usernames: string[];
   passwords: string[];
+  ageConfirmed: boolean;
+  legalAcceptedAt?: number;
 }
 
 const INITIAL: Draft = {
@@ -37,6 +39,8 @@ const INITIAL: Draft = {
   emails: ["", ""],
   usernames: ["", ""],
   passwords: ["", ""],
+  ageConfirmed: false,
+  legalAcceptedAt: undefined,
 };
 
 export const [OnboardingProvider, useOnboarding] = createContextHook(() => {
@@ -76,6 +80,14 @@ export const [OnboardingProvider, useOnboarding] = createContextHook(() => {
       passwords[index] = password;
       return { ...d, passwords };
     });
+  }, []);
+
+  const acceptLegal = useCallback(() => {
+    setDraft((d) => ({
+      ...d,
+      ageConfirmed: true,
+      legalAcceptedAt: Date.now(),
+    }));
   }, []);
 
   const setPerson = useCallback(
@@ -194,6 +206,7 @@ export const [OnboardingProvider, useOnboarding] = createContextHook(() => {
       setEmail,
       setUsername,
       setPassword,
+      acceptLegal,
       reset,
     }),
     [
@@ -213,6 +226,7 @@ export const [OnboardingProvider, useOnboarding] = createContextHook(() => {
       setEmail,
       setUsername,
       setPassword,
+      acceptLegal,
       reset,
     ]
   );

@@ -142,6 +142,8 @@ export default function PhotosScreen() {
       ownerEmail,
       linkedPartners: linkedPartners.length > 0 ? linkedPartners : undefined,
       credentials: credentials.length > 0 ? credentials : undefined,
+      ageConfirmed: draft.ageConfirmed,
+      legalAcceptedAt: draft.legalAcceptedAt,
     };
 
     console.log("[photos] completing onboarding", profile.id, {

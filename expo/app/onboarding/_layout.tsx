@@ -17,6 +17,7 @@ export default function OnboardingLayout() {
         }}
       >
         <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="legal" />
         <Stack.Screen name="account-type" />
         <Stack.Screen name="basics" />
         <Stack.Screen name="identity" />

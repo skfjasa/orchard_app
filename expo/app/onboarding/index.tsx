@@ -44,7 +44,7 @@ export default function WelcomeScreen() {
           <View style={{ height: 24 }} />
           <Button
             label="Create your profile"
-            onPress={() => router.push("/onboarding/account-type")}
+            onPress={() => router.push("/onboarding/legal")}
             testID="start-btn"
             backgroundColor="#FFD36B"
             textColor="#1F1320"

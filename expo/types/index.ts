@@ -384,6 +384,8 @@ export interface Profile {
   ownerEmail?: string;
   linkedPartners?: LinkedPartner[];
   credentials?: AccountCredentials[];
+  ageConfirmed?: boolean;
+  legalAcceptedAt?: number;
 }
 
 export type PhotoStatus = "pending" | "approved" | "declined";

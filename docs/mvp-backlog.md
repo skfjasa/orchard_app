@@ -79,6 +79,7 @@ Current status:
 
 - Prototype/local sign-in only.
 - Onboarding screens exist under `expo/app/onboarding`.
+- Required 18+ and MVP legal/community standards acceptance gate exists before profile creation and stores acceptance on the local prototype profile.
 
 Tasks:
 
@@ -192,6 +193,7 @@ Acceptance:
 Current status:
 
 - Initial in-app Safety & Legal screen exists, with privacy, terms, community standards, support, and account deletion request sections.
+- Onboarding includes required 18+ confirmation and MVP terms/privacy/community standards acceptance.
 - Final public Privacy Policy, Terms, Support, and Account Deletion URLs/email are still human decisions.
 
 Tasks:
