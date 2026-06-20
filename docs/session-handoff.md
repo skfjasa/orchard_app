@@ -130,6 +130,7 @@ The initial migration was applied to hosted `orchard-dev` with `expo/node_module
 
 ## Latest Commits
 
+- `e87e9f0` - Wire Supabase auth and profile persistence
 - `1be95cd` - project review gemini
 - `b9110df` - Record MVP decisions and handoff context
 - `034e254` - Enforce active match for local sends
@@ -153,25 +154,26 @@ The initial migration was applied to hosted `orchard-dev` with `expo/node_module
 
 ## Current Repo Status
 
-As of the 2026-06-20 MVP decision handoff, before committing this doc refresh:
+As of the 2026-06-20 Supabase auth/profile persistence handoff:
 
 - Branch: `main`
 - Remote: `origin/main`
-- Current working tree contains docs/config handoff updates for recorded product/backend/release decisions.
-- Runtime config changed in `expo/app.json`, `expo/.env.example`, and `expo/constants/legal.ts`.
+- Latest pushed commit: `e87e9f0` - Wire Supabase auth and profile persistence.
+- Working tree should contain only this handoff doc refresh before the handoff commit.
+- Local-only ignored files exist for Supabase credentials/env: `.local/`, `expo/.env`, and `supabase/.temp/`.
 - Local Supabase database is running via Docker Desktop. Non-database Supabase services are stopped, which was sufficient for `supabase test db`.
 - `personal-os` already had unrelated dirty files before this handoff; do not revert them.
 
 ## Checks Used
 
-Run from `expo/`:
+Run from `expo/` after `e87e9f0`:
 
 ```bash
 bun run lint
 bun run typecheck
 ```
 
-Both passed after the latest runtime code change (`f9859fa`).
+Both passed.
 
 Run from the repo root:
 
@@ -196,73 +198,40 @@ expo/node_modules/.bin/supabase test db
 
 passed locally: 1 file, 22 tests.
 
-After the safety/legal UI changes, run from `expo/`:
-
-```bash
-bun run lint
-bun run typecheck
-```
-
-Both passed.
-
 ## 2026-06-20 Handoff Scope
 
-This handoff intentionally updated continuity/status docs only.
+Latest implementation checkpoint:
 
-Latest handoff additions:
-
-- Added initial Safety & Legal screen linked from Profile.
-- Wired report profile, report message, block, unmatch, and account deletion request entry points through the service boundary.
-- Preserved mock/local behavior; backend persistence still depends on auth/profile source-of-truth work.
-- Added onboarding 18+ and legal acceptance gate before profile creation.
-- Added env-backed legal/support configuration and wired Safety & Legal/onboarding policy links to it.
-- Added report reason/details form for profile and message reports.
-- Added local active-match guards for direct chat routes and provider message/photo send helpers.
-- Recorded MVP prototype gap assessment and user decisions for app identity, Supabase project/region, and placeholder legal/support URLs.
+- `e87e9f0` wires Supabase email/password sign-in and account creation while preserving mock mode.
+- Adds Supabase profile/member persistence through `expo/services/supabase-profile-service.ts`.
+- Extends the initial migration with `profile_members` and member-scoped `profile_photos`.
+- Applies the initial migration to hosted `orchard-dev`; Dashboard verification confirmed tables, RLS, and migration history.
+- Keeps profile photos local/default for now; Supabase Storage and `profile_photos.member_id` writes are the next backend task.
+- Records review follow-ups: avoid a broad `ProfileProvider` rewrite, keep moving behavior behind services, and add CI after backend command reliability is confirmed.
 
 Orchard files updated:
 
-- `AGENTS.md`
-- `README.md`
+- `.gitignore`
+- `docs/20260620_project_review.md`
 - `docs/session-handoff.md`
 - `docs/project-status.md`
 - `docs/backend-migration-plan.md`
-- `docs/setup.md`
+- `docs/mvp-backlog.md`
+- `docs/mvp-plan.md`
 - `docs/supabase-hardening-plan.md`
 - `docs/supabase-schema.md`
-- `docs/mvp-backlog.md`
-- `docs/profile-provider-map.md`
-- `docs/codex-operating-guide.md`
-- `supabase/tests/database/202606200001_mvp_security.sql`
-- `expo/app/safety-legal.tsx`
-- `expo/app/_layout.tsx`
-- `expo/app/(tabs)/profile.tsx`
-- `expo/app/match/[id].tsx`
-- `expo/app/chat/[id].tsx`
-- `expo/providers/profile-provider.tsx`
-- `expo/app/onboarding/legal.tsx`
-- `expo/app/onboarding/index.tsx`
-- `expo/app/onboarding/_layout.tsx`
+- `expo/app/index.tsx`
 - `expo/app/onboarding/photos.tsx`
-- `expo/providers/onboarding-provider.tsx`
-- `expo/types/index.ts`
-- `expo/constants/legal.ts`
-- `expo/.env.example`
-- `expo/app/report.tsx`
-- `expo/app.json`
-- `docs/mvp-prototype-gap-assessment.md`
-
-Global/workspace files updated:
-
-- `C:\Users\skfja\.codex\AGENTS.md`
-- `C:\Users\skfja\Projects\AGENTS.md`
-- `C:\Users\skfja\Projects\personal-os\AGENTS.md`
-- `C:\Users\skfja\Projects\personal-os\01-control-center\repo-status.md`
-- `C:\Users\skfja\Projects\personal-os\01-control-center\open-loops.md`
-- `C:\Users\skfja\Projects\personal-os\01-control-center\decisions.md`
-- `C:\Users\skfja\Projects\personal-os\03-projects\handoffs\index.md`
-- `C:\Users\skfja\Projects\personal-os\03-projects\handoffs\orchard_app\latest.md`
-- `C:\Users\skfja\Projects\personal-os\03-projects\handoffs\orchard_app\sessions\2026-06-20-docker-restart.md`
+- `expo/app/onboarding/sign-in.tsx`
+- `expo/lib/supabase.ts`
+- `expo/providers/auth-provider.tsx`
+- `expo/providers/profile-provider.tsx`
+- `expo/services/app-services.ts`
+- `expo/services/auth-service.ts`
+- `expo/services/index.ts`
+- `expo/services/supabase-profile-service.ts`
+- `supabase/migrations/202606190001_initial_mvp_schema.sql`
+- `supabase/tests/database/202606200001_mvp_security.sql`
 
 Existing unrelated dirty files in `personal-os` should be preserved and not reverted.
 
@@ -276,7 +245,6 @@ Existing unrelated dirty files in `personal-os` should be preserved and not reve
 
 ## Human Decisions Needed
 
-- Apple Developer account creation.
 - Apple Developer account creation.
 - Real public domain/legal URLs before productionization.
 

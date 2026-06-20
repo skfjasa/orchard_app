@@ -11,7 +11,7 @@ The app is currently a prototype with a backend migration path in progress.
 - Framework: Expo React Native with Expo Router
 - Runtime app path: `expo/`
 - Package manager: Bun
-- Current data mode: local/mock, with gated Supabase swipe persistence scaffolding
+- Current data mode: local/mock UI state with Supabase auth, profile/member persistence, and gated swipe persistence scaffolding
 - Backend target: Supabase
 - Initial deployment target: iOS TestFlight
 - Android support: later
@@ -27,8 +27,10 @@ Most core behavior is currently simulated or stored locally:
 Backend foundation currently exists for:
 
 - Env-gated Supabase client setup
-- Auth/session provider foundation
+- Auth/session provider foundation with email/password sign-in and account creation
 - Initial Supabase schema/RLS/RPC migration draft
+- Hosted `orchard-dev` migration apply and Dashboard verification
+- Profile/member persistence to Supabase `profiles` and `profile_members`
 - Supabase service adapters for swipe, match, and safety flows
 - Backend/mock service factory
 - Non-blocking gated swipe persistence hook

@@ -5,7 +5,7 @@ Last updated: 2026-06-20
 ## Current Repo State
 
 - Repo: `skfjasa/orchard_app`
-- Handoff checkpoint: 2026-06-20 MVP decision handoff
+- Handoff checkpoint: 2026-06-20 Supabase auth/profile persistence handoff
 - App code: `expo/`
 - Runtime: Expo React Native with Expo Router and TypeScript
 - Package manager: Bun
@@ -19,6 +19,7 @@ Last updated: 2026-06-20
 
 ## Latest Foundation Commits
 
+- `e87e9f0` - Wire Supabase auth and profile persistence
 - `1be95cd` - Add Gemini project review
 - `b9110df` - Record MVP decisions and handoff context
 - `034e254` - Enforce active match for local sends
@@ -103,6 +104,7 @@ Last updated: 2026-06-20
 - A Supabase `ProfileService` now persists onboarding/profile rows to `profiles` and `profile_members`, and the provider can hydrate a signed-in user's local prototype profile from those backend rows.
 - Profile photos are still local/default placeholders; Supabase Storage and `profile_photos.member_id` writes are still the next backend storage task.
 - Project review recommendations remain relevant: avoid a broad `ProfileProvider` rewrite, keep moving behavior behind services, and add CI/database automation after the auth/profile path has a little more coverage.
+- Latest implementation checkpoint `e87e9f0` is pushed to `origin/main`.
 
 ## Current Task
 

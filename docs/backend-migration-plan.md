@@ -118,9 +118,9 @@ Initial tables:
 2. Add service interfaces while existing provider still owns behavior. Done.
 3. Draft initial Supabase schema, RLS, and core matching/safety RPCs. Done.
 4. Move mock profile/discovery access behind adapters.
-5. Add real auth/session provider. Foundation done; onboarding/sign-in flow not wired yet.
-6. Add Supabase swipe, match, and safety service adapters. Done; provider/UI not wired yet.
-7. Add backend/mock service factory. Done; runtime provider/UI not wired yet.
+5. Add real auth/session provider. Done; email/password sign-in and account creation are wired.
+6. Add Supabase swipe, match, and safety service adapters. Done; swipe persistence and safety entry points are lightly wired, while match/chat source-of-truth work remains.
+7. Add backend/mock service factory. Done.
 8. Add gated swipe persistence hook through service factory. Done; local state remains source of truth.
 9. Harden initial schema, RLS, grants, and safety RPC boundaries before dev apply. Done.
 10. Add database/RLS tests for the hardened migration. Done; tests pass locally.
