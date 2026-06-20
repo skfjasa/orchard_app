@@ -72,6 +72,7 @@ When these docs become large, compact them by preserving active state, blockers,
 - The first database test run exposed pgTAP assertion argument mistakes; those were fixed in `supabase/tests/database/202606200001_mvp_security.sql`, and the suite then passed 19/19.
 - Initial in-app Safety & Legal surface exists and is linked from Profile.
 - Report profile, report message, block, unmatch, and account deletion request entry points exist in the mock/local app flow and call the service boundary.
+- Report profile/message now routes through a dedicated reason/details form before submission.
 - Onboarding includes a required 18+ and legal acceptance screen before account type selection; acceptance is stored on the local prototype profile.
 - Safety/legal URLs and support contact are env-configurable via `expo/constants/legal.ts` and `expo/.env.example`; final public values are still human decisions.
 
@@ -123,8 +124,8 @@ As of the 2026-06-20 safety/legal checkpoint, before committing this doc refresh
 
 - Branch: `main`
 - Remote: `origin/main`
-- Current working tree contains legal/support env configuration changes plus status doc updates.
-- Runtime app code changed in `expo/constants/legal.ts`, `expo/app/safety-legal.tsx`, and `expo/app/onboarding/legal.tsx`.
+- Current working tree contains report reason/details form changes plus status doc updates.
+- Runtime app code changed in `expo/app/report.tsx`, root route registration, match detail, and chat.
 - Local Supabase database is running via Docker Desktop. Non-database Supabase services are stopped, which was sufficient for `supabase test db`.
 - `personal-os` already had unrelated dirty files before this handoff; do not revert them.
 
@@ -168,6 +169,7 @@ Latest handoff additions:
 - Preserved mock/local behavior; backend persistence still depends on auth/profile source-of-truth work.
 - Added onboarding 18+ and legal acceptance gate before profile creation.
 - Added env-backed legal/support configuration and wired Safety & Legal/onboarding policy links to it.
+- Added report reason/details form for profile and message reports.
 
 Orchard files updated:
 
@@ -197,6 +199,7 @@ Orchard files updated:
 - `expo/types/index.ts`
 - `expo/constants/legal.ts`
 - `expo/.env.example`
+- `expo/app/report.tsx`
 
 Global/workspace files updated:
 

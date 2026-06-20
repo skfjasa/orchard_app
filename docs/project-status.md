@@ -72,13 +72,14 @@ Last updated: 2026-06-20
 - The first database test run exposed pgTAP assertion argument mistakes, which were fixed in `supabase/tests/database/202606200001_mvp_security.sql`; the suite then passed 19/19.
 - Initial in-app Safety & Legal surface exists at `expo/app/safety-legal.tsx`, linked from Profile.
 - Profile detail and chat now expose report/block actions; chat also exposes unmatch and report-message actions. These use the existing safety service boundary and preserve mock mode.
+- Report profile and report message actions now open a reason/details form before submitting through the safety service.
 - Account deletion can be requested from the Safety & Legal screen; the local flow records the request through the safety service and signs out.
 - Onboarding now includes a pre-profile age/legal gate for 18+ confirmation, MVP terms, privacy notice, and community standards acceptance. Acceptance is stored on the local prototype profile.
 - Safety/legal links and support contact are env-configurable through `EXPO_PUBLIC_PRIVACY_POLICY_URL`, `EXPO_PUBLIC_TERMS_URL`, `EXPO_PUBLIC_COMMUNITY_STANDARDS_URL`, `EXPO_PUBLIC_SUPPORT_EMAIL`, `EXPO_PUBLIC_SUPPORT_URL`, and `EXPO_PUBLIC_ACCOUNT_DELETION_URL`.
 
 ## Current Task
 
-Continue safety/legal hardening by filling final public policy/support env values and wiring persisted backend safety/legal acceptance once auth/profile persistence is live.
+Continue safety/legal hardening by filling final public policy/support env values and wiring persisted backend safety/legal/report flows once auth/profile persistence is live.
 
 ## Next Planned Tasks
 

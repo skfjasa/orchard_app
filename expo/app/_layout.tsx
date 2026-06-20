@@ -62,6 +62,14 @@ function RootLayoutNav() {
           headerShadowVisible: false,
         }}
       />
+      <Stack.Screen
+        name="report"
+        options={{
+          presentation: "modal",
+          title: "Report",
+          headerShadowVisible: false,
+        }}
+      />
     </Stack>
   );
 }

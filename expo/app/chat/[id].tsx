@@ -83,7 +83,6 @@ export default function ChatScreen() {
     respondToPhoto,
     markRead,
     unmatch,
-    reportProfile,
     blockProfile,
     drafts,
     setDraft,
@@ -161,23 +160,15 @@ export default function ChatScreen() {
     setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50);
   }, [text, id, sendMessage, isCouple, activeName, setDraft]);
 
-  const reportConversation = useCallback(
-    async (reportedMessageId?: string) => {
+  const openReport = useCallback(
+    (reportedMessageId?: string) => {
       if (!id) return;
-      const result = await reportProfile(
-        id,
-        "unsafe_behavior",
-        undefined,
-        reportedMessageId
-      );
-      Alert.alert(
-        result.ok ? "Report submitted" : "Report failed",
-        result.ok
-          ? "Thanks. This has been flagged for review."
-          : result.error ?? "Try again in a moment."
-      );
+      const messageQuery = reportedMessageId
+        ? `&messageId=${reportedMessageId}`
+        : "";
+      router.push(`/report?profileId=${id}${messageQuery}`);
     },
-    [id, reportProfile]
+    [id]
   );
 
   const blockConversation = useCallback(async () => {
@@ -211,7 +202,7 @@ export default function ChatScreen() {
             {
               text: "Report profile",
               style: "destructive",
-              onPress: () => void reportConversation(),
+              onPress: () => openReport(),
             },
             {
               text: "Block profile",
@@ -229,7 +220,7 @@ export default function ChatScreen() {
       },
       { text: "Cancel", style: "cancel" },
     ]);
-  }, [id, reportConversation, blockConversation, unmatchConversation]);
+  }, [id, openReport, blockConversation, unmatchConversation]);
 
   const onLongPressMessage = useCallback(
     (m: Message) => {
@@ -251,7 +242,7 @@ export default function ChatScreen() {
         options.push({
           text: "Report message",
           style: "destructive" as const,
-          onPress: () => void reportConversation(m.id),
+          onPress: () => openReport(m.id),
         });
       }
       if (m.fromMe) {
@@ -264,7 +255,7 @@ export default function ChatScreen() {
       options.push({ text: "Cancel", style: "cancel" as const });
       Alert.alert("Message", undefined, options);
     },
-    [id, deleteMessage, reportConversation]
+    [id, deleteMessage, openReport]
   );
 
   const pickPhoto = useCallback(async () => {

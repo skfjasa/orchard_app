@@ -55,7 +55,6 @@ export default function MatchDetail() {
     likedIds,
     superLikeProfile,
     superLikedIds,
-    reportProfile,
     blockProfile,
   } = useProfile();
 
@@ -177,27 +176,21 @@ export default function MatchDetail() {
     );
   };
 
-  const reportOther = async () => {
-    const result = await reportProfile(other.id, "unsafe_behavior");
-    Alert.alert(
-      result.ok ? "Report submitted" : "Report failed",
-      result.ok
-        ? "Thanks. This profile has been flagged for review."
-        : result.error ?? "Try again in a moment."
-    );
-  };
-
   const confirmReport = () => {
     const message = `Report ${other.people[0].name}'s profile for review?`;
     if (Platform.OS === "web") {
       if (typeof window !== "undefined" && window.confirm(message)) {
-        void reportOther();
+        router.push(`/report?profileId=${other.id}`);
       }
       return;
     }
     Alert.alert("Report profile?", message, [
       { text: "Cancel", style: "cancel" },
-      { text: "Report", style: "destructive", onPress: () => void reportOther() },
+      {
+        text: "Report",
+        style: "destructive",
+        onPress: () => router.push(`/report?profileId=${other.id}`),
+      },
     ]);
   };
 

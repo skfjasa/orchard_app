@@ -169,6 +169,7 @@ Current status:
 
 - Local unmatch exists and is exposed from chat safety actions.
 - Report profile, report message, block, and account deletion request entry points exist and call the safety service boundary.
+- Report profile/message includes reason selection and optional details before submission.
 - Backend persistence for safety actions depends on real auth/profile source-of-truth wiring.
 
 Tasks:
