@@ -19,11 +19,11 @@ This app should not become a generic swipe clone. Preserve the working prototype
 - Entrypoint: `expo-router/entry`
 - Root layout: `expo/app/_layout.tsx`
 - Initial redirect: `expo/app/index.tsx`
-- State provider: `expo/providers/profile-provider.tsx`
+- State providers: `expo/providers/profile-provider.tsx`, `expo/providers/auth-provider.tsx`
 - Onboarding provider: `expo/providers/onboarding-provider.tsx`
 - Mock data: `expo/mocks/profiles.ts`, `expo/mocks/fruit-profiles.ts`
 
-There is currently no backend implementation, no migrations, no API client, no server functions, no real auth, no real storage, and no real chat backend. A Supabase JS dependency and env-gated client skeleton exist, but no runtime app behavior is backed by Supabase yet.
+There is currently no production backend wired as the app source of truth. Supabase JS, an env-gated client skeleton, auth/session provider foundation, initial schema/RLS/RPC migration draft, Supabase swipe/match/safety adapters, and a backend/mock service factory exist. Profile storage, discovery, photos, reciprocal match source of truth, and chat are still local/mock. Swipe persistence has a gated, non-blocking Supabase hook when Supabase mode has a matching authenticated profile id.
 
 ## Actual Repo Structure
 
@@ -33,6 +33,7 @@ There is currently no backend implementation, no migrations, no API client, no s
 ├── README.md
 ├── rork.json
 ├── docs/
+├── supabase/
 ├── android/
 ├── assets/
 └── expo/

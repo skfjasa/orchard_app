@@ -103,15 +103,19 @@ Onboarding stores a `Profile` object locally. Updating a profile patches the loc
 
 `likeProfile` checks local match slot limits only when monetization is enabled. If allowed, it adds the profile ID to `likedIds` and immediately creates a local conversation with a synthetic greeting from `MOCK_PROFILES` through `ensureGreetingConversation`.
 
-This is not true reciprocal matching. Backend migration must replace this with persisted swipes and mutual-match creation.
+When Supabase mode is active and the local profile id matches the authenticated Supabase user id, `likeProfile` also sends a non-blocking `swipes.recordSwipe` call through the backend/mock service factory.
+
+This is not true reciprocal matching as the app source of truth yet. Local state still drives UI behavior; backend migration must eventually replace this with persisted swipes and mutual-match creation.
 
 ### Super Likes
 
 `superLikeProfile` checks slot limits and local Super Like balance only when monetization is enabled. In the feedback MVP, Super Likes are demoable without paywall or balance blocking. It records a super-like ID, adds a like, and immediately creates a local conversation with a synthetic greeting.
 
+When Supabase mode is active and the local profile id matches the authenticated Supabase user id, Super Likes are persisted as backend `like` decisions while preserving local Super Like UI semantics.
+
 ### Passes
 
-`passProfile` records a local passed profile ID.
+`passProfile` records a local passed profile ID. When Supabase mode is active and the local profile id matches the authenticated Supabase user id, passes are also sent as non-blocking backend swipe persistence.
 
 ### Unmatch
 

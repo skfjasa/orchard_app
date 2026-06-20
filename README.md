@@ -6,12 +6,12 @@ The product goal is not to build a generic swipe app with different labels. The 
 
 ## Current Status
 
-The app is currently a prototype.
+The app is currently a prototype with a backend migration path in progress.
 
 - Framework: Expo React Native with Expo Router
 - Runtime app path: `expo/`
 - Package manager: Bun
-- Current data mode: local/mock
+- Current data mode: local/mock, with gated Supabase swipe persistence scaffolding
 - Backend target: Supabase
 - Initial deployment target: iOS TestFlight
 - Android support: later
@@ -23,6 +23,15 @@ Most core behavior is currently simulated or stored locally:
 - Likes/passes/matches are local.
 - Chat is local and includes fake replies.
 - Paywall, boosts, subscriptions, and Super Likes are simulated.
+
+Backend foundation currently exists for:
+
+- Env-gated Supabase client setup
+- Auth/session provider foundation
+- Initial Supabase schema/RLS/RPC migration draft
+- Supabase service adapters for swipe, match, and safety flows
+- Backend/mock service factory
+- Non-blocking gated swipe persistence hook
 
 ## Repository Layout
 
@@ -127,6 +136,9 @@ The app should continue to run in mock mode when Supabase environment variables 
 - [Repo audit](docs/repo-audit.md)
 - [MVP plan](docs/mvp-plan.md)
 - [Development setup](docs/setup.md)
+- [Current project status](docs/project-status.md)
+- [Session handoff](docs/session-handoff.md)
+- [Backend migration plan](docs/backend-migration-plan.md)
 
 ## Development Principles
 

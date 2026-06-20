@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-06-19
+Last updated: 2026-06-20
 
 ## Current Repo State
 
@@ -16,7 +16,7 @@ Last updated: 2026-06-19
 
 ## Latest Foundation Commits
 
-- This commit - Gate swipe persistence through backend service factory
+- `f9859fa` - Gate swipe persistence through backend service factory
 - `8d1c023` - Add backend/mock service factory
 - `525df94` - Add Supabase swipe, match, and safety service adapters
 - `9cf5b94` - Add core Supabase matching and safety RPC drafts
@@ -53,20 +53,20 @@ Last updated: 2026-06-19
 - Auth/session provider foundation exists and defaults to mock mode when Supabase env vars are absent.
 - Initial Supabase schema/RLS migration draft exists.
 - Draft RPCs exist for reciprocal swipe matching, unmatch, and block behavior.
-- Supabase service adapters exist for swipe, match, and safety behavior, but they are not wired into the provider/UI yet.
+- Supabase service adapters exist for swipe, match, and safety behavior. Swipe persistence is lightly wired into the provider as a gated, non-blocking hook; match and safety adapters are not wired into UI/provider flows yet.
 - Backend/mock service factory exists and exposes per-service capabilities so partial Supabase support is explicit.
 - `ProfileProvider` can now call the swipe service factory as a non-blocking persistence hook when Supabase mode has a real authenticated profile id. Local state remains the UI source of truth.
 
 ## Current Task
 
-Gate swipe persistence through the backend/mock service factory while preserving current local/mock runtime behavior.
+Refresh session handoff/context docs so the next session can resume without relying on chat history.
 
 ## Next Planned Tasks
 
-1. Review Supabase schema/RLS/RPCs before applying to a dev project.
-2. Decide production bundle ID and beta app identity.
-3. Add safety/legal surfaces required for TestFlight planning.
-4. Decide whether to apply the Supabase migration to a dev project now or keep building local safety/legal surfaces first.
+1. Decide whether to apply the Supabase migration to a dev project now or keep building local safety/legal surfaces first.
+2. Review Supabase schema/RLS/RPCs before applying to a dev project.
+3. Decide production bundle ID and beta app identity.
+4. Add safety/legal surfaces required for TestFlight planning.
 5. Start wiring real auth into onboarding/sign-in once schema decisions are made.
 
 ## Human Decisions Needed

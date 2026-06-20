@@ -1,0 +1,123 @@
+# Session Handoff
+
+Last updated: 2026-06-20
+
+## Current Context
+
+The repo is `skfjasa/orchard_app`. App code lives in `expo/`.
+
+This is a Rork-generated Expo React Native app using Expo Router, TypeScript, React Native 0.81.5, Expo 54, React 19, and Bun. The MVP target is an iOS-first TestFlight-ready dating app for polyamorous / ENM users. Android is later.
+
+The product wedge is structured relationship-context matching, not a generic swipe clone. Relationship structure, partnered status, dating mode, boundaries, looking-for intent, and expectations should be clear before chat.
+
+## Important Product Decisions
+
+- User monetization is out of MVP scope.
+- Monetizable features should remain demoable without payment walls during the feedback MVP.
+- Existing and future monetization surfaces are tracked in `docs/monetization-candidates.md`.
+- Preserve the existing Rork UI unless explicitly asked to redesign.
+- Preserve mock/demo mode while backend features are introduced.
+- Keep changes small and commit/sync after meaningful steps.
+- Update `docs/project-status.md` when status, plan, or blockers change.
+
+## Current Technical State
+
+- Runtime behavior is still mostly local/mock.
+- Persistence is still primarily `AsyncStorage`.
+- `ProfileProvider` remains the main runtime state provider.
+- `ProfileProvider` no longer directly owns AsyncStorage helper code.
+- Local interaction, monetization, profile mutation, and storage helper logic has been extracted.
+- Service interfaces and mock adapters exist.
+- Supabase client skeleton exists and is env-gated.
+- Auth provider foundation exists and defaults to mock mode when Supabase env vars are absent.
+- Initial Supabase schema/RLS/RPC migration draft exists.
+- Supabase service adapters exist for swipe, match, and safety.
+- Backend/mock service factory exists.
+- Swipe persistence has a gated, non-blocking hook through the service factory. Local UI state remains the source of truth.
+
+## Current Backend State
+
+Migration draft:
+
+- `supabase/migrations/202606190001_initial_mvp_schema.sql`
+
+Tables covered:
+
+- `profiles`
+- `profile_photos`
+- `swipes`
+- `matches`
+- `messages`
+- `blocks`
+- `reports`
+- `user_settings`
+- `account_deletion_requests`
+
+Draft RPCs:
+
+- `create_swipe(target_profile_id, swipe_decision)`
+- `unmatch_match(target_match_id)`
+- `block_profile(blocked_profile_id)`
+
+The migration has not been applied to a live Supabase project yet.
+
+## Latest Commits
+
+- `f9859fa` - Gate swipe persistence through services
+- `8d1c023` - Add backend service factory
+- `525df94` - Add Supabase service adapters
+- `9cf5b94` - Add core Supabase RPC drafts
+- `9422c3a` - Draft initial Supabase schema
+- `c4a4efb` - Add auth session provider foundation
+- `a4f57ea` - Add env-gated Supabase client skeleton
+- `3efd74a` - Update provider architecture status
+
+## Current Repo Status
+
+As of this handoff, before committing this doc refresh:
+
+- Branch: `main`
+- Remote: `origin/main`
+- Expected status after commit/push: clean and synced
+
+## Checks Used
+
+Run from `expo/`:
+
+```bash
+bun run lint
+bun run typecheck
+```
+
+Both passed after the latest runtime code change (`f9859fa`).
+
+## Next Best Tasks
+
+1. Decide whether to apply the Supabase migration to a dev project now or build local safety/legal surfaces first.
+2. Review Supabase schema/RLS/RPCs before applying them to a dev project.
+3. Decide production bundle ID and beta app identity.
+4. Add required safety/legal surfaces: privacy, terms, community standards, support, report, block, unmatch, account deletion.
+5. Wire real auth into onboarding/sign-in once schema decisions are made.
+6. Persist onboarding/profile to Supabase.
+7. Add photo upload through `StorageService`.
+8. Replace swipe/match/chat local state as source of truth only after auth/profile persistence works.
+
+## Human Decisions Needed
+
+- Production bundle ID.
+- Apple Developer account availability.
+- Supabase project name and region.
+- Public Privacy Policy URL.
+- Public Terms URL.
+- Public Support URL or email.
+- Public Account Deletion URL or documented support process.
+- Whether to keep `Orchard` as the final app name.
+
+## Cautions
+
+- Do not rewrite `ProfileProvider` in one pass.
+- Do not remove mock/demo behavior.
+- Do not commit `.env`, secrets, Supabase service-role keys, signing credentials, Apple credentials, Google credentials, or private config.
+- Do not put private messages, raw profile text, or PII into analytics.
+- Do not collect exact location for MVP unless explicitly approved.
+- Supabase RLS/RPC behavior must be tested with multiple users before runtime code depends on it as source of truth.
