@@ -117,3 +117,7 @@ export {
   removePartnerLink,
   resendPartnerInvite,
 } from "./local-profile-mutation-service";
+
+export { createSupabaseMatchService } from "./supabase-match-service";
+export { createSupabaseSafetyService } from "./supabase-safety-service";
+export { createSupabaseSwipeService } from "./supabase-swipe-service";
