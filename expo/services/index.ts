@@ -1,4 +1,14 @@
 export type {
+  AppServiceCapabilities,
+  AppServices,
+  CreateAppServicesOptions,
+} from "./app-services";
+
+export {
+  createAppServices,
+} from "./app-services";
+
+export type {
   ServiceContext,
   ServiceFailure,
   ServiceMode,
