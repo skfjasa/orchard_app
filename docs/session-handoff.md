@@ -10,6 +10,16 @@ This is a Rork-generated Expo React Native app using Expo Router, TypeScript, Re
 
 The product wedge is structured relationship-context matching, not a generic swipe clone. Relationship structure, partnered status, dating mode, boundaries, looking-for intent, and expectations should be clear before chat.
 
+## Session Start Shortcut
+
+If the user says `status report` in any capitalization, treat it as the standard startup command:
+
+1. Read `AGENTS.md`, `docs/session-handoff.md`, `docs/project-status.md`, and `docs/backend-migration-plan.md`.
+2. Inspect `git status` and recent commits.
+3. Do not modify files yet.
+4. Summarize current repo state, implementation status, latest completed commit, next recommended task, and blockers/human decisions.
+5. Wait for user confirmation before making changes.
+
 ## Important Product Decisions
 
 - User monetization is out of MVP scope.

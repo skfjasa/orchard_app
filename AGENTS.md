@@ -87,6 +87,18 @@ Use `bun run lint` and `bun run typecheck` from `expo/` for code changes.
 - Do not implement production behavior in docs-only tasks.
 - Keep `docs/project-status.md` current when commits change status, plans, or blockers.
 
+## Session Start Shortcut
+
+When the user says `status report` in any capitalization, treat it as the standard session-start command for this repo.
+
+Do this:
+
+1. Read `AGENTS.md`, `docs/session-handoff.md`, `docs/project-status.md`, and `docs/backend-migration-plan.md`.
+2. Inspect `git status` and recent commits.
+3. Do not modify files yet.
+4. Summarize current repo state, implementation status, latest completed commit, next recommended task, and blockers/human decisions.
+5. Wait for user confirmation before making changes.
+
 ## MVP Priority Order
 
 1. Operating layer and docs.
