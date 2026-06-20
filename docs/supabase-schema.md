@@ -36,8 +36,10 @@ The draft covers:
 - `create_swipe(target_profile_id, swipe_decision)` persists like/pass decisions and creates an active match only when a reciprocal like exists.
 - `unmatch_match(target_match_id)` lets a match member mark an active match as unmatched.
 - `block_profile(blocked_profile_id)` creates a block and marks any existing match between the two users as blocked.
+- `submit_report(reported_profile_id, report_reason, report_details, reported_message_id)` derives reporter identity from `auth.uid()` and creates a moderation report.
+- `request_account_deletion(deletion_reason)` derives profile identity from `auth.uid()` and creates an account deletion request.
 
-These functions are granted to authenticated users only. They still need to be tested in a Supabase dev project before app runtime code depends on them.
+These functions are granted to authenticated users only. Initial database/RLS tests exist at `supabase/tests/database/202606200001_mvp_security.sql` and pass against the local Supabase database.
 
 ## Known Gaps Before Applying
 
@@ -52,6 +54,7 @@ These functions are granted to authenticated users only. They still need to be t
 
 Before applying to staging or production:
 
+- Keep the local Supabase database/RLS tests passing before applying migration changes.
 - Run a Supabase RLS/security review.
 - Test select/insert/update policies with at least two users.
 - Verify blocked users cannot discover, match, or message each other.

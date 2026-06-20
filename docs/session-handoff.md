@@ -20,6 +20,20 @@ If the user says `status report` in any capitalization, treat it as the standard
 4. Summarize current repo state, implementation status, latest completed commit, next recommended task, and blockers/human decisions.
 5. Wait for user confirmation before making changes.
 
+## Session Handoff Shortcut
+
+If the user says `handoff sync` or `session handoff` in any capitalization, follow the global session-end handoff protocol from `C:\Users\skfja\.codex\AGENTS.md` and `C:\Users\skfja\Projects\AGENTS.md`.
+
+For Orchard, the project-specific handoff update should:
+
+1. Inspect `git status` and recent commits.
+2. Update all relevant Orchard markdown files containing current status, updates, context, blockers, or next-step instructions. Start with `docs/session-handoff.md`, `docs/project-status.md`, `docs/backend-migration-plan.md`, and `README.md`; update other docs only when materially stale.
+3. Update central `personal-os` mirrors when available and relevant.
+4. Do not change runtime code unless the user explicitly asks.
+5. Summarize changed docs, current blockers, and exact next-session startup steps.
+
+When these docs become large, compact them by preserving active state, blockers, decisions, verification, and next actions in current-state files, while moving older tactical detail to dated history or archive docs.
+
 ## Important Product Decisions
 
 - User monetization is out of MVP scope.
@@ -47,7 +61,15 @@ If the user says `status report` in any capitalization, treat it as the standard
 - Supabase hardening is tracked in `docs/supabase-hardening-plan.md`.
 - Supabase safety report and account deletion calls now use RPCs, with actor identity derived by the database.
 - Supabase CLI is installed as an Expo dev dependency (`supabase@2.107.0`), and local Supabase config exists at `supabase/config.toml`.
-- Initial pgTAP-style database/RLS tests exist at `supabase/tests/database/202606200001_mvp_security.sql`, but they have not been run because Docker Desktop is not installed/running.
+- Initial pgTAP-style database/RLS tests exist at `supabase/tests/database/202606200001_mvp_security.sql` and pass locally.
+- Docker Desktop was installed manually during the 2026-06-20 session and is now operational after enabling firmware virtualization.
+- Post-fix diagnostics on 2026-06-20:
+  - CPU: AMD Ryzen 5 5600X 6-Core Processor
+  - `VirtualizationFirmwareEnabled: True`
+  - `HypervisorPresent: True`
+  - Docker Desktop server running Docker Engine 29.5.3 on Linux
+  - `wsl --status`: default distribution `docker-desktop`, default version 2
+- The first database test run exposed pgTAP assertion argument mistakes; those were fixed in `supabase/tests/database/202606200001_mvp_security.sql`, and the suite then passed 19/19.
 
 ## Current Backend State
 
@@ -79,6 +101,9 @@ The migration has not been applied to a live Supabase project yet.
 
 ## Latest Commits
 
+- `a29e3c4` - Harden Supabase MVP migration
+- `2b73a97` - Document status report shortcut
+- `3a39dbc` - Refresh session handoff context
 - `f9859fa` - Gate swipe persistence through services
 - `8d1c023` - Add backend service factory
 - `525df94` - Add Supabase service adapters
@@ -90,11 +115,14 @@ The migration has not been applied to a live Supabase project yet.
 
 ## Current Repo Status
 
-As of this handoff, before committing this doc refresh:
+As of this post-Docker checkpoint on 2026-06-20, before committing this doc refresh:
 
 - Branch: `main`
 - Remote: `origin/main`
-- Expected status after commit/push: clean and synced
+- Current working tree contains docs/status edits from the prior checkpoint, current Docker/test status edits, and a database test-file fix.
+- No runtime app code is dirty.
+- Local Supabase database is running via Docker Desktop. Non-database Supabase services are stopped, which was sufficient for `supabase test db`.
+- `personal-os` already had unrelated dirty files before this handoff; do not revert them.
 
 ## Checks Used
 
@@ -107,19 +135,64 @@ bun run typecheck
 
 Both passed after the latest runtime code change (`f9859fa`).
 
+Run from the repo root:
+
+```bash
+expo/node_modules/.bin/supabase start
+expo/node_modules/.bin/supabase test db
+```
+
+`supabase test db` now passes locally: 1 file, 19 tests.
+
+## 2026-06-20 Handoff Scope
+
+This handoff intentionally updated continuity/status docs only.
+
+Latest handoff additions:
+
+- Captured that Docker Desktop is operational after enabling firmware virtualization.
+- Ran local Supabase database/RLS tests and fixed pgTAP assertion argument ordering.
+- Updated restart/resume steps to make migration review/dev apply the next backend action.
+
+Orchard files updated:
+
+- `AGENTS.md`
+- `README.md`
+- `docs/session-handoff.md`
+- `docs/project-status.md`
+- `docs/backend-migration-plan.md`
+- `docs/setup.md`
+- `docs/supabase-hardening-plan.md`
+- `docs/supabase-schema.md`
+- `docs/mvp-backlog.md`
+- `docs/profile-provider-map.md`
+- `docs/codex-operating-guide.md`
+- `supabase/tests/database/202606200001_mvp_security.sql`
+
+Global/workspace files updated:
+
+- `C:\Users\skfja\.codex\AGENTS.md`
+- `C:\Users\skfja\Projects\AGENTS.md`
+- `C:\Users\skfja\Projects\personal-os\AGENTS.md`
+- `C:\Users\skfja\Projects\personal-os\01-control-center\repo-status.md`
+- `C:\Users\skfja\Projects\personal-os\01-control-center\open-loops.md`
+- `C:\Users\skfja\Projects\personal-os\01-control-center\decisions.md`
+- `C:\Users\skfja\Projects\personal-os\03-projects\handoffs\index.md`
+- `C:\Users\skfja\Projects\personal-os\03-projects\handoffs\orchard_app\latest.md`
+- `C:\Users\skfja\Projects\personal-os\03-projects\handoffs\orchard_app\sessions\2026-06-20-docker-restart.md`
+
+Existing unrelated dirty files in `personal-os` should be preserved and not reverted.
+
 ## Next Best Tasks
 
-1. Install/start Docker Desktop.
-2. Run `expo\node_modules\.bin\supabase start` from the repo root.
-3. Run `expo\node_modules\.bin\supabase test db` from the repo root.
-4. Fix any database test failures and review the hardened SQL before dev apply.
-5. Decide whether to apply the hardened Supabase migration to a dev project now or build local safety/legal surfaces first.
-6. Decide production bundle ID and beta app identity.
-7. Add required safety/legal surfaces: privacy, terms, community standards, support, report, block, unmatch, account deletion.
-8. Wire real auth into onboarding/sign-in once schema decisions are made.
-9. Persist onboarding/profile to Supabase.
-10. Add photo upload through `StorageService`.
-11. Replace swipe/match/chat local state as source of truth only after auth/profile persistence works.
+1. Review the hardened SQL and passing database/RLS tests before dev apply.
+2. Decide whether to apply the hardened Supabase migration to a dev project now or build local safety/legal surfaces first.
+3. Decide production bundle ID and beta app identity.
+4. Add required safety/legal surfaces: privacy, terms, community standards, support, report, block, unmatch, account deletion.
+5. Wire real auth into onboarding/sign-in once schema decisions are made.
+6. Persist onboarding/profile to Supabase.
+7. Add photo upload through `StorageService`.
+8. Replace swipe/match/chat local state as source of truth only after auth/profile persistence works.
 
 ## Human Decisions Needed
 

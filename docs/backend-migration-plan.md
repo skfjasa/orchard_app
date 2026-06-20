@@ -10,7 +10,7 @@ The current app is a local/mock Rork prototype.
 - Swipes create local matches/conversations.
 - Chat is local and simulated.
 - Paywall, boosts, subscriptions, and Super Likes are simulated.
-- No backend exists.
+- No production backend is wired as the source of truth.
 - Supabase JS dependency and env-gated client skeleton exist.
 - Auth/session provider foundation exists.
 - Initial Supabase schema migration draft exists and has been hardened before dev-project apply.
@@ -18,6 +18,8 @@ The current app is a local/mock Rork prototype.
 - Backend/mock service factory exists with explicit per-service capabilities.
 - Swipe persistence has a gated, non-blocking provider hook for Supabase mode only when the local profile id matches the authenticated user id.
 - Safety service report and account deletion calls use RPCs so the database derives actor identity from `auth.uid()`.
+- Initial database/RLS tests exist and pass against the local Supabase database.
+- Docker Desktop is operational after enabling firmware virtualization.
 - No real onboarding/profile auth flow, storage, reciprocal matching, or chat backend exists.
 
 ## 2. Migration Principle
@@ -35,7 +37,7 @@ Migration should:
 
 ## 3. Suggested Services / Adapters
 
-Initial TypeScript service interfaces now exist under `expo/services/`. In-memory mock adapters also exist under `expo/mocks/adapters/`. They are not wired into the current app runtime yet.
+Initial TypeScript service interfaces now exist under `expo/services/`. In-memory mock adapters also exist under `expo/mocks/adapters/`. The backend/mock service factory is lightly wired for gated non-blocking swipe persistence; most runtime behavior is still local/mock.
 
 - `ProfileService`: profile CRUD, onboarding completion, visibility.
 - `DiscoveryService`: eligible profile queries.
@@ -113,10 +115,11 @@ Initial tables:
 7. Add backend/mock service factory. Done; runtime provider/UI not wired yet.
 8. Add gated swipe persistence hook through service factory. Done; local state remains source of truth.
 9. Harden initial schema, RLS, grants, and safety RPC boundaries before dev apply. Done.
-10. Add database/RLS tests for the hardened migration.
-11. Persist onboarding/profile to backend.
-12. Add photo upload through `StorageService`.
-13. Replace swipe persistence as source of truth.
-14. Add reciprocal match creation.
-15. Replace local chat with match-scoped backend messages.
-16. Add safety service and enforce block/report/unmatch/account deletion flows.
+10. Add database/RLS tests for the hardened migration. Done; tests pass locally.
+11. Enable firmware virtualization, start Docker Desktop, run `expo\node_modules\.bin\supabase start`, and run `expo\node_modules\.bin\supabase test db`. Done.
+12. Persist onboarding/profile to backend.
+13. Add photo upload through `StorageService`.
+14. Replace swipe persistence as source of truth.
+15. Add reciprocal match creation.
+16. Replace local chat with match-scoped backend messages.
+17. Add safety service and enforce block/report/unmatch/account deletion flows.

@@ -125,6 +125,10 @@ Add SQL/RLS tests covering:
 5. Validate with anon and authenticated sessions.
 6. Wire app services in order: auth/profile, discovery, swipes/matches, chat, safety.
 
-## Current First Slice
+## Current Status
 
-Harden `supabase/migrations/202606190001_initial_mvp_schema.sql` before any shared dev apply.
+- `supabase/migrations/202606190001_initial_mvp_schema.sql` has been hardened before any shared dev apply.
+- Initial database/RLS tests exist at `supabase/tests/database/202606200001_mvp_security.sql`.
+- Docker Desktop is operational after enabling firmware virtualization.
+- `expo\node_modules\.bin\supabase start` runs the local database, and `expo\node_modules\.bin\supabase test db` passes locally.
+- Next step: review the passing hardened migration before applying it to a shared development Supabase project.

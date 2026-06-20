@@ -33,6 +33,30 @@ Later for TestFlight:
 - EAS CLI
 - App Store Connect access
 
+For local Supabase database/RLS tests:
+
+- Docker Desktop
+- Supabase CLI from `expo/node_modules/.bin/supabase`
+
+Current local note: Docker Desktop was installed manually on 2026-06-20 and is operational after enabling firmware virtualization. `docker version` reports a Docker Desktop Linux engine, and local Supabase database/RLS tests pass.
+
+To verify Docker/virtualization from PowerShell:
+
+```powershell
+Get-CimInstance Win32_Processor | Select-Object Name,VirtualizationFirmwareEnabled
+Get-ComputerInfo -Property HyperVRequirement*
+docker version
+```
+
+If Docker still fails after firmware virtualization is enabled, enable the required Windows features from an Administrator PowerShell and restart:
+
+```powershell
+dism /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+dism /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+wsl --update
+wsl --set-default-version 2
+```
+
 ## Install Dependencies
 
 From the Expo app folder:
@@ -133,6 +157,9 @@ Rules:
 
 - `rork.json`: Rork app metadata
 - `expo/package.json`: scripts and dependencies
+- `supabase/config.toml`: local Supabase config
+- `supabase/migrations/202606190001_initial_mvp_schema.sql`: hardened MVP schema/RLS/RPC migration draft
+- `supabase/tests/database/202606200001_mvp_security.sql`: initial database/RLS tests, passing locally
 - `expo/app.json`: Expo app config
 - `expo/app/_layout.tsx`: root navigation/providers
 - `expo/providers/profile-provider.tsx`: current local app state

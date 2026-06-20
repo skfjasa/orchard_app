@@ -5,11 +5,10 @@
 Current status:
 
 - Repo audit exists.
-- Some docs exist.
-- No `AGENTS.md` before this pass.
-- No `.env.example` before this pass.
+- Project operating docs exist, including repo-level `AGENTS.md`.
+- `expo/.env.example` exists.
 - No EAS config.
-- No backend.
+- Backend foundation exists, but production backend behavior is not wired as source of truth.
 
 Tasks:
 
@@ -32,6 +31,8 @@ Current status:
 - Local state centralized in `expo/providers/profile-provider.tsx`.
 - Mock data in `expo/mocks`.
 - Types in `expo/types/index.ts`.
+- Service interfaces, mock adapters, Supabase adapters for swipe/match/safety, and backend/mock service factory exist.
+- Swipe persistence has a gated non-blocking Supabase hook, while local state remains the UI source of truth.
 
 Tasks:
 
@@ -52,7 +53,9 @@ Acceptance:
 
 Current status:
 
-- No backend exists.
+- Supabase client, auth/session provider foundation, hardened schema/RLS/RPC migration draft, local Supabase config, service adapters, and initial database/RLS tests exist.
+- Docker Desktop is operational after enabling firmware virtualization, and local Supabase database/RLS tests pass.
+- No live Supabase project has been applied as the app source of truth.
 
 Tasks:
 

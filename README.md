@@ -32,6 +32,7 @@ Backend foundation currently exists for:
 - Supabase service adapters for swipe, match, and safety flows
 - Backend/mock service factory
 - Non-blocking gated swipe persistence hook
+- Local Supabase CLI/config and initial database/RLS tests, now passing against Docker Desktop/local Supabase
 
 ## Repository Layout
 

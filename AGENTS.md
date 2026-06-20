@@ -99,6 +99,39 @@ Do this:
 4. Summarize current repo state, implementation status, latest completed commit, next recommended task, and blockers/human decisions.
 5. Wait for user confirmation before making changes.
 
+## Project Handoff Files
+
+For this repo, the global session handoff shortcut should refresh these project-specific files when they are relevant:
+
+- `docs/session-handoff.md`
+- `docs/project-status.md`
+- `docs/backend-migration-plan.md`
+- `docs/supabase-hardening-plan.md`
+- `README.md`
+- Any other markdown file containing stale status, setup, blocker, or next-step context
+
+## Session Handoff Shortcut
+
+When the user says `handoff sync` or `session handoff` in any capitalization, follow the global session-end handoff command and keep the update repo-specific.
+
+Do this:
+
+1. Inspect `git status` and recent commits.
+2. Update the relevant project handoff/status markdown files listed above with the current repo state, latest completed work, checks run or skipped, blockers, and the next recommended task.
+3. Update central `personal-os` mirrors when available and relevant.
+4. Do not change runtime code unless the user explicitly asks.
+5. Summarize changed docs, current blockers, and exact next-session startup steps.
+
+## Handoff Cleanup
+
+When handoff/status docs become large or repetitive, compact them without losing continuity:
+
+- Keep current handoff files focused on the latest state, active blockers, decisions, verification, and next steps.
+- Move or summarize older tactical detail into dated session history or archive docs.
+- Preserve durable decisions and current blockers in the files read at session start.
+- Remove duplicated procedural text when it is already covered by global or workspace instructions.
+- Keep enough context for a new session to resume without loading long dated histories by default.
+
 ## MVP Priority Order
 
 1. Operating layer and docs.
@@ -141,7 +174,7 @@ Behavioral rules:
 
 ## Backend / Supabase Rules
 
-The intended backend is Supabase, but no backend code exists yet.
+The intended backend is Supabase. Backend foundation code and migration drafts exist, but Supabase is not yet wired as the app source of truth.
 
 Future backend access rules must enforce:
 

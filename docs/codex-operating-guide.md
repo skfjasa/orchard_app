@@ -8,8 +8,9 @@
 - Routing: Expo Router
 - Package manager: Bun
 - Current persistence: local AsyncStorage
-- Current backend: none
+- Current backend: Supabase foundation exists, but production backend behavior is not wired as source of truth
 - Current mode: Rork prototype with mock/local behavior
+- Local Docker/Supabase status: Docker Desktop is operational after enabling firmware virtualization, and `expo\node_modules\.bin\supabase test db` passes locally
 
 ## Commands
 
@@ -48,6 +49,12 @@ Use the existing Rork start commands in `expo/package.json`. Do not replace them
 5. Run typecheck if a script exists.
 6. Document manual test steps.
 7. Summarize risks and blockers.
+
+## Session Continuity
+
+- `status report` starts a read-only session orientation.
+- `handoff sync` or `session handoff` updates all relevant continuity markdown files and central mirrors so a new session can resume cleanly.
+- Compact handoff/status docs when they become repetitive; keep current-state files focused on active blockers, decisions, verification, and next actions.
 
 ## Backend Migration Rule
 

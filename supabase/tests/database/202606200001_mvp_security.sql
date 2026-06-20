@@ -190,6 +190,7 @@ set local role anon;
 select throws_ok(
   $$ select count(*) from public.profiles $$,
   '42501',
+  'permission denied for table profiles',
   'anon cannot read profiles'
 );
 
@@ -249,6 +250,7 @@ select throws_ok(
     where id = '00000000-0000-0000-0000-000000000001'
   $$,
   '42501',
+  'permission denied for table profiles',
   'client cannot update trusted suspension field'
 );
 
@@ -268,6 +270,7 @@ select throws_ok(
     )
   $$,
   '42501',
+  'permission denied for table reports',
   'client cannot directly insert report workflow state'
 );
 
@@ -356,6 +359,7 @@ select throws_ok(
     'like'
   ) $$,
   'P0001',
+  'current profile is not eligible',
   'suspended actor cannot swipe'
 );
 
@@ -395,6 +399,7 @@ select throws_ok(
     )
   $$,
   '42501',
+  'new row violates row-level security policy for table "messages"',
   'blocked match cannot receive new messages'
 );
 

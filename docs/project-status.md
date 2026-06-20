@@ -5,17 +5,23 @@ Last updated: 2026-06-20
 ## Current Repo State
 
 - Repo: `skfjasa/orchard_app`
+- Handoff checkpoint: 2026-06-20 post-Docker verification
 - App code: `expo/`
 - Runtime: Expo React Native with Expo Router and TypeScript
 - Package manager: Bun
 - Backend: Supabase client, auth/session provider skeleton, hardened schema/RLS/RPC draft, initial Supabase service adapters, backend/mock service factory, and gated swipe persistence hook; no backend profile/matching/chat behavior is fully wired yet
 - Persistence: local `AsyncStorage`
-- Checks: `bun run lint` and `bun run typecheck`
+- Checks: `bun run lint`, `bun run typecheck`, and `expo\node_modules\.bin\supabase test db`
 - Branch: `main`
 - MVP monetization: disabled
+- Local Docker: Docker Desktop is operational after enabling firmware virtualization. `docker version` reports Docker Desktop with a Linux engine, and WSL default distribution is `docker-desktop`.
+- Handoff procedure: global `handoff sync` / `session handoff` behavior is being recorded in global/workspace instructions and Orchard-specific docs.
 
 ## Latest Foundation Commits
 
+- `a29e3c4` - Harden Supabase MVP migration
+- `2b73a97` - Document status report shortcut
+- `3a39dbc` - Refresh session handoff context
 - `f9859fa` - Gate swipe persistence through backend service factory
 - `8d1c023` - Add backend/mock service factory
 - `525df94` - Add Supabase swipe, match, and safety service adapters
@@ -60,21 +66,22 @@ Last updated: 2026-06-20
 - The initial Supabase migration draft has been hardened with authenticated-only RLS policies, private eligibility helpers, column-scoped profile/photo grants, RPC-only report/account-deletion writes, actor eligibility checks for swipes/messages, and the missing account deletion `reason` column.
 - The Supabase safety adapter now uses RPCs for report and account deletion requests so actor identity is derived server-side.
 - Supabase CLI is installed as an Expo dev dependency (`supabase@2.107.0`), and local Supabase config exists at `supabase/config.toml`.
-- Initial pgTAP-style database/RLS tests exist at `supabase/tests/database/202606200001_mvp_security.sql`, but they have not been run because Docker Desktop is not installed/running.
+- Initial pgTAP-style database/RLS tests exist at `supabase/tests/database/202606200001_mvp_security.sql` and pass locally.
+- Docker Desktop was installed manually during the 2026-06-20 session and is now operational after firmware virtualization was enabled.
+- Diagnostics captured after enabling virtualization on 2026-06-20: AMD Ryzen 5 5600X, `VirtualizationFirmwareEnabled: True`, `HypervisorPresent: True`, Docker Desktop server running Docker Engine 29.5.3 on Linux, WSL default distribution `docker-desktop`, WSL default version 2.
+- The first database test run exposed pgTAP assertion argument mistakes, which were fixed in `supabase/tests/database/202606200001_mvp_security.sql`; the suite then passed 19/19.
 
 ## Current Task
 
-Install/start Docker Desktop and run the database/RLS tests for the hardened migration before applying it to a shared development project.
+Review the passing hardened Supabase migration and decide whether to apply it to a shared development project now or build local safety/legal surfaces first.
 
 ## Next Planned Tasks
 
-1. Install and start Docker Desktop, then run `expo\node_modules\.bin\supabase start` from the repo root.
-2. Run `expo\node_modules\.bin\supabase test db` from the repo root.
-3. Fix any database test failures and review the hardened SQL before dev apply.
-4. Decide whether to apply the hardened migration to a dev project or keep building local safety/legal surfaces first.
-5. Decide production bundle ID and beta app identity.
-6. Add safety/legal surfaces required for TestFlight planning.
-7. Start wiring real auth into onboarding/sign-in once schema decisions are made.
+1. Review the hardened SQL and passing database/RLS tests before dev apply.
+2. Decide whether to apply the hardened migration to a dev project or keep building local safety/legal surfaces first.
+3. Decide production bundle ID and beta app identity.
+4. Add safety/legal surfaces required for TestFlight planning.
+5. Start wiring real auth into onboarding/sign-in once schema decisions are made.
 
 ## Human Decisions Needed
 

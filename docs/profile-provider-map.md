@@ -8,7 +8,7 @@ Purpose: document the current provider before extracting services/adapters. This
 
 `ProfileProvider` is the central app-state provider for the Rork prototype. It still owns UI-facing local state and coordinates persistence, but the first service boundaries have been extracted.
 
-Current persistence is local through `AsyncStorage` via `expo/services/local-profile-storage.ts` and React Query mutations. No backend is involved.
+Current persistence is local through `AsyncStorage` via `expo/services/local-profile-storage.ts` and React Query mutations. Supabase swipe persistence can run as a gated, non-blocking hook when Supabase mode has a matching authenticated profile id, but backend data is not the UI source of truth.
 
 ## Storage Keys
 
@@ -146,7 +146,7 @@ Partner invite/link behavior is local profile metadata through helpers in `expo/
 - Local match creation is still coupled to mock profiles and conversations.
 - Chat simulation still depends on `MOCK_PROFILES`.
 - Local React state updates and persistence calls are still coupled in provider callbacks.
-- Provider actions are not yet backed by the service interfaces under `expo/services/`.
+- Most provider actions are not yet backed by the service interfaces under `expo/services/`; swipe persistence is the first lightly wired service-factory hook.
 
 ## Recommended Extraction Order
 
@@ -156,14 +156,15 @@ Partner invite/link behavior is local profile metadata through helpers in `expo/
 4. Extract local monetization/demo calculations and disable MVP paywalls. Done.
 5. Extract local profile mutation helpers. Done.
 6. Reassess remaining provider responsibilities. Current step.
-7. Add Supabase client skeleton behind environment-gated mock mode.
-8. Move auth/session out of local prototype behavior.
-9. Replace swipe/match/chat behavior with service-backed mock/Supabase adapters incrementally.
-10. Extract safety actions once block/report/unmatch backend concepts exist.
+7. Add Supabase client skeleton behind environment-gated mock mode. Done.
+8. Add auth/session provider foundation. Done; onboarding/sign-in flow is not wired yet.
+9. Add backend/mock service factory and gated swipe persistence hook. Done.
+10. Replace swipe/match/chat behavior with service-backed mock/Supabase adapters incrementally.
+11. Extract safety actions once block/report/unmatch UI flows are ready to wire.
 
 ## Future Service Boundaries
 
-Initial interface skeletons exist under `expo/services/`, with in-memory mock adapters under `expo/mocks/adapters/`. They are not wired into runtime behavior yet.
+Initial interface skeletons exist under `expo/services/`, with in-memory mock adapters under `expo/mocks/adapters/`. The backend/mock service factory is lightly wired for swipe persistence only; profile storage, discovery, matches, chat, and safety UI flows remain local/mock.
 
 Runtime local helper modules now exist:
 
