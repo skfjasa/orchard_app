@@ -26,8 +26,9 @@ The current app is a local/mock Rork prototype.
 - The migration now includes `profile_members` and requires profile photos to reference a member on the same profile, matching the app's single/couple `Profile.people[]` shape before hosted apply. Local database/RLS tests pass against this shape.
 - The initial migration was pushed to hosted `orchard-dev`; migration history shows `202606190001` on both local and remote. Supabase Dashboard verification confirmed the hosted tables exist and RLS is enabled on public Orchard tables. CLI dry-run verification was temporarily blocked by Supabase auth throttling, but dashboard verification completed the hosted setup check.
 - Real Supabase auth flow exists for email/password sign-in and account creation, and onboarding/profile rows persist to `profiles` and `profile_members`.
-- Hosted email-confirmation flow is now resumable in app code: if signup returns a user id without a session, a pending onboarding profile is stored locally without credentials and persisted after the confirmation link returns with a session.
+- Hosted email-confirmation flow is now resumable in app code: if signup returns a user id without a session, a pending onboarding profile is stored locally without credentials and persisted after the confirmation link returns with a session. The app explicitly handles web `?code=` and hash-token callback formats, routes users to a pending-confirmation screen after signup, and includes a development-only local test reset control on sign-in.
 - Supabase Storage-backed upload for selected local onboarding profile photos exists. It writes private bucket objects, `profile_photos.member_id` metadata rows, and signed URLs during current-profile hydration. The storage migration has been pushed to hosted `orchard-dev`; app smoke testing with a selected photo is still pending.
+- GitHub Actions now runs Expo install/typecheck/lint on push/PR, and a manual Supabase DB test workflow has been validated against GitHub-hosted runners.
 - Reciprocal matching source of truth and chat backend are not fully wired yet.
 - The project review's `ProfileProvider` concern should be handled incrementally by continuing to move behavior behind service adapters; avoid a one-pass provider rewrite.
 
@@ -131,7 +132,7 @@ Initial tables:
 13. Persist onboarding/profile to backend by mapping `Profile.people[]` to `profile_members`. Done.
 14. Add photo upload through `StorageService`, writing `profile_photos.member_id`. Done locally and pushed to hosted `orchard-dev`.
 15. Smoke-test browser onboarding with selected photo and hosted email confirmation.
-16. Add CI for lint, typecheck, and database tests after DB command reliability is confirmed.
+16. Add CI for lint, typecheck, and database tests after DB command reliability is confirmed. Done; Expo checks run on push/PR and manual Supabase DB workflow passed on GitHub Actions.
 17. Replace swipe persistence as source of truth.
 18. Add reciprocal match creation.
 19. Replace local chat with match-scoped backend messages.

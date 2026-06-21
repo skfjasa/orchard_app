@@ -28,7 +28,7 @@ Backend foundation currently exists for:
 
 - Env-gated Supabase client setup
 - Auth/session provider foundation with email/password sign-in and account creation
-- Resumable hosted Supabase email-confirmation flow for onboarding/profile persistence
+- Resumable hosted Supabase email-confirmation flow for onboarding/profile persistence, with a pending-confirmation screen and local pending-profile restore
 - Initial Supabase schema/RLS/RPC migration draft
 - Hosted `orchard-dev` migration apply and Dashboard verification
 - Profile/member persistence to Supabase `profiles` and `profile_members`
@@ -37,6 +37,7 @@ Backend foundation currently exists for:
 - Backend/mock service factory
 - Non-blocking gated swipe persistence hook
 - Local Supabase CLI/config and initial database/RLS tests, now passing against Docker Desktop/local Supabase
+- GitHub Actions for Expo install/typecheck/lint, plus a validated manual Supabase DB/RLS test workflow
 
 ## Repository Layout
 

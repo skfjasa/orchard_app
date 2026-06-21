@@ -10,30 +10,6 @@ This is a Rork-generated Expo React Native app using Expo Router, TypeScript, Re
 
 The product wedge is structured relationship-context matching, not a generic swipe clone. Relationship structure, partnered status, dating mode, boundaries, looking-for intent, and expectations should be clear before chat.
 
-## Session Start Shortcut
-
-If the user says `status report` in any capitalization, treat it as the standard startup command:
-
-1. Read `AGENTS.md`, `docs/session-handoff.md`, `docs/project-status.md`, and `docs/backend-migration-plan.md`.
-2. Inspect `git status` and recent commits.
-3. Do not modify files yet.
-4. Summarize current repo state, implementation status, latest completed commit, next recommended task, and blockers/human decisions.
-5. Wait for user confirmation before making changes.
-
-## Session Handoff Shortcut
-
-If the user says `handoff sync` or `session handoff` in any capitalization, follow the global session-end handoff protocol from `C:\Users\skfja\.codex\AGENTS.md` and `C:\Users\skfja\Projects\AGENTS.md`.
-
-For Orchard, the project-specific handoff update should:
-
-1. Inspect `git status` and recent commits.
-2. Update all relevant Orchard markdown files containing current status, updates, context, blockers, or next-step instructions. Start with `docs/session-handoff.md`, `docs/project-status.md`, `docs/backend-migration-plan.md`, and `README.md`; update other docs only when materially stale.
-3. Update central `personal-os` mirrors when available and relevant.
-4. Do not change runtime code unless the user explicitly asks.
-5. Summarize changed docs, current blockers, and exact next-session startup steps.
-
-When these docs become large, compact them by preserving active state, blockers, decisions, verification, and next actions in current-state files, while moving older tactical detail to dated history or archive docs.
-
 ## Important Product Decisions
 
 - App name: Orchard.
@@ -50,64 +26,34 @@ When these docs become large, compact them by preserving active state, blockers,
 - Placeholder Account Deletion URL: `https://yourdomain.com/delete`.
 - MVP account deletion process: user requests deletion in app, request is stored, admin reviews/completes deletion in Supabase, and deletion/anonymization follows the policy.
 - User monetization is out of MVP scope.
-- Monetizable features should remain demoable without payment walls during the feedback MVP.
-- Existing and future monetization surfaces are tracked in `docs/monetization-candidates.md`.
 - Preserve the existing Rork UI unless explicitly asked to redesign.
 - Preserve mock/demo mode while backend features are introduced.
-- Keep changes small and commit/sync after meaningful steps.
-- Update `docs/project-status.md` when status, plan, or blockers change.
 
 ## Current Technical State
 
 - Runtime behavior is still mostly local/mock.
 - Persistence is still primarily `AsyncStorage`.
-- `ProfileProvider` remains the main runtime state provider.
-- `ProfileProvider` no longer directly owns AsyncStorage helper code.
-- Local interaction, monetization, profile mutation, and storage helper logic has been extracted.
-- Service interfaces and mock adapters exist.
-- Supabase client skeleton exists and is env-gated.
-- Auth provider foundation exists and defaults to mock mode when Supabase env vars are absent.
-- Supabase email/password auth is wired into sign-in and final onboarding completion when Supabase env vars are present.
-- Hardened Supabase schema/RLS/RPC migration draft exists.
-- The migration includes `profile_members` and requires member-scoped `profile_photos`, so the backend can represent the app's single/couple `Profile.people[]` shape.
-- Supabase service adapters exist for swipe, match, and safety.
-- Backend/mock service factory exists.
-- Swipe persistence has a gated, non-blocking hook through the service factory. Local UI state remains the source of truth.
-- Supabase hardening is tracked in `docs/supabase-hardening-plan.md`.
-- Supabase safety report and account deletion calls now use RPCs, with actor identity derived by the database.
-- Supabase CLI is installed as an Expo dev dependency (`supabase@2.107.0`), and local Supabase config exists at `supabase/config.toml`.
-- Hosted Supabase dev project `orchard-dev` exists at project ref `cvvavwuksygahezzhmqp`; local CLI is linked to it.
-- Initial pgTAP-style database/RLS tests exist at `supabase/tests/database/202606200001_mvp_security.sql` and pass locally.
-- Docker Desktop was installed manually during the 2026-06-20 session and is now operational after enabling firmware virtualization.
-- Post-fix diagnostics on 2026-06-20:
-  - CPU: AMD Ryzen 5 5600X 6-Core Processor
-  - `VirtualizationFirmwareEnabled: True`
-  - `HypervisorPresent: True`
-  - Docker Desktop server running Docker Engine 29.5.3 on Linux
-  - `wsl --status`: default distribution `docker-desktop`, default version 2
-- The first database test run exposed pgTAP assertion argument mistakes; those were fixed in `supabase/tests/database/202606200001_mvp_security.sql`. After the profile-member schema update and local database reset, the suite passes 22/22.
-- Initial in-app Safety & Legal surface exists and is linked from Profile.
-- Report profile, report message, block, unmatch, and account deletion request entry points exist in the mock/local app flow and call the service boundary.
-- Report profile/message now routes through a dedicated reason/details form before submission.
-- Direct chat routes and provider send helpers are guarded so the local app only shows/writes chat for active local matches.
-- Onboarding includes a required 18+ and legal acceptance screen before account type selection; acceptance is stored on the local prototype profile.
-- Safety/legal URLs and support contact are env-configurable via `expo/constants/legal.ts` and `expo/.env.example`; final public values are still human decisions.
-- Supabase signup now passes an app redirect URL for confirmation emails. On web, it defaults to the current browser origin plus `/onboarding/sign-in`; `EXPO_PUBLIC_AUTH_REDIRECT_URL` can override it. The Supabase client detects auth sessions from web confirmation URLs.
-- If hosted Supabase requires email confirmation and returns a user id without a session, the app saves a pending onboarding profile locally without local credentials. When the confirmation link returns with a session, `ProfileProvider` resumes backend profile/member/photo persistence. Web-selected photos are stored as data URIs for this pending path so selected browser photos survive the confirmation/new-tab flow.
-- In Supabase mode, the root route requires an active Supabase session before entering the tab app. Final onboarding creates a Supabase auth user first and uses the Supabase user id as the local prototype profile id when a session is returned.
-- A Supabase profile adapter persists onboarding/profile rows to `profiles` and `profile_members`; the provider can hydrate a signed-in user's local prototype profile from those backend rows.
-- A Supabase storage adapter now uploads selected local onboarding profile photos to a private `profile-photos` bucket, writes `profile_photos.member_id` metadata rows, and hydrates signed current-profile photo URLs locally.
-- New migration `202606200002_profile_photo_storage.sql` adds the storage bucket, owner-scoped storage object policies, and the `profile_photos(profile_id, member_id, sort_order)` unique constraint required for upserts. It passes local reset/tests and has been pushed to hosted `orchard-dev`; app smoke testing with a selected photo is still pending.
-- The project review's `ProfileProvider` and CI/CD recommendations are noted: keep extracting through services instead of rewriting the provider, and add lint/typecheck/database CI after the backend auth/profile path stabilizes.
-- MVP prototype gap assessment is recorded in `docs/mvp-prototype-gap-assessment.md`.
-- Current distance estimate: local demo prototype is close, real backend MVP is roughly 2-4 focused weeks after hosted Supabase setup, and TestFlight beta is roughly 4-6+ weeks depending on Apple/Supabase/legal/build readiness.
+- `ProfileProvider` remains the main runtime state provider. Do not rewrite it in one pass.
+- Service interfaces, mock adapters, Supabase swipe/match/safety adapters, backend/mock service factory, Supabase profile service, and Supabase storage service exist.
+- Supabase email/password auth is wired when Supabase env vars are present.
+- Hosted Supabase dev project `orchard-dev` exists at project ref `cvvavwuksygahezzhmqp`.
+- Hardened schema/RLS/RPC migrations exist:
+  - `supabase/migrations/202606190001_initial_mvp_schema.sql`
+  - `supabase/migrations/202606200002_profile_photo_storage.sql`
+- Hosted migrations through `202606200002` have been pushed and verified.
+- `profile_members` supports single/couple `Profile.people[]`.
+- Private `profile-photos` Supabase Storage bucket and owner-scoped policies exist.
+- Supabase Storage-backed selected local onboarding photo upload exists.
+- Auth confirmation path was improved in `0bc2ffd`:
+  - web auth callback handling supports `?code=` and hash-token callback formats
+  - pending onboarding profile is saved locally without credentials when email confirmation is required
+  - pending profile/member/photo persistence resumes after confirmation returns a session
+  - root loader waits while backend profile restoration is in progress
+  - dedicated pending-confirmation screen exists
+  - development-only sign-in reset control clears local test state
+- Discovery, reciprocal match source of truth, and chat are not yet backend source of truth.
 
 ## Current Backend State
-
-Migration draft:
-
-- `supabase/migrations/202606190001_initial_mvp_schema.sql`
-- `supabase/migrations/202606200002_profile_photo_storage.sql`
 
 Tables covered:
 
@@ -122,7 +68,7 @@ Tables covered:
 - `user_settings`
 - `account_deletion_requests`
 
-Draft RPCs:
+RPCs:
 
 - `create_swipe(target_profile_id, swipe_decision)`
 - `unmatch_match(target_match_id)`
@@ -130,179 +76,64 @@ Draft RPCs:
 - `submit_report(reported_profile_id, report_reason, report_details, reported_message_id)`
 - `request_account_deletion(deletion_reason)`
 
-The initial migration was applied to hosted `orchard-dev` with `expo/node_modules/.bin/supabase db push`. `supabase migration list` shows `202606190001` aligned locally and remotely. Supabase Dashboard verification confirmed the hosted Orchard tables exist, RLS is enabled on public Orchard tables, and `supabase_migrations.schema_migrations` contains `202606190001`. CLI dry-run verification was temporarily blocked by Supabase's auth circuit breaker after temporary-role auth failures, but dashboard verification completed the hosted setup check.
-
-The storage migration `202606200002` has been applied locally and pushed to hosted `orchard-dev`. A follow-up `supabase db push --dry-run` reported the remote database is up to date. `supabase migration list` verification timed out once after the push, but the dry-run confirmed no pending migrations.
-
-Hosted SQL verification on 2026-06-20 confirmed:
-
-- `202606200002` is recorded in `supabase_migrations.schema_migrations`.
-- The `profile-photos` bucket is private.
-- Four owner-scoped `profile_photos_storage_%` policies exist on `storage.objects`.
-- `profile_photos_profile_member_sort_unique` exists.
-
-A hosted anon-client smoke test attempted to create a fresh test auth user but Supabase returned `email rate limit exceeded` before a session was returned. Retest the app photo upload flow after the hosted auth email rate limit clears or with an existing confirmed dev account.
-
-A browser funnel test reached `/onboarding/photos`, sent a Supabase confirmation email, and exposed hosted auth setup gaps: the confirmation link redirected to `http://localhost:3000`, and the email used default Supabase Auth branding. App-side redirect handling has been patched; Supabase Dashboard still needs redirect allow-list/Site URL review and Orchard-branded auth email sender/templates before external tests.
-
-User completed the Supabase Auth URL Configuration redirect setup for the browser preview. Supabase Dashboard requires SMTP configuration before email templates can be customized; SMTP fields remain blank except project auth secrets. Email branding therefore remains an external setup item, not an app-code blocker.
-
 ## Latest Commits
 
+- `1f0f211` - Track GitHub Actions Node warning
+- `e4695be` - Record CI workflow validation
+- `0bc2ffd` - Improve auth confirmation flow and add CI checks
+- `a52ce0e` - Mark handoff commits pushed
 - `06f0a9c` - Refresh handoff after auth resume work
-- `19f3a05` - Resume onboarding after email confirmation
-- `d840619` - Fix Supabase signup redirect handling
-- `01952d5` - Record hosted storage verification
-- `8cc71a0` - Refresh photo storage status docs
-- `6100fc5` - Add Supabase profile photo storage
-- `0b5570c` - Refresh Supabase handoff status
-- `e87e9f0` - Wire Supabase auth and profile persistence
-- `1be95cd` - project review gemini
-- `b9110df` - Record MVP decisions and handoff context
-- `034e254` - Enforce active match for local sends
-- `b56039c` - Guard chat behind active local matches
-- `2834c55` - Add report reason details flow
-- `e9bff32` - Configure legal and support links
-- `5424577` - Add onboarding age and legal gate
-- `e402633` - Add initial safety and legal surfaces
-- `915bc88` - Verify local Supabase database tests
-- `a29e3c4` - Harden Supabase MVP migration
-- `2b73a97` - Document status report shortcut
-- `3a39dbc` - Refresh session handoff context
-- `f9859fa` - Gate swipe persistence through services
-- `8d1c023` - Add backend service factory
-- `525df94` - Add Supabase service adapters
-- `9cf5b94` - Add core Supabase RPC drafts
-- `9422c3a` - Draft initial Supabase schema
-- `c4a4efb` - Add auth session provider foundation
-- `a4f57ea` - Add env-gated Supabase client skeleton
-- `3efd74a` - Update provider architecture status
 
 ## Current Repo Status
 
-As of the 2026-06-21 auth confirmation resume handoff:
-
 - Branch: `main`
 - Remote: `origin/main`
-- Latest pushed commit: `06f0a9c` - Refresh handoff after auth resume work.
-- Latest implementation commit: `19f3a05` - Resume onboarding after email confirmation.
-- Working tree should be clean.
-- Local-only ignored files exist for Supabase credentials/env: `.local/`, `expo/.env`, and `supabase/.temp/`.
-- Local Supabase database is running via Docker Desktop. Non-database Supabase services are stopped, which was sufficient for `supabase test db`.
-- `personal-os` already had unrelated dirty files before this handoff; do not revert them.
+- Current handoff state: code commits are clean/synced with `origin/main`; handoff sync markdown changes are saved locally and uncommitted.
+- Latest pushed commit: `1f0f211` - Track GitHub Actions Node warning
+- Local-only ignored files may exist for Supabase credentials/env: `.local/`, `expo/.env`, and `supabase/.temp/`.
+- `personal-os` may have unrelated dirty files; do not revert them.
 
-## Checks Used
+## Verification
 
-Run from `expo/` after `6100fc5`:
+- Local `bun run typecheck` from `expo/`: passed after auth/UX/CI changes.
+- Local `bun run lint` from `expo/`: passed after auth/UX/CI changes.
+- Local Supabase database tests previously passed with 25 tests after profile photo storage migration.
+- GitHub Actions `Expo Checks`: passed after `0bc2ffd`, `e4695be`, and `1f0f211`.
+- GitHub Actions manual `Supabase DB Tests` run `27895063423`: passed in 4m05s, including local Supabase start, database reset, and `supabase test db`.
+- Session close check: Orchard web preview process group was stopped.
 
-```bash
-bun run lint
-bun run typecheck
-```
+## Active Blockers / Open Loops
 
-Both passed.
-
-Run from `expo/` after `19f3a05`:
-
-```bash
-bun run typecheck
-bun run lint
-```
-
-Both passed.
-
-Run from the repo root:
-
-```bash
-expo/node_modules/.bin/supabase start
-expo/node_modules/.bin/supabase test db
-```
-
-`supabase test db` passed locally after the Docker checkpoint: 1 file, 19 tests.
-
-After the profile-member schema update, the local database was reset with:
-
-```bash
-expo/node_modules/.bin/supabase db reset
-```
-
-Then:
-
-```bash
-expo/node_modules/.bin/supabase test db
-```
-
-passed locally: 1 file, 22 tests.
-
-After adding profile photo storage, local verification used:
-
-```bash
-bun run typecheck
-bun run lint
-expo/node_modules/.bin/supabase db reset
-expo/node_modules/.bin/supabase test db
-```
-
-All passed; `supabase test db` reports 1 file, 25 tests.
-
-## 2026-06-20 Handoff Scope
-
-Latest implementation checkpoint:
-
-- `19f3a05` adds a pending onboarding profile store for hosted Supabase email-confirmation flows, resumes backend profile/photo persistence after confirmation, stores web-selected photos as data URIs for that pending path, and avoids redirecting away from sign-in before pending profile restoration can complete.
-- `d840619` fixes Supabase signup redirect handling by passing the current web origin plus `/onboarding/sign-in` and enabling web URL session detection.
-- `6100fc5` adds Supabase profile photo storage, a private `profile-photos` bucket migration, owner-scoped storage object policies, `profile_photos.member_id` metadata writes, signed current-profile photo hydration, and expanded local database tests.
-- `e87e9f0` wires Supabase email/password sign-in and account creation while preserving mock mode.
-- Adds Supabase profile/member persistence through `expo/services/supabase-profile-service.ts`.
-- Extends the initial migration with `profile_members` and member-scoped `profile_photos`.
-- Applies the initial migration to hosted `orchard-dev`; Dashboard verification confirmed tables, RLS, and migration history.
-- Keeps profile photos local/default for now; Supabase Storage and `profile_photos.member_id` writes are the next backend task.
-- Records review follow-ups: avoid a broad `ProfileProvider` rewrite, keep moving behavior behind services, and add CI after backend command reliability is confirmed.
-
-Orchard files updated:
-
-- `.gitignore`
-- `docs/20260620_project_review.md`
-- `docs/session-handoff.md`
-- `docs/project-status.md`
-- `docs/backend-migration-plan.md`
-- `docs/mvp-backlog.md`
-- `docs/mvp-plan.md`
-- `docs/supabase-hardening-plan.md`
-- `docs/supabase-schema.md`
-- `expo/app/index.tsx`
-- `expo/app/onboarding/photos.tsx`
-- `expo/app/onboarding/sign-in.tsx`
-- `expo/lib/supabase.ts`
-- `expo/providers/auth-provider.tsx`
-- `expo/providers/profile-provider.tsx`
-- `expo/services/app-services.ts`
-- `expo/services/auth-service.ts`
-- `expo/services/index.ts`
-- `expo/services/supabase-profile-service.ts`
-- `supabase/migrations/202606190001_initial_mvp_schema.sql`
-- `supabase/tests/database/202606200001_mvp_security.sql`
-
-Existing unrelated dirty files in `personal-os` should be preserved and not reverted.
+- Hosted Supabase email sends are rate-limited to 2/hour; confirmation-link smoke test is blocked until the rate limit clears or custom SMTP is configured.
+- Need full hosted browser signup/onboarding/photo smoke test in one browser profile.
+- Supabase Auth email sender/template branding requires custom SMTP setup.
+- Apple Developer Program account still needs to be created.
+- Real public legal/support URLs are still placeholders.
+- Decide whether manual Supabase DB tests should run automatically for `supabase/**` pull-request changes.
+- Resolve GitHub Actions Node 20 deprecation warning from `actions/checkout@v4` when a Node-24-native action version is available.
 
 ## Next Best Tasks
 
-1. Create Apple Developer Program account.
-2. Restart the browser preview and smoke-test onboarding in Supabase mode with a selected local photo and the email confirmation link.
-3. Add focused CI for lint, typecheck, and database tests once remote/local DB command reliability is confirmed.
-4. Replace swipe/match/chat local state as source of truth only after auth/profile persistence works.
-5. Add EAS build config and TestFlight metadata when backend/legal placeholders are acceptable.
+1. Retest hosted Supabase confirmation flow with selected local photo once email rate limit clears.
+2. Add safety/moderation hardening DB/RLS tests for report-message, blocked discovery, blocked chat, unmatch behavior, and account deletion edge cases.
+3. Begin backend source-of-truth work behind services without replacing local UI source of truth yet: discovery adapter, match list adapter, chat read/send adapter.
+4. Decide whether to auto-run Supabase DB tests on migration pull requests.
+5. Create Apple Developer Program account and plan custom SMTP/legal URL setup.
 
-## Human Decisions Needed
+## Session Start Shortcut
 
-- Apple Developer account creation.
-- Real public domain/legal URLs before productionization.
-- Supabase Auth email sender/template branding for Orchard requires custom SMTP setup.
+If the user says `status report` in any capitalization:
+
+1. Read `AGENTS.md`, `.agents/handoff.md`, `docs/session-handoff.md`, `docs/project-status.md`, and `docs/backend-migration-plan.md`.
+2. Inspect `git status` and recent commits.
+3. Do not modify files yet.
+4. Summarize current repo state, implementation status, latest completed commit, next recommended task, and blockers/human decisions.
+5. Wait for user confirmation before making changes.
 
 ## Cautions
 
-- Do not rewrite `ProfileProvider` in one pass.
 - Do not remove mock/demo behavior.
+- Do not rewrite `expo/providers/profile-provider.tsx` in one pass.
 - Do not commit `.env`, secrets, Supabase service-role keys, signing credentials, Apple credentials, Google credentials, or private config.
 - Do not put private messages, raw profile text, or PII into analytics.
 - Do not collect exact location for MVP unless explicitly approved.

@@ -5,7 +5,7 @@ Last updated: 2026-06-21
 ## Current Repo State
 
 - Repo: `skfjasa/orchard_app`
-- Handoff checkpoint: 2026-06-21 auth confirmation resume handoff
+- Handoff checkpoint: 2026-06-21 auth confirmation UX and CI validation handoff
 - App code: `expo/`
 - Runtime: Expo React Native with Expo Router and TypeScript
 - Package manager: Bun
@@ -20,6 +20,10 @@ Last updated: 2026-06-21
 
 ## Latest Foundation Commits
 
+- `1f0f211` - Track GitHub Actions Node warning
+- `e4695be` - Record CI workflow validation
+- `0bc2ffd` - Improve auth confirmation flow and add CI checks
+- `a52ce0e` - Mark handoff commits pushed
 - `06f0a9c` - Refresh handoff after auth resume work
 - `19f3a05` - Resume onboarding after email confirmation
 - `d840619` - Fix Supabase signup redirect handling
@@ -128,7 +132,7 @@ Last updated: 2026-06-21
 - A browser funnel test reached `/onboarding/photos`, sent a Supabase confirmation email, and exposed two hosted auth setup gaps: the redirect URL was still pointing at `http://localhost:3000`, and emails still used default Supabase Auth branding. App-side redirect handling has been patched; hosted Supabase Auth redirect allow-list, Site URL, and email templates/sender still need Dashboard review.
 - User updated Supabase Auth URL Configuration redirect entries for the browser preview. Supabase Dashboard currently requires SMTP configuration before auth email templates can be customized; SMTP fields are still blank except project auth secrets.
 - Project review recommendations remain relevant: avoid a broad `ProfileProvider` rewrite, keep moving behavior behind services, and add CI/database automation after the auth/profile path has a little more coverage.
-- Latest implementation checkpoint `19f3a05` is pushed to `origin/main`; latest handoff/status commit is `06f0a9c`.
+- Latest implementation checkpoint `0bc2ffd` is pushed to `origin/main`; latest handoff/status commit is `1f0f211`.
 
 ## Current Task
 
@@ -138,9 +142,10 @@ Retest the hosted Supabase email-confirmation resume flow with a selected local 
 
 1. Create Apple Developer Program account.
 2. Restart the browser preview and smoke-test onboarding in Supabase mode with a real selected photo and the email confirmation link.
-3. Decide whether to make Supabase DB tests automatic for Supabase migration pull requests.
-4. Continue reducing `ProfileProvider` responsibility by moving backend-backed behavior behind services.
-5. Track and resolve the GitHub Actions Node 20 deprecation warning from `actions/checkout@v4`.
+3. Add safety/moderation hardening tests for report-message, blocked discovery, blocked chat, unmatch behavior, and account deletion edge cases.
+4. Decide whether to make Supabase DB tests automatic for Supabase migration pull requests.
+5. Continue reducing `ProfileProvider` responsibility by moving backend-backed behavior behind services.
+6. Track and resolve the GitHub Actions Node 20 deprecation warning from `actions/checkout@v4`.
 
 ## Human Decisions Needed
 
