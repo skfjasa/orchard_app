@@ -47,6 +47,10 @@ import {
   resendPartnerInvite as resendLocalPartnerInvite,
 } from "@/services/local-profile-mutation-service";
 import {
+  clearPendingOnboardingProfile,
+  loadPendingOnboardingProfile,
+} from "@/services/pending-onboarding-storage";
+import {
   Conversation,
   DEFAULT_MATCH_SLOTS,
   DEFAULT_SUPER_LIKES,
@@ -169,7 +173,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     if (!hydrated || backendProfileHydrated || !userId || profile) return;
 
     let cancelled = false;
-    void appServices.profiles.getCurrentProfile().then((result) => {
+    void appServices.profiles.getCurrentProfile().then(async (result) => {
       if (cancelled) return;
       setBackendProfileHydrated(true);
 
@@ -181,7 +185,28 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         return;
       }
 
-      if (!result.value) return;
+      if (!result.value) {
+        const pendingProfile = await loadPendingOnboardingProfile(userId);
+        if (!pendingProfile) return;
+
+        const pendingResult = await appServices.profiles.completeOnboarding({
+          profile: pendingProfile,
+        });
+
+        if (!pendingResult.ok) {
+          console.log("[profile-provider] pending profile save failed", {
+            code: pendingResult.error.code,
+            message: pendingResult.error.message,
+          });
+          return;
+        }
+
+        await clearPendingOnboardingProfile();
+        setProfile(pendingResult.value);
+        saveProfileMutation.mutate(pendingResult.value);
+        return;
+      }
+
       setProfile(result.value);
       saveProfileMutation.mutate(result.value);
     });

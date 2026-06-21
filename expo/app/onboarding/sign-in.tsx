@@ -97,7 +97,8 @@ export default function SignInScreen() {
   useEffect(() => {
     if (mode !== "supabase") return;
     if (!authInitialized || !session) return;
-    router.replace(profile ? "/(tabs)/discover" : "/onboarding/legal");
+    if (!profile) return;
+    router.replace("/(tabs)/discover");
   }, [authInitialized, mode, profile, session]);
 
   const onEmailSignIn = async () => {

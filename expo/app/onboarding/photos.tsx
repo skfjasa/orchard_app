@@ -20,6 +20,7 @@ import Colors from "@/constants/colors";
 import { useOnboarding } from "@/providers/onboarding-provider";
 import { useAuth } from "@/providers/auth-provider";
 import { useProfile } from "@/providers/profile-provider";
+import { savePendingOnboardingProfile } from "@/services/pending-onboarding-storage";
 import {
   AccountCredentials,
   AccountType,
@@ -68,9 +69,15 @@ export default function PhotosScreen() {
           quality: 0.7,
           allowsEditing: true,
           aspect: [3, 4],
+          base64: Platform.OS === "web",
         });
         if (!res.canceled && res.assets[0]) {
-          addPhoto(index, res.assets[0].uri);
+          const asset = res.assets[0];
+          const photoUri =
+            Platform.OS === "web" && asset.base64
+              ? `data:${asset.mimeType ?? "image/jpeg"};base64,${asset.base64}`
+              : asset.uri;
+          addPhoto(index, photoUri);
         }
       } catch (e) {
         console.log("[photos] pick error", e);
@@ -134,6 +141,7 @@ export default function PhotosScreen() {
     }
 
     let profileId = `me-${Date.now()}`;
+    let shouldSavePendingProfile = false;
 
     if (mode === "supabase") {
       if (!ownerEmail || !primaryPassword) {
@@ -156,7 +164,7 @@ export default function PhotosScreen() {
           return;
         }
 
-        if (!result.session || !result.userId) {
+        if (!result.userId) {
           Alert.alert(
             "Check your email",
             "Confirm your email address, then sign in to finish your profile."
@@ -166,6 +174,10 @@ export default function PhotosScreen() {
         }
 
         profileId = result.userId;
+
+        if (!result.session) {
+          shouldSavePendingProfile = true;
+        }
       }
     }
 
@@ -198,6 +210,17 @@ export default function PhotosScreen() {
     console.log("[photos] completing onboarding", profile.id, {
       linkedPartners: linkedPartners.length,
     });
+
+    if (shouldSavePendingProfile) {
+      await savePendingOnboardingProfile(profile);
+      Alert.alert(
+        "Check your email",
+        "Confirm your email address, then return to Orchard. We'll finish saving your profile after you're confirmed."
+      );
+      setFinishing(false);
+      return;
+    }
+
     const completeResult = await completeOnboarding(profile);
     if (!completeResult.ok) {
       Alert.alert(
