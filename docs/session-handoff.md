@@ -149,6 +149,7 @@ User completed the Supabase Auth URL Configuration redirect setup for the browse
 
 ## Latest Commits
 
+- `06f0a9c` - Refresh handoff after auth resume work
 - `19f3a05` - Resume onboarding after email confirmation
 - `d840619` - Fix Supabase signup redirect handling
 - `01952d5` - Record hosted storage verification
@@ -183,8 +184,9 @@ As of the 2026-06-21 auth confirmation resume handoff:
 
 - Branch: `main`
 - Remote: `origin/main`
-- Latest local implementation commit: `19f3a05` - Resume onboarding after email confirmation.
-- Working tree should contain only handoff/status doc refreshes before the handoff commit.
+- Latest pushed commit: `06f0a9c` - Refresh handoff after auth resume work.
+- Latest implementation commit: `19f3a05` - Resume onboarding after email confirmation.
+- Working tree should be clean.
 - Local-only ignored files exist for Supabase credentials/env: `.local/`, `expo/.env`, and `supabase/.temp/`.
 - Local Supabase database is running via Docker Desktop. Non-database Supabase services are stopped, which was sufficient for `supabase test db`.
 - `personal-os` already had unrelated dirty files before this handoff; do not revert them.

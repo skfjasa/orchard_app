@@ -19,6 +19,7 @@ Last updated: 2026-06-21
 
 ## Latest Foundation Commits
 
+- `06f0a9c` - Refresh handoff after auth resume work
 - `19f3a05` - Resume onboarding after email confirmation
 - `d840619` - Fix Supabase signup redirect handling
 - `01952d5` - Record hosted storage verification
@@ -118,7 +119,7 @@ Last updated: 2026-06-21
 - A browser funnel test reached `/onboarding/photos`, sent a Supabase confirmation email, and exposed two hosted auth setup gaps: the redirect URL was still pointing at `http://localhost:3000`, and emails still used default Supabase Auth branding. App-side redirect handling has been patched; hosted Supabase Auth redirect allow-list, Site URL, and email templates/sender still need Dashboard review.
 - User updated Supabase Auth URL Configuration redirect entries for the browser preview. Supabase Dashboard currently requires SMTP configuration before auth email templates can be customized; SMTP fields are still blank except project auth secrets.
 - Project review recommendations remain relevant: avoid a broad `ProfileProvider` rewrite, keep moving behavior behind services, and add CI/database automation after the auth/profile path has a little more coverage.
-- Latest local implementation checkpoint is `19f3a05`. It was created after `d840619`; push state should be verified before closing.
+- Latest implementation checkpoint `19f3a05` is pushed to `origin/main`; latest handoff/status commit is `06f0a9c`.
 
 ## Current Task
 

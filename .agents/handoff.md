@@ -10,7 +10,8 @@ Continue turning the Rork-generated Orchard Expo prototype into an iOS-first Sup
 
 - Repo: `C:\Users\skfja\Projects\orchard_app`
 - Branch: `main`
-- Latest local implementation commit: `19f3a05` - Resume onboarding after email confirmation
+- Latest pushed commit: `06f0a9c` - Refresh handoff after auth resume work
+- Latest implementation commit: `19f3a05` - Resume onboarding after email confirmation
 - App: Expo React Native / Expo Router / TypeScript under `expo/`
 - Backend: Supabase dev project `orchard-dev`, project ref `cvvavwuksygahezzhmqp`
 - Runtime is still mixed: local/mock UI state remains primary for discovery/matches/chat, while Supabase auth, profile/member persistence, safety RPCs, swipe persistence hook, and profile photo storage now exist.
@@ -42,10 +43,9 @@ Continue turning the Rork-generated Orchard Expo prototype into an iOS-first Sup
 
 ## Exact Next Action
 
-1. Confirm latest commits are pushed or push them if appropriate.
-2. Restart `bun run start-web` from `expo/`.
-3. Run a fresh signup/onboarding test with a selected photo.
-4. Confirm the email link returns to `/onboarding/sign-in`, the pending profile persists after confirmation, and Supabase has `profiles`, `profile_members`, `profile_photos`, and Storage object rows.
+1. Restart `bun run start-web` from `expo/`.
+2. Run a fresh signup/onboarding test with a selected photo.
+3. Confirm the email link returns to `/onboarding/sign-in`, the pending profile persists after confirmation, and Supabase has `profiles`, `profile_members`, `profile_photos`, and Storage object rows.
 
 ## Read First Next Session
 
