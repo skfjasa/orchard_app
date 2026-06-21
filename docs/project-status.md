@@ -114,6 +114,7 @@ Last updated: 2026-06-21
 - GitHub Actions validation on 2026-06-21:
   - `Expo Checks` passed on push for commit `0bc2ffd`.
   - Manual `Supabase DB Tests` run `27895063423` passed in 4m05s, including local Supabase start, database reset, and `supabase test db`.
+  - Follow-up: GitHub Actions warns that `actions/checkout@v4` targets Node 20 and is being forced to Node 24; upgrade checkout usage when a Node-24-native action version is available.
 - In Supabase mode, the root route requires an active Supabase session before entering the tab app.
 - Final onboarding creates a Supabase auth user first and uses the Supabase user id as the local prototype profile id when a session is returned.
 - Profile/account-deletion sign-out now clears both local prototype state and the Supabase auth session.
@@ -139,6 +140,7 @@ Retest the hosted Supabase email-confirmation resume flow with a selected local 
 2. Restart the browser preview and smoke-test onboarding in Supabase mode with a real selected photo and the email confirmation link.
 3. Decide whether to make Supabase DB tests automatic for Supabase migration pull requests.
 4. Continue reducing `ProfileProvider` responsibility by moving backend-backed behavior behind services.
+5. Track and resolve the GitHub Actions Node 20 deprecation warning from `actions/checkout@v4`.
 
 ## Human Decisions Needed
 
