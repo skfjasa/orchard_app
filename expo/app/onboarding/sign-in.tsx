@@ -1,6 +1,6 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router, Stack } from "expo-router";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react-native";
+import { Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
   Alert,
@@ -91,7 +91,7 @@ export default function SignInScreen() {
     signInWithEmail,
     signOut,
   } = useAuth();
-  const { profile } = useProfile();
+  const { backendProfileHydrated, hydrated, profile } = useProfile();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -102,8 +102,26 @@ export default function SignInScreen() {
   useEffect(() => {
     if (mode !== "supabase") return;
     if (!authInitialized || !session) return;
-    router.replace(profile ? "/(tabs)/discover" : "/");
-  }, [authInitialized, mode, profile, session]);
+    if (profile) {
+      router.replace("/(tabs)/discover");
+      return;
+    }
+    if (!hydrated || !backendProfileHydrated) return;
+  }, [authInitialized, backendProfileHydrated, hydrated, mode, profile, session]);
+
+  const finalizingConfirmedProfile =
+    mode === "supabase" &&
+    authInitialized &&
+    !!session &&
+    !profile &&
+    (!hydrated || !backendProfileHydrated);
+  const signedInWithoutProfile =
+    mode === "supabase" &&
+    authInitialized &&
+    !!session &&
+    !profile &&
+    hydrated &&
+    backendProfileHydrated;
 
   const onEmailSignIn = async () => {
     const id = email.trim();
@@ -132,7 +150,6 @@ export default function SignInScreen() {
         return;
       }
 
-      router.replace(profile ? "/(tabs)/discover" : "/");
       return;
     }
 
@@ -224,6 +241,35 @@ export default function SignInScreen() {
             </View>
 
             <View style={styles.card}>
+              {finalizingConfirmedProfile && (
+                <View style={styles.finalizing} testID="finalizing-profile">
+                  <Loader2 size={18} color="#FFD36B" />
+                  <Text style={styles.finalizingText}>
+                    Email confirmed. Finishing your profile...
+                  </Text>
+                </View>
+              )}
+
+              {signedInWithoutProfile && (
+                <View style={styles.finalizing} testID="missing-profile">
+                  <Text style={styles.finalizingText}>
+                    You are signed in, but Orchard could not find a saved
+                    profile for this email. Continue profile setup to enter
+                    Orchard.
+                  </Text>
+                  <Pressable
+                    onPress={() => router.replace("/onboarding/account-type")}
+                    style={({ pressed }) => [
+                      styles.inlineAction,
+                      pressed && { opacity: 0.82 },
+                    ]}
+                    testID="continue-profile-setup"
+                  >
+                    <Text style={styles.inlineActionText}>Continue setup</Text>
+                  </Pressable>
+                </View>
+              )}
+
               <Text style={styles.label}>Username or email</Text>
               <View style={styles.inputWrap}>
                 <Mail size={18} color="#8A7C83" />
@@ -390,6 +436,34 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,214,107,0.25)",
     borderRadius: 20,
     padding: 18,
+  },
+  finalizing: {
+    alignItems: "flex-start",
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,211,107,0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(255,211,107,0.28)",
+    marginBottom: 16,
+  },
+  finalizingText: {
+    color: "#FFE6A1",
+    fontSize: 13,
+    fontWeight: "800" as const,
+  },
+  inlineAction: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: "#FFD36B",
+  },
+  inlineActionText: {
+    color: "#1F1320",
+    fontSize: 12,
+    fontWeight: "900" as const,
   },
   label: {
     color: "#FFE6A1",

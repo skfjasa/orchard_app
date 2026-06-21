@@ -17,7 +17,7 @@ The current app is a local/mock Rork prototype.
 - Initial Supabase schema migration draft exists and has been hardened before dev-project apply.
 - Initial Supabase service adapters exist for swipes, matches, and safety flows.
 - Backend/mock service factory exists with explicit per-service capabilities.
-- Swipe persistence has a gated, non-blocking provider hook for Supabase mode only when the local profile id matches the authenticated user id.
+- Swipe persistence has a gated, non-blocking provider hook for Supabase mode only when the local profile id matches the authenticated user id. Mock UI profile ids are mapped to stable seeded fixture UUIDs for dev backend swipe persistence.
 - Safety service report and account deletion calls use RPCs so the database derives actor identity from `auth.uid()`.
 - Initial database/RLS tests exist and pass against the local Supabase database.
 - Docker Desktop is operational after enabling firmware virtualization.
@@ -29,7 +29,9 @@ The current app is a local/mock Rork prototype.
 - Hosted email-confirmation flow is now resumable in app code: if signup returns a user id without a session, a pending onboarding profile is stored locally without credentials and persisted after the confirmation link returns with a session. The app explicitly handles web `?code=` and hash-token callback formats, routes users to a pending-confirmation screen after signup, and includes a development-only local test reset control on sign-in.
 - Supabase Storage-backed upload for selected local onboarding profile photos exists. It writes private bucket objects, `profile_photos.member_id` metadata rows, and signed URLs during current-profile hydration. The storage migration has been pushed to hosted `orchard-dev`; app smoke testing with a selected photo is still pending.
 - GitHub Actions now runs Expo install/typecheck/lint on push/PR, and a manual Supabase DB test workflow has been validated against GitHub-hosted runners.
-- Reciprocal matching source of truth and chat backend are not fully wired yet.
+- Dev fixture profile support exists in `202606210001_fixture_profiles_and_settings.sql`; hosted `orchard-dev` has 22 seeded fixture profiles, 30 fixture members, and settings rows. Real users who like fixture profiles auto-match for dev testing.
+- `user_settings` rows are created/backfilled at the database layer and also written during Supabase profile completion.
+- Reciprocal matching source of truth and chat backend are not fully wired yet for real user-to-user matching/chat.
 - The project review's `ProfileProvider` concern should be handled incrementally by continuing to move behavior behind service adapters; avoid a one-pass provider rewrite.
 
 ## 2. Migration Principle
@@ -133,7 +135,9 @@ Initial tables:
 14. Add photo upload through `StorageService`, writing `profile_photos.member_id`. Done locally and pushed to hosted `orchard-dev`.
 15. Smoke-test browser onboarding with selected photo and hosted email confirmation.
 16. Add CI for lint, typecheck, and database tests after DB command reliability is confirmed. Done; Expo checks run on push/PR and manual Supabase DB workflow passed on GitHub Actions.
-17. Replace swipe persistence as source of truth.
-18. Add reciprocal match creation.
-19. Replace local chat with match-scoped backend messages.
-20. Add safety service and enforce block/report/unmatch/account deletion flows.
+17. Add dev fixture profile support and default `user_settings` creation/backfill. Done and pushed to hosted `orchard-dev`.
+18. Retest hosted swipe/match persistence by liking seeded fixture profiles from the browser/ngrok app.
+19. Replace swipe persistence as source of truth.
+20. Add reciprocal match creation for real user-to-user matching.
+21. Replace local chat with match-scoped backend messages.
+22. Add safety service and enforce block/report/unmatch/account deletion flows.

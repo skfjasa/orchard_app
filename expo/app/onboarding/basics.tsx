@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { Eye, EyeOff, Lock, MapPin, User as UserIcon } from "lucide-react-native";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -15,6 +15,7 @@ import {
 import { Button, SectionLabel } from "@/components/ui";
 import { searchCities } from "@/constants/cities";
 import Colors from "@/constants/colors";
+import { useAuth } from "@/providers/auth-provider";
 import { useOnboarding } from "@/providers/onboarding-provider";
 
 function isValidEmail(v: string): boolean {
@@ -22,9 +23,11 @@ function isValidEmail(v: string): boolean {
 }
 
 export default function BasicsScreen() {
+  const { mode, session } = useAuth();
   const { draft, setPerson, setCity, setEmail, setUsername, setPassword } =
     useOnboarding();
   const isCouple = draft.accountType === "couple";
+  const hasSupabaseSession = mode === "supabase" && !!session;
   const [cityFocused, setCityFocused] = useState<boolean>(false);
   const [showPw1, setShowPw1] = useState<boolean>(false);
   const [showPw2, setShowPw2] = useState<boolean>(false);
@@ -51,24 +54,34 @@ export default function BasicsScreen() {
 
   const validUsername = (v: string) => /^[a-zA-Z0-9_.]{3,20}$/.test(v.trim());
   const validPassword = (v: string) => v.length >= 6;
+  const primaryAccountValid = hasSupabaseSession
+    ? isValidEmail(email1)
+    : isValidEmail(email1) && validUsername(username1) && validPassword(password1);
+  const partnerAccountValid = hasSupabaseSession
+    ? isValidEmail(email2) && email2.trim().toLowerCase() !== email1.trim().toLowerCase()
+    : isValidEmail(email2) &&
+      email2.trim().toLowerCase() !== email1.trim().toLowerCase() &&
+      validUsername(username2) &&
+      validPassword(password2) &&
+      username2.trim().toLowerCase() !== username1.trim().toLowerCase();
+
+  useEffect(() => {
+    const authEmail = session?.user.email;
+    if (!hasSupabaseSession || !authEmail || email1.trim()) return;
+    setEmail(0, authEmail);
+  }, [email1, hasSupabaseSession, session?.user.email, setEmail]);
 
   const canContinue =
     !!person1.name &&
     !!person1.age &&
     person1.age >= 18 &&
     !!draft.city &&
-    isValidEmail(email1) &&
-    validUsername(username1) &&
-    validPassword(password1) &&
+    primaryAccountValid &&
     (!isCouple ||
       (!!person2.name &&
         !!person2.age &&
         person2.age >= 18 &&
-        isValidEmail(email2) &&
-        email2.trim().toLowerCase() !== email1.trim().toLowerCase() &&
-        validUsername(username2) &&
-        validPassword(password2) &&
-        username2.trim().toLowerCase() !== username1.trim().toLowerCase()));
+        partnerAccountValid));
 
   return (
     <KeyboardAvoidingView
@@ -104,6 +117,7 @@ export default function BasicsScreen() {
           onEmail={(v) => setEmail(0, v)}
           onUsername={(v) => setUsername(0, v)}
           onPassword={(v) => setPassword(0, v)}
+          showCredentials={!hasSupabaseSession}
         />
 
         {isCouple && (
@@ -125,6 +139,7 @@ export default function BasicsScreen() {
               onEmail={(v) => setEmail(1, v)}
               onUsername={(v) => setUsername(1, v)}
               onPassword={(v) => setPassword(1, v)}
+              showCredentials={!hasSupabaseSession}
             />
           </>
         )}
@@ -201,6 +216,7 @@ function PersonBasics({
   onEmail,
   onUsername,
   onPassword,
+  showCredentials = true,
 }: {
   label: string;
   name: string;
@@ -217,6 +233,7 @@ function PersonBasics({
   onEmail: (v: string) => void;
   onUsername: (v: string) => void;
   onPassword: (v: string) => void;
+  showCredentials?: boolean;
 }) {
   return (
     <View>
@@ -257,47 +274,51 @@ function PersonBasics({
       />
       {emailHint && <Text style={styles.hint}>{emailHint}</Text>}
 
-      <View style={{ height: 10 }} />
-      <Text style={styles.miniLabel}>Username</Text>
-      <View style={styles.inputWrap}>
-        <UserIcon size={16} color={Colors.light.textMuted} />
-        <TextInput
-          value={username}
-          onChangeText={onUsername}
-          placeholder="e.g. sunny_sam"
-          placeholderTextColor={Colors.light.textMuted}
-          autoCapitalize="none"
-          autoCorrect={false}
-          style={styles.inputInner}
-          testID={`input-username-${label}`}
-        />
-      </View>
-      <Text style={styles.hint}>3–20 characters. Letters, numbers, _ or .</Text>
+      {showCredentials && (
+        <>
+          <View style={{ height: 10 }} />
+          <Text style={styles.miniLabel}>Username</Text>
+          <View style={styles.inputWrap}>
+            <UserIcon size={16} color={Colors.light.textMuted} />
+            <TextInput
+              value={username}
+              onChangeText={onUsername}
+              placeholder="e.g. sunny_sam"
+              placeholderTextColor={Colors.light.textMuted}
+              autoCapitalize="none"
+              autoCorrect={false}
+              style={styles.inputInner}
+              testID={`input-username-${label}`}
+            />
+          </View>
+          <Text style={styles.hint}>3–20 characters. Letters, numbers, _ or .</Text>
 
-      <View style={{ height: 10 }} />
-      <Text style={styles.miniLabel}>Password</Text>
-      <View style={styles.inputWrap}>
-        <Lock size={16} color={Colors.light.textMuted} />
-        <TextInput
-          value={password}
-          onChangeText={onPassword}
-          placeholder="At least 6 characters"
-          placeholderTextColor={Colors.light.textMuted}
-          secureTextEntry={!showPassword}
-          autoCapitalize="none"
-          autoCorrect={false}
-          style={styles.inputInner}
-          testID={`input-password-${label}`}
-        />
-        <Pressable onPress={onToggleShow} hitSlop={10}>
-          {showPassword ? (
-            <EyeOff size={16} color={Colors.light.textMuted} />
-          ) : (
-            <Eye size={16} color={Colors.light.textMuted} />
-          )}
-        </Pressable>
-      </View>
-      <Text style={styles.hint}>You&apos;ll use these to sign back in.</Text>
+          <View style={{ height: 10 }} />
+          <Text style={styles.miniLabel}>Password</Text>
+          <View style={styles.inputWrap}>
+            <Lock size={16} color={Colors.light.textMuted} />
+            <TextInput
+              value={password}
+              onChangeText={onPassword}
+              placeholder="At least 6 characters"
+              placeholderTextColor={Colors.light.textMuted}
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
+              style={styles.inputInner}
+              testID={`input-password-${label}`}
+            />
+            <Pressable onPress={onToggleShow} hitSlop={10}>
+              {showPassword ? (
+                <EyeOff size={16} color={Colors.light.textMuted} />
+              ) : (
+                <Eye size={16} color={Colors.light.textMuted} />
+              )}
+            </Pressable>
+          </View>
+          <Text style={styles.hint}>You&apos;ll use these to sign back in.</Text>
+        </>
+      )}
     </View>
   );
 }

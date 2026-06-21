@@ -4,8 +4,10 @@ import type { ServiceResponse } from "./service-types";
 
 export interface DiscoveryFilters {
   profileId: string;
+  viewerProfile?: Profile;
   limit?: number;
   includePassed?: boolean;
+  excludedProfileIds?: string[];
 }
 
 export interface DiscoveryProfile {

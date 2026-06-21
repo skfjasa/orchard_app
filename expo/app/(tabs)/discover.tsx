@@ -5,6 +5,7 @@ import { router } from "expo-router";
 import {
   Heart,
   MapPin,
+  MessageCircle,
   Sparkles,
   Users,
   X,
@@ -15,12 +16,12 @@ import SuperLikeBurst from "@/components/SuperLikeBurst";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
-  Dimensions,
   PanResponder,
   Platform,
   Pressable,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -31,16 +32,17 @@ import {
   MVP_SUPER_LIKES_ENABLED,
 } from "@/constants/features";
 import { getPolyFruit } from "@/constants/poly-fruits";
-import { MOCK_PROFILES } from "@/mocks/profiles";
 import { useProfile } from "@/providers/profile-provider";
+import { createAppServices } from "@/services/app-services";
+import type { DiscoveryProfile } from "@/services";
 import { Profile } from "@/types";
-import { rankProfiles } from "@/utils/match";
 
-const { width: SCREEN_W } = Dimensions.get("window");
-const CARD_W = SCREEN_W - 40;
+const MAX_CARD_W = 460;
 const SWIPE_THRESHOLD = 120;
 
 export default function DiscoverScreen() {
+  const { width: screenWidth } = useWindowDimensions();
+  const appServices = useMemo(() => createAppServices(), []);
   const {
     profile,
     likedIds,
@@ -54,14 +56,40 @@ export default function DiscoverScreen() {
     superLikeProfile,
     superLikeBalance,
   } = useProfile();
+  const [ranked, setRanked] = useState<DiscoveryProfile[]>([]);
+  const [matchProfile, setMatchProfile] = useState<Profile | null>(null);
+  const cardWidth = Math.min(screenWidth - 40, MAX_CARD_W);
 
-  const ranked = useMemo(() => {
-    if (!profile) return [];
-    const available = MOCK_PROFILES.filter(
-      (p) => !likedIds.includes(p.id) && !passedIds.includes(p.id)
-    );
-    return rankProfiles(profile, available);
-  }, [profile, likedIds, passedIds]);
+  useEffect(() => {
+    if (!profile) {
+      setRanked([]);
+      return;
+    }
+
+    let cancelled = false;
+    void appServices.discovery
+      .listProfiles({
+        profileId: profile.id,
+        viewerProfile: profile,
+        excludedProfileIds: [...likedIds, ...passedIds],
+      })
+      .then((result) => {
+        if (cancelled) return;
+        if (!result.ok) {
+          console.log("[discover] profile discovery failed", {
+            code: result.error.code,
+            message: result.error.message,
+          });
+          setRanked([]);
+          return;
+        }
+        setRanked(result.value);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [appServices, profile, likedIds, passedIds]);
 
   const pan = useRef(new Animated.ValueXY()).current;
   const swipingRef = useRef<boolean>(false);
@@ -84,6 +112,15 @@ export default function DiscoverScreen() {
   const triggerHaptic = (style: Haptics.ImpactFeedbackStyle) => {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(style).catch(() => {});
+    }
+  };
+
+  const showMatchConfirmation = (matched: Profile) => {
+    setMatchProfile(matched);
+    if (Platform.OS !== "web") {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(
+        () => {}
+      );
     }
   };
 
@@ -123,7 +160,7 @@ export default function DiscoverScreen() {
     Animated.sequence([
       Animated.delay(420),
       Animated.timing(pan, {
-        toValue: { x: 0, y: -SCREEN_W * 1.2 },
+        toValue: { x: 0, y: -screenWidth * 1.2 },
         duration: 360,
         useNativeDriver: Platform.OS !== "web",
       }),
@@ -135,6 +172,7 @@ export default function DiscoverScreen() {
     const pid = pendingSuperLikeRef.current;
     pendingSuperLikeRef.current = null;
     if (!pid) return;
+    const matched = ranked.find((item) => item.profile.id === pid)?.profile;
     const res = superLikeProfile(pid);
     if (MVP_MONETIZATION_ENABLED && !res.ok && res.reason === "limit") {
       router.push("/paywall?reason=limit");
@@ -144,6 +182,8 @@ export default function DiscoverScreen() {
       res.reason === "superlikes"
     ) {
       router.push("/paywall?reason=superlikes");
+    } else if (res.ok && matched) {
+      showMatchConfirmation(matched);
     }
   };
 
@@ -162,7 +202,8 @@ export default function DiscoverScreen() {
     }
     swipingRef.current = true;
     const profileId = current.profile.id;
-    const toX = direction === "right" ? SCREEN_W * 1.5 : -SCREEN_W * 1.5;
+    const swipedProfile = current.profile;
+    const toX = direction === "right" ? screenWidth * 1.5 : -screenWidth * 1.5;
     triggerHaptic(
       direction === "right"
         ? Haptics.ImpactFeedbackStyle.Medium
@@ -174,7 +215,10 @@ export default function DiscoverScreen() {
       useNativeDriver: Platform.OS !== "web",
     }).start(() => {
       if (direction === "right") {
-        likeProfile(profileId);
+        const res = likeProfile(profileId);
+        if (res.ok) {
+          showMatchConfirmation(swipedProfile);
+        }
       } else {
         passProfile(profileId);
       }
@@ -203,11 +247,11 @@ export default function DiscoverScreen() {
         },
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [current?.profile.id, isAtMatchLimit, likedIds]
+    [current?.profile.id, isAtMatchLimit, likedIds, screenWidth]
   );
 
   const rotate = pan.x.interpolate({
-    inputRange: [-SCREEN_W, 0, SCREEN_W],
+    inputRange: [-screenWidth, 0, screenWidth],
     outputRange: ["-12deg", "0deg", "12deg"],
   });
   const likeOpacity = pan.x.interpolate({
@@ -221,7 +265,7 @@ export default function DiscoverScreen() {
     extrapolate: "clamp",
   });
   const nextScale = pan.x.interpolate({
-    inputRange: [-SCREEN_W, 0, SCREEN_W],
+    inputRange: [-screenWidth, 0, screenWidth],
     outputRange: [1, 0.94, 1],
     extrapolate: "clamp",
   });
@@ -268,12 +312,13 @@ export default function DiscoverScreen() {
             <Animated.View
               style={[
                 styles.cardWrap,
+                { width: cardWidth },
                 styles.cardBehind,
                 { transform: [{ scale: nextScale }] },
               ]}
               pointerEvents="none"
             >
-              <ProfileCard data={next.profile} score={next.score.total} />
+              <ProfileCard data={next.profile} score={next.score?.total ?? 0} />
             </Animated.View>
           )}
           {current ? (
@@ -281,6 +326,7 @@ export default function DiscoverScreen() {
               key={current.profile.id}
               style={[
                 styles.cardWrap,
+                { width: cardWidth },
                 {
                   transform: [
                     { translateX: pan.x },
@@ -293,8 +339,8 @@ export default function DiscoverScreen() {
             >
               <ProfileCard
                 data={current.profile}
-                score={current.score.total}
-                distanceKm={current.score.distanceKm}
+                score={current.score?.total ?? 0}
+                distanceKm={current.score?.distanceKm}
                 onPress={() => router.push(`/match/${current.profile.id}`)}
               />
               <Animated.View
@@ -372,6 +418,14 @@ export default function DiscoverScreen() {
         )}
       </SafeAreaView>
       <SuperLikeBurst visible={burstVisible} onDone={handleBurstDone} />
+      <MatchConfirmation
+        profile={matchProfile}
+        onClose={() => setMatchProfile(null)}
+        onMessage={(profileId) => {
+          setMatchProfile(null);
+          router.push(`/chat/${profileId}`);
+        }}
+      />
     </View>
   );
 }
@@ -416,6 +470,72 @@ function ActionButton({
     >
       {children}
     </Pressable>
+  );
+}
+
+function MatchConfirmation({
+  profile,
+  onClose,
+  onMessage,
+}: {
+  profile: Profile | null;
+  onClose: () => void;
+  onMessage: (profileId: string) => void;
+}) {
+  if (!profile) return null;
+
+  const primary = profile.people[0];
+  const secondary = profile.people[1];
+  const displayName =
+    profile.accountType === "couple" && secondary
+      ? `${primary.name} & ${secondary.name}`
+      : primary.name;
+
+  return (
+    <View style={styles.matchOverlay} pointerEvents="auto">
+      <Pressable style={StyleSheet.absoluteFillObject} onPress={onClose} />
+      <View style={styles.matchCard}>
+        <View style={styles.matchAvatarRow}>
+          <Image
+            source={{ uri: primary.photo }}
+            style={styles.matchAvatar}
+            contentFit="cover"
+          />
+          {secondary && (
+            <Image
+              source={{ uri: secondary.photo }}
+              style={[styles.matchAvatar, styles.matchAvatarSecond]}
+              contentFit="cover"
+            />
+          )}
+        </View>
+        <Text style={styles.matchTitle}>{"It's a match!"}</Text>
+        <Text style={styles.matchSub}>
+          You and {displayName} can start chatting now.
+        </Text>
+        <View style={styles.matchActions}>
+          <Pressable
+            onPress={onClose}
+            style={({ pressed }) => [
+              styles.matchSecondaryBtn,
+              pressed && { opacity: 0.85 },
+            ]}
+          >
+            <Text style={styles.matchSecondaryText}>Keep swiping</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => onMessage(profile.id)}
+            style={({ pressed }) => [
+              styles.matchPrimaryBtn,
+              pressed && { opacity: 0.9 },
+            ]}
+          >
+            <MessageCircle color="#FFF" size={16} />
+            <Text style={styles.matchPrimaryText}>Message</Text>
+          </Pressable>
+        </View>
+      </View>
+    </View>
   );
 }
 
@@ -566,6 +686,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 8,
     paddingBottom: 10,
+    zIndex: 2,
   },
   hello: {
     fontSize: 13,
@@ -683,7 +804,6 @@ const styles = StyleSheet.create({
   },
   deck: { flex: 1, alignItems: "center", justifyContent: "center" },
   cardWrap: {
-    width: CARD_W,
     aspectRatio: 3 / 4,
     position: "absolute",
   },
@@ -889,5 +1009,83 @@ const styles = StyleSheet.create({
     color: Colors.light.textMuted,
     marginTop: 6,
     textAlign: "center",
+  },
+  matchOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+    backgroundColor: "rgba(31,19,32,0.48)",
+    zIndex: 20,
+  },
+  matchCard: {
+    width: "100%",
+    maxWidth: 360,
+    alignItems: "center",
+    paddingHorizontal: 22,
+    paddingVertical: 24,
+    borderRadius: 24,
+    backgroundColor: Colors.light.background,
+    borderWidth: 1,
+    borderColor: Colors.light.line,
+  },
+  matchAvatarRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    minHeight: 96,
+    marginBottom: 10,
+  },
+  matchAvatar: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    borderWidth: 4,
+    borderColor: Colors.light.background,
+  },
+  matchAvatarSecond: {
+    marginLeft: -28,
+  },
+  matchTitle: {
+    fontSize: 28,
+    fontWeight: "900" as const,
+    color: Colors.light.text,
+    textAlign: "center",
+  },
+  matchSub: {
+    marginTop: 6,
+    fontSize: 14,
+    lineHeight: 20,
+    color: Colors.light.textMuted,
+    textAlign: "center",
+  },
+  matchActions: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 20,
+  },
+  matchSecondaryBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 999,
+    backgroundColor: Colors.light.surfaceAlt,
+  },
+  matchSecondaryText: {
+    fontSize: 13,
+    fontWeight: "800" as const,
+    color: Colors.light.text,
+  },
+  matchPrimaryBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 999,
+    backgroundColor: Colors.palette.coral,
+  },
+  matchPrimaryText: {
+    fontSize: 13,
+    fontWeight: "900" as const,
+    color: "#FFF",
   },
 });

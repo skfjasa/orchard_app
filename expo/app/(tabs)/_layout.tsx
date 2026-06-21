@@ -1,11 +1,26 @@
 import { Tabs } from "expo-router";
 import { Citrus, Compass, Heart, MessageCircle, User } from "lucide-react-native";
-import React from "react";
+import React, { useMemo } from "react";
 import { Platform, StyleSheet } from "react-native";
 
 import Colors from "@/constants/colors";
+import { useProfile } from "@/providers/profile-provider";
 
 export default function TabLayout() {
+  const { conversations } = useProfile();
+  const newMatchCount = useMemo(
+    () => conversations.filter((conversation) => conversation.unread > 0).length,
+    [conversations]
+  );
+  const unreadMessageCount = useMemo(
+    () =>
+      conversations.reduce(
+        (total, conversation) => total + Math.max(0, conversation.unread),
+        0
+      ),
+    [conversations]
+  );
+
   return (
     <Tabs
       screenOptions={{
@@ -14,6 +29,7 @@ export default function TabLayout() {
         headerShown: false,
         tabBarStyle: styles.tabBar,
         tabBarLabelStyle: styles.tabLabel,
+        tabBarBadgeStyle: styles.tabBadge,
       }}
     >
       <Tabs.Screen
@@ -38,6 +54,7 @@ export default function TabLayout() {
         name="matches"
         options={{
           title: "Matches",
+          tabBarBadge: newMatchCount > 0 ? newMatchCount : undefined,
           tabBarIcon: ({ color, size }) => (
             <Heart color={color} size={size ?? 22} strokeWidth={2} />
           ),
@@ -47,6 +64,7 @@ export default function TabLayout() {
         name="inbox"
         options={{
           title: "Inbox",
+          tabBarBadge: unreadMessageCount > 0 ? unreadMessageCount : undefined,
           tabBarIcon: ({ color, size }) => (
             <MessageCircle color={color} size={size ?? 22} strokeWidth={2} />
           ),
@@ -77,5 +95,13 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "600" as const,
     letterSpacing: 0.3,
+  },
+  tabBadge: {
+    backgroundColor: Colors.palette.coral,
+    color: "#FFF",
+    fontSize: 10,
+    fontWeight: "800" as const,
+    minWidth: 18,
+    height: 18,
   },
 });

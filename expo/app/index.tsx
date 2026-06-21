@@ -23,6 +23,10 @@ export default function Index() {
     return <Redirect href="/onboarding" />;
   }
 
+  if (mode === "supabase" && session && !profile) {
+    return <Redirect href="/onboarding/account-type" />;
+  }
+
   if (!profile) return <Redirect href="/onboarding" />;
   return <Redirect href="/(tabs)/discover" />;
 }

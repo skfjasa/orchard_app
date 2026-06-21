@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Check, FileText, Shield } from "lucide-react-native";
 import React from "react";
 import {
@@ -18,6 +18,7 @@ import { useOnboarding } from "@/providers/onboarding-provider";
 
 export default function LegalGateScreen() {
   const { acceptLegal } = useOnboarding();
+  const params = useLocalSearchParams<{ next?: string }>();
   const [ageConfirmed, setAgeConfirmed] = React.useState(false);
   const [termsAccepted, setTermsAccepted] = React.useState(false);
   const [privacyAccepted, setPrivacyAccepted] = React.useState(false);
@@ -28,7 +29,12 @@ export default function LegalGateScreen() {
 
   const continueOnboarding = () => {
     acceptLegal();
-    router.push("/onboarding/account-type");
+    if (params.next === "/onboarding/basics") {
+      router.replace("/onboarding/basics");
+      return;
+    }
+
+    router.replace("/onboarding/account-type");
   };
 
   const openOptionalUrl = (url: string | undefined) => {

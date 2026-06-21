@@ -53,7 +53,7 @@ export default function WelcomeScreen() {
           <Pressable
             onPress={() => {
               console.log("[welcome] sign-in pressed");
-              router.replace("/onboarding/sign-in");
+              router.push("/onboarding/sign-in");
             }}
             testID="already-account-btn"
             style={({ pressed }) => [

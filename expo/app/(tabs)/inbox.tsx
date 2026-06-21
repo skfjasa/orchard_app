@@ -8,7 +8,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "@/constants/colors";
 import { MOCK_PROFILES } from "@/mocks/profiles";
 import { useProfile } from "@/providers/profile-provider";
-import { Conversation, Profile } from "@/types";
+import { Conversation, Message, Profile } from "@/types";
+
+interface InboxItem {
+  convo: Conversation;
+  other: Profile;
+  lastMessage: Message | null;
+}
 
 function formatTime(t: number): string {
   const diff = Date.now() - t;
@@ -27,15 +33,21 @@ export default function InboxScreen() {
 
   const items = useMemo(() => {
     return conversations
-      .map((c) => {
+      .map<InboxItem | null>((c) => {
         const other = MOCK_PROFILES.find((p) => p.id === c.profileId);
         if (!other) return null;
-        return { convo: c, other };
+        const messages = Array.isArray(c.messages) ? c.messages : [];
+        const lastMessage = messages[messages.length - 1] ?? null;
+        return {
+          convo: { ...c, messages },
+          other,
+          lastMessage,
+        };
       })
-      .filter((x): x is { convo: Conversation; other: Profile } => !!x)
+      .filter((x): x is InboxItem => !!x)
       .sort((a, b) => {
-        const ta = a.convo.messages[a.convo.messages.length - 1]?.at ?? 0;
-        const tb = b.convo.messages[b.convo.messages.length - 1]?.at ?? 0;
+        const ta = a.lastMessage?.at ?? 0;
+        const tb = b.lastMessage?.at ?? 0;
         return tb - ta;
       });
   }, [conversations]);
@@ -109,7 +121,7 @@ export default function InboxScreen() {
                         : item.other.people[0].name}
                     </Text>
                     <Text style={styles.rowTime}>
-                      {formatTime(item.convo.messages[item.convo.messages.length - 1]?.at ?? 0)}
+                      {item.lastMessage ? formatTime(item.lastMessage.at) : ""}
                     </Text>
                   </View>
                   <View style={styles.rowBottom}>
@@ -122,11 +134,11 @@ export default function InboxScreen() {
                       </Text>
                     ) : (
                       <Text style={styles.rowPreview} numberOfLines={1}>
-                        {item.convo.messages[item.convo.messages.length - 1]?.kind === "photo"
-                          ? item.convo.messages[item.convo.messages.length - 1]?.fromMe
+                        {item.lastMessage?.kind === "photo"
+                          ? item.lastMessage.fromMe
                             ? "🔒 You sent a photo request"
                             : "🔒 Sent you a photo request"
-                          : item.convo.messages[item.convo.messages.length - 1]?.text}
+                          : item.lastMessage?.text ?? "Matched. Say hi."}
                       </Text>
                     )}
                     {item.convo.unread > 0 && <View style={styles.unread} />}

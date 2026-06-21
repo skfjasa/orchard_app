@@ -29,14 +29,25 @@ export async function savePendingOnboardingProfile(profile: Profile) {
 }
 
 export async function loadPendingOnboardingProfile(
-  profileId: string
+  profileId: string,
+  ownerEmail?: string | null
 ): Promise<Profile | null> {
   try {
     const raw = await AsyncStorage.getItem(PENDING_ONBOARDING_PROFILE_KEY);
     if (!raw) return null;
     const pending = JSON.parse(raw) as PendingOnboardingProfile;
-    if (pending.profile.id !== profileId) return null;
-    return pending.profile;
+    if (pending.profile.id === profileId) return pending.profile;
+
+    const expectedEmail = ownerEmail?.trim().toLowerCase();
+    const pendingEmail = pending.profile.ownerEmail?.trim().toLowerCase();
+    if (expectedEmail && pendingEmail && expectedEmail === pendingEmail) {
+      return {
+        ...pending.profile,
+        id: profileId,
+      };
+    }
+
+    return null;
   } catch (error) {
     console.log("[pending-onboarding-storage] load error", error);
     return null;

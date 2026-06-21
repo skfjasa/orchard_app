@@ -40,10 +40,13 @@ The product wedge is structured relationship-context matching, not a generic swi
 - Hardened schema/RLS/RPC migrations exist:
   - `supabase/migrations/202606190001_initial_mvp_schema.sql`
   - `supabase/migrations/202606200002_profile_photo_storage.sql`
-- Hosted migrations through `202606200002` have been pushed and verified.
+- Hosted migrations through `202606210001` have been pushed and verified.
 - `profile_members` supports single/couple `Profile.people[]`.
 - Private `profile-photos` Supabase Storage bucket and owner-scoped policies exist.
 - Supabase Storage-backed selected local onboarding photo upload exists.
+- Dev fixture profiles are seeded in hosted `orchard-dev`: 22 fixture profiles, 30 fixture members, and 22 fixture settings. They are marked with `profiles.is_test_fixture = true`.
+- `user_settings` rows are now created/backfilled at the database layer and also written during Supabase profile completion. Hosted verification after backfill showed 23 total profiles and 23 settings rows.
+- Real users who like seeded fixture profiles through `create_swipe` auto-match for dev testing; fixture profiles do not need to run the app and should not match each other.
 - Auth confirmation path was improved in `0bc2ffd`:
   - web auth callback handling supports `?code=` and hash-token callback formats
   - pending onboarding profile is saved locally without credentials when email confirmation is required
@@ -51,7 +54,7 @@ The product wedge is structured relationship-context matching, not a generic swi
   - root loader waits while backend profile restoration is in progress
   - dedicated pending-confirmation screen exists
   - development-only sign-in reset control clears local test state
-- Discovery, reciprocal match source of truth, and chat are not yet backend source of truth.
+- Discovery and chat are not yet backend source of truth. Swipe persistence can now target seeded backend fixture profile UUIDs while local UI still drives the visible demo experience.
 
 ## Current Backend State
 
@@ -78,6 +81,8 @@ RPCs:
 
 ## Latest Commits
 
+- Pending commit - fixture profiles, onboarding/sign-in fixes, match UX, and handoff refresh
+- `ce27578` - update docs
 - `1f0f211` - Track GitHub Actions Node warning
 - `e4695be` - Record CI workflow validation
 - `0bc2ffd` - Improve auth confirmation flow and add CI checks
@@ -88,16 +93,18 @@ RPCs:
 
 - Branch: `main`
 - Remote: `origin/main`
-- Current handoff state: code commits are clean/synced with `origin/main`; handoff sync markdown changes are saved locally and uncommitted.
-- Latest pushed commit: `1f0f211` - Track GitHub Actions Node warning
+- Current handoff state before commit: runtime/docs changes are staged for handoff commit and push.
+- Latest pushed commit before this handoff commit: `ce27578` - update docs
 - Local-only ignored files may exist for Supabase credentials/env: `.local/`, `expo/.env`, and `supabase/.temp/`.
 - `personal-os` may have unrelated dirty files; do not revert them.
 
 ## Verification
 
-- Local `bun run typecheck` from `expo/`: passed after auth/UX/CI changes.
-- Local `bun run lint` from `expo/`: passed after auth/UX/CI changes.
-- Local Supabase database tests previously passed with 25 tests after profile photo storage migration.
+- Local `bun run typecheck` from `expo/`: passed after fixture/profile/match UX changes.
+- Local `bun run lint` from `expo/`: passed after fixture/profile/match UX changes.
+- Local `expo\node_modules\.bin\supabase db reset`: passed after `202606210001` and `supabase/seed.sql`.
+- Local `expo\node_modules\.bin\supabase test db`: passed with 38 tests.
+- Hosted `orchard-dev` verification after seed/backfill: 23 profiles, 22 fixtures, 23 settings rows.
 - GitHub Actions `Expo Checks`: passed after `0bc2ffd`, `e4695be`, and `1f0f211`.
 - GitHub Actions manual `Supabase DB Tests` run `27895063423`: passed in 4m05s, including local Supabase start, database reset, and `supabase test db`.
 - Session close check: Orchard web preview process group was stopped.
@@ -106,6 +113,7 @@ RPCs:
 
 - Hosted Supabase email sends are rate-limited to 2/hour; confirmation-link smoke test is blocked until the rate limit clears or custom SMTP is configured.
 - Need full hosted browser signup/onboarding/photo smoke test in one browser profile.
+- Need browser/ngrok retest that liking seeded fixture profiles creates hosted `swipes` and `matches` rows.
 - Supabase Auth email sender/template branding requires custom SMTP setup.
 - Apple Developer Program account still needs to be created.
 - Real public legal/support URLs are still placeholders.
@@ -114,11 +122,12 @@ RPCs:
 
 ## Next Best Tasks
 
-1. Retest hosted Supabase confirmation flow with selected local photo once email rate limit clears.
-2. Add safety/moderation hardening DB/RLS tests for report-message, blocked discovery, blocked chat, unmatch behavior, and account deletion edge cases.
-3. Begin backend source-of-truth work behind services without replacing local UI source of truth yet: discovery adapter, match list adapter, chat read/send adapter.
-4. Decide whether to auto-run Supabase DB tests on migration pull requests.
-5. Create Apple Developer Program account and plan custom SMTP/legal URL setup.
+1. Retest logged-in app over browser/ngrok: match confirmation, Matches/Inbox badges, Inbox stability, and hosted `swipes`/`matches` rows after liking fixture profiles.
+2. Retest hosted Supabase confirmation flow with selected local photo once email rate limit clears.
+3. Decide whether to ingest fixture images into Supabase Storage for backend-backed discovery.
+4. Begin backend source-of-truth work behind services without replacing local UI source of truth yet: discovery adapter, match list adapter, chat read/send adapter.
+5. Decide whether to auto-run Supabase DB tests on migration pull requests.
+6. Create Apple Developer Program account and plan custom SMTP/legal URL setup.
 
 ## Session Start Shortcut
 

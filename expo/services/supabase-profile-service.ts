@@ -27,8 +27,12 @@ type ProfileInsert = Database["public"]["Tables"]["profiles"]["Insert"];
 type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
 type ProfileMemberInsert =
   Database["public"]["Tables"]["profile_members"]["Insert"];
+type ProfileMemberUpdate =
+  Database["public"]["Tables"]["profile_members"]["Update"];
 type ProfilePhotoInsert =
   Database["public"]["Tables"]["profile_photos"]["Insert"];
+type UserSettingsInsert =
+  Database["public"]["Tables"]["user_settings"]["Insert"];
 
 const DEFAULT_PHOTO =
   "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=900&q=80";
@@ -107,6 +111,41 @@ function toProfileUpdate(patch: Partial<Profile>): ProfileUpdate {
 
   update.last_active_at = new Date().toISOString();
   return update;
+}
+
+function toProfileUpdateFromProfile(profile: Profile): ProfileUpdate {
+  return {
+    ...toProfileUpdate(profile),
+    is_visible: true,
+    onboarding_completed: true,
+  };
+}
+
+function toMemberUpdate(row: ProfileMemberInsert): ProfileMemberUpdate {
+  return {
+    display_name: row.display_name,
+    birthdate: row.birthdate,
+    gender: row.gender,
+    orientation: row.orientation,
+    bio: row.bio,
+    sort_order: row.sort_order,
+  };
+}
+
+function isUniqueViolation(error: { code?: string } | null): boolean {
+  return error?.code === "23505";
+}
+
+function toUserSettings(profile: Profile): UserSettingsInsert {
+  return {
+    profile_id: profile.id,
+    min_age: 18,
+    max_age: 99,
+    max_distance_miles: 50,
+    show_me: profile.preferences,
+    relationship_structures: profile.polyType ? [profile.polyType] : [],
+    push_enabled: false,
+  };
 }
 
 function toAppProfile(
@@ -252,19 +291,45 @@ async function persistProfilePhotos(
   const clientResult = requireSupabase(supabase);
   if (!clientResult.ok) return clientResult;
 
-  const { error } = await clientResult.value
-    .from("profile_photos")
-    .upsert(photoRows, { onConflict: "profile_id,member_id,sort_order" });
+  for (const photoRow of photoRows) {
+    const { error: insertError } = await clientResult.value
+      .from("profile_photos")
+      .insert(photoRow);
 
-  if (error) {
-    for (const storagePath of uploadedPaths) {
-      void storage.remove(storagePath);
+    if (!insertError) continue;
+
+    if (!isUniqueViolation(insertError)) {
+      for (const storagePath of uploadedPaths) {
+        void storage.remove(storagePath);
+      }
+      return fail(
+        "profile_photos_write_failed",
+        "Unable to save profile photos.",
+        insertError
+      );
     }
-    return fail(
-      "profile_photos_write_failed",
-      "Unable to save profile photos.",
-      error
-    );
+
+    const { error: updateError } = await clientResult.value
+      .from("profile_photos")
+      .update({
+        member_id: photoRow.member_id,
+        storage_path: photoRow.storage_path,
+        sort_order: photoRow.sort_order,
+      })
+      .eq("profile_id", photoRow.profile_id)
+      .eq("member_id", photoRow.member_id)
+      .eq("sort_order", photoRow.sort_order ?? 0);
+
+    if (updateError) {
+      for (const storagePath of uploadedPaths) {
+        void storage.remove(storagePath);
+      }
+      return fail(
+        "profile_photos_write_failed",
+        "Unable to save profile photos.",
+        updateError
+      );
+    }
   }
 
   return ok(applyUploadedPhotosToProfile(profile, uploadedPhotosByPersonIndex));
@@ -331,30 +396,87 @@ export function createSupabaseProfileService(): ProfileService {
       const client = clientResult.value;
       const profile = input.profile;
 
-      const { error: profileError } = await client
+      const profileInsert = toProfileInsert(profile);
+      const { error: profileInsertError } = await client
         .from("profiles")
-        .upsert(toProfileInsert(profile), { onConflict: "id" });
+        .insert(profileInsert);
 
-      if (profileError) {
-        return fail("profile_write_failed", "Unable to save profile.", profileError);
+      if (profileInsertError) {
+        if (!isUniqueViolation(profileInsertError)) {
+          return fail(
+            "profile_write_failed",
+            "Unable to save profile.",
+            profileInsertError
+          );
+        }
+
+        const { error: profileUpdateError } = await client
+          .from("profiles")
+          .update(toProfileUpdateFromProfile(profile))
+          .eq("id", profile.id);
+
+        if (profileUpdateError) {
+          return fail(
+            "profile_write_failed",
+            "Unable to save profile.",
+            profileUpdateError
+          );
+        }
       }
 
       const memberRows = toMemberInserts(profile);
       let savedMembers: ProfileMemberRow[] = [];
       if (memberRows.length > 0) {
-        const { data: membersData, error: membersError } = await client
-          .from("profile_members")
-          .upsert(memberRows, { onConflict: "profile_id,sort_order" })
-          .select("*");
+        for (const memberRow of memberRows) {
+          const { data: insertedMember, error: memberInsertError } = await client
+            .from("profile_members")
+            .insert(memberRow)
+            .select("*")
+            .single();
 
-        if (membersError) {
-          return fail(
-            "profile_members_write_failed",
-            "Unable to save profile members.",
-            membersError
-          );
+          if (!memberInsertError) {
+            savedMembers.push(insertedMember);
+            continue;
+          }
+
+          if (!isUniqueViolation(memberInsertError)) {
+            return fail(
+              "profile_members_write_failed",
+              "Unable to save profile members.",
+              memberInsertError
+            );
+          }
+
+          const { data: updatedMember, error: memberUpdateError } = await client
+            .from("profile_members")
+            .update(toMemberUpdate(memberRow))
+            .eq("profile_id", profile.id)
+            .eq("sort_order", memberRow.sort_order ?? 0)
+            .select("*")
+            .single();
+
+          if (memberUpdateError) {
+            return fail(
+              "profile_members_write_failed",
+              "Unable to save profile members.",
+              memberUpdateError
+            );
+          }
+
+          savedMembers.push(updatedMember);
         }
-        savedMembers = membersData ?? [];
+      }
+
+      const { error: settingsError } = await client
+        .from("user_settings")
+        .upsert(toUserSettings(profile), { onConflict: "profile_id" });
+
+      if (settingsError) {
+        return fail(
+          "user_settings_write_failed",
+          "Unable to save default user settings.",
+          settingsError
+        );
       }
 
       const photoResult = await persistProfilePhotos(profile, savedMembers);

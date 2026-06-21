@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(25);
+select plan(38);
 
 insert into auth.users (
   id,
@@ -176,6 +176,19 @@ values
     false,
     true
   );
+
+select is(
+  (
+    select count(*)::int
+    from public.user_settings
+    where profile_id = '00000000-0000-0000-0000-000000000001'
+      and min_age = 18
+      and max_age = 99
+      and max_distance_miles = 50
+  ),
+  1,
+  'profile insert creates default user settings'
+);
 
 insert into public.profile_members (
   id,
@@ -452,6 +465,32 @@ select is(
   'reciprocal likes create one active match'
 );
 
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+
+select lives_ok(
+  $$ select * from public.create_swipe(
+    '10000000-0000-4000-8000-000000000001',
+    'like'
+  ) $$,
+  'real user can like seeded fixture profile'
+);
+
+select is(
+  (
+    select count(*)::int
+    from public.matches
+    where status = 'active'
+      and (
+        user_a = '10000000-0000-4000-8000-000000000001'
+        or user_b = '10000000-0000-4000-8000-000000000001'
+      )
+  ),
+  1,
+  'seeded fixture profile auto-matches real user likes'
+);
+
 reset role;
 
 update public.matches
@@ -473,6 +512,95 @@ select lives_ok(
     )
   $$,
   'active match member can send message'
+);
+
+select throws_ok(
+  $$ select public.submit_report(
+    '00000000-0000-0000-0000-000000000001',
+    'harassment',
+    'wrong reported sender',
+    (
+      select id
+      from public.messages
+      where match_id = '00000000-0000-0000-0000-000000000100'
+        and body = 'hello'
+    )
+  ) $$,
+  'P0001',
+  'reported message is not accessible',
+  'report message RPC rejects a message not sent by the reported profile'
+);
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+
+select lives_ok(
+  $$ select public.submit_report(
+    '00000000-0000-0000-0000-000000000002',
+    'harassment',
+    'message report',
+    (
+      select id
+      from public.messages
+      where match_id = '00000000-0000-0000-0000-000000000100'
+        and body = 'hello'
+    )
+  ) $$,
+  'report message RPC accepts an accessible message from the reported profile'
+);
+
+select is(
+  (
+    select count(*)::int
+    from public.reports
+    where reporter_id = '00000000-0000-0000-0000-000000000001'
+      and reported_user_id = '00000000-0000-0000-0000-000000000002'
+      and reported_message_id = (
+        select id
+        from public.messages
+        where match_id = '00000000-0000-0000-0000-000000000100'
+          and body = 'hello'
+      )
+      and status = 'open'
+  ),
+  1,
+  'report message RPC stores the reported message id'
+);
+
+select lives_ok(
+  $$ select public.unmatch_match('00000000-0000-0000-0000-000000000100') $$,
+  'match member can unmatch an active match'
+);
+
+reset role;
+
+select is(
+  (
+    select status
+    from public.matches
+    where id = '00000000-0000-0000-0000-000000000100'
+  ),
+  'unmatched',
+  'unmatch RPC marks the match unmatched'
+);
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+
+select throws_ok(
+  $$
+    insert into public.messages (match_id, sender_id, body)
+    values (
+      '00000000-0000-0000-0000-000000000100',
+      '00000000-0000-0000-0000-000000000001',
+      'unmatched message'
+    )
+  $$,
+  '42501',
+  'new row violates row-level security policy for table "messages"',
+  'unmatched match cannot receive new messages'
 );
 
 set local role authenticated;
@@ -498,6 +626,16 @@ select lives_ok(
   'block RPC succeeds'
 );
 
+select is(
+  (
+    select count(*)::int
+    from public.profiles
+    where id = '00000000-0000-0000-0000-000000000002'
+  ),
+  0,
+  'blocked profile is hidden from blocker discovery reads'
+);
+
 reset role;
 
 select is(
@@ -509,6 +647,30 @@ select is(
   ),
   'blocked',
   'blocking marks existing match blocked'
+);
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000002', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+
+select is(
+  (
+    select count(*)::int
+    from public.profiles
+    where id = '00000000-0000-0000-0000-000000000001'
+  ),
+  0,
+  'blocked profile is hidden from blocked user discovery reads'
+);
+
+select is(
+  (
+    select count(*)::int
+    from public.messages
+    where match_id = '00000000-0000-0000-0000-000000000100'
+  ),
+  0,
+  'blocked match messages are hidden from match members'
 );
 
 set local role authenticated;
@@ -532,6 +694,24 @@ select throws_ok(
 select lives_ok(
   $$ select public.request_account_deletion('testing deletion request') $$,
   'account deletion RPC succeeds'
+);
+
+select throws_ok(
+  $$
+    insert into public.account_deletion_requests (
+      profile_id,
+      reason,
+      status
+    )
+    values (
+      '00000000-0000-0000-0000-000000000001',
+      'direct insert',
+      'completed'
+    )
+  $$,
+  '42501',
+  'permission denied for table account_deletion_requests',
+  'client cannot directly insert account deletion workflow state'
 );
 
 select is(

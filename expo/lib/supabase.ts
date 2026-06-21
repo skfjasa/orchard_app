@@ -42,6 +42,7 @@ export interface Database {
           bio: string | null;
           is_visible: boolean;
           is_suspended: boolean;
+          is_test_fixture: boolean;
           onboarding_completed: boolean;
           created_at: string;
           updated_at: string;
@@ -66,6 +67,7 @@ export interface Database {
           boundaries?: string[];
           bio?: string | null;
           is_visible?: boolean;
+          is_test_fixture?: boolean;
           onboarding_completed?: boolean;
           last_active_at?: string | null;
         };
@@ -87,6 +89,7 @@ export interface Database {
           boundaries?: string[];
           bio?: string | null;
           is_visible?: boolean;
+          is_test_fixture?: boolean;
           onboarding_completed?: boolean;
           last_active_at?: string | null;
         };
@@ -148,6 +151,40 @@ export interface Database {
           storage_path?: string;
           sort_order?: number;
           moderation_status?: "pending" | "approved" | "rejected";
+        };
+        Relationships: [];
+      };
+      user_settings: {
+        Row: {
+          profile_id: string;
+          min_age: number | null;
+          max_age: number | null;
+          max_distance_miles: number | null;
+          show_me: string[];
+          relationship_structures: string[];
+          push_enabled: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          profile_id: string;
+          min_age?: number | null;
+          max_age?: number | null;
+          max_distance_miles?: number | null;
+          show_me?: string[];
+          relationship_structures?: string[];
+          push_enabled?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          min_age?: number | null;
+          max_age?: number | null;
+          max_distance_miles?: number | null;
+          show_me?: string[];
+          relationship_structures?: string[];
+          push_enabled?: boolean;
+          updated_at?: string;
         };
         Relationships: [];
       };

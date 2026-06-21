@@ -1,6 +1,6 @@
 import createContextHook from "@nkzw/create-context-hook";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { MOCK_PROFILES } from "@/mocks/profiles";
 import { MVP_MONETIZATION_ENABLED } from "@/constants/features";
@@ -64,8 +64,10 @@ import type { ReportReason } from "@/services/safety-service";
 export type { SubscriptionState } from "@/services/local-profile-storage";
 
 export const [ProfileProvider, useProfile] = createContextHook(() => {
-  const { mode, signOut: signOutAuth, userId } = useAuth();
+  const { mode, session, signOut: signOutAuth, userId } = useAuth();
   const appServices = useMemo(() => createAppServices(), []);
+  const lastBackendProfileSessionKey = useRef<string | null>(null);
+  const lastBackendProfileUserId = useRef<string | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [likedIds, setLikedIds] = useState<string[]>([]);
@@ -154,6 +156,34 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   });
 
   useEffect(() => {
+    if (mode !== "supabase") {
+      lastBackendProfileSessionKey.current = null;
+      lastBackendProfileUserId.current = null;
+      setBackendProfileHydrated(false);
+      return;
+    }
+
+    if (!userId) {
+      lastBackendProfileSessionKey.current = null;
+      lastBackendProfileUserId.current = null;
+      setBackendProfileHydrated(false);
+      return;
+    }
+
+    const sessionKey = session?.access_token ?? null;
+    if (
+      lastBackendProfileUserId.current === userId &&
+      lastBackendProfileSessionKey.current === sessionKey
+    ) {
+      return;
+    }
+
+    lastBackendProfileSessionKey.current = sessionKey;
+    lastBackendProfileUserId.current = userId;
+    setBackendProfileHydrated(false);
+  }, [mode, session?.access_token, userId]);
+
+  useEffect(() => {
     if (mode !== "supabase") return;
     if (!hydrated || !userId) return;
     if (!profile || profile.id === userId) return;
@@ -186,7 +216,10 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       }
 
       if (!result.value) {
-        const pendingProfile = await loadPendingOnboardingProfile(userId);
+        const pendingProfile = await loadPendingOnboardingProfile(
+          userId,
+          session?.user.email
+        );
         if (cancelled) return;
         if (!pendingProfile) {
           setBackendProfileHydrated(true);
@@ -230,6 +263,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     mode,
     profile,
     saveProfileMutation,
+    session?.user.email,
     userId,
   ]);
 

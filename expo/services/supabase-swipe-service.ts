@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { isBackendProfileId, toBackendProfileId } from "@/constants/mock-profile-ids";
 
 import type { SwipeDecision, SwipeService } from "./swipe-service";
 import { fail, ok, requireSupabase } from "./supabase-service-response";
@@ -13,8 +14,13 @@ export function createSupabaseSwipeService(): SwipeService {
       const client = requireSupabase(supabase);
       if (!client.ok) return client;
 
+      const targetProfileId = toBackendProfileId(input.targetId);
+      if (!isBackendProfileId(targetProfileId)) {
+        return fail("invalid_target_profile", "Swipe target is not a backend profile id.");
+      }
+
       const { data, error } = await client.value.rpc("create_swipe", {
-        target_profile_id: input.targetId,
+        target_profile_id: targetProfileId,
         swipe_decision: toBackendDecision(input.decision),
       });
 

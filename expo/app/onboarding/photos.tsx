@@ -107,7 +107,8 @@ export default function PhotosScreen() {
       };
     });
 
-    const ownerEmail = draft.emails[0]?.trim() || undefined;
+    const ownerEmail =
+      draft.emails[0]?.trim() || session?.user.email?.trim() || undefined;
     const primaryPassword = draft.passwords[0] ?? "";
     const credentials: AccountCredentials[] = draft.usernames
       .map((u, idx) => ({
@@ -140,46 +141,11 @@ export default function PhotosScreen() {
       }
     }
 
-    let profileId = `me-${Date.now()}`;
+    let profileId = mode === "supabase" && session && userId
+      ? userId
+      : `pending-${Date.now()}`;
     let shouldSavePendingProfile = false;
-
-    if (mode === "supabase") {
-      if (!ownerEmail || !primaryPassword) {
-        Alert.alert("Missing account info", "Add your email and password before finishing.");
-        setFinishing(false);
-        return;
-      }
-
-      if (session && userId) {
-        profileId = userId;
-      } else {
-        const result = await signUpWithEmail({
-          email: ownerEmail,
-          password: primaryPassword,
-        });
-
-        if (!result.ok) {
-          Alert.alert("Account could not be created", result.error);
-          setFinishing(false);
-          return;
-        }
-
-        if (!result.userId) {
-          Alert.alert(
-            "Check your email",
-            "Confirm your email address, then sign in to finish your profile."
-          );
-          setFinishing(false);
-          return;
-        }
-
-        profileId = result.userId;
-
-        if (!result.session) {
-          shouldSavePendingProfile = true;
-        }
-      }
-    }
+    let shouldCreateSupabaseAccount = mode === "supabase" && (!session || !userId);
 
     const profile: Profile = {
       id: profileId,
@@ -211,8 +177,48 @@ export default function PhotosScreen() {
       linkedPartners: linkedPartners.length,
     });
 
-    if (shouldSavePendingProfile) {
+    if (mode === "supabase" && shouldCreateSupabaseAccount) {
+      if (!ownerEmail || !primaryPassword) {
+        Alert.alert(
+          "Missing account info",
+          "Add your email and password before finishing."
+        );
+        setFinishing(false);
+        return;
+      }
+
       await savePendingOnboardingProfile(profile);
+
+      const result = await signUpWithEmail({
+        email: ownerEmail,
+        password: primaryPassword,
+      });
+
+      if (!result.ok) {
+        Alert.alert("Account could not be created", result.error);
+        setFinishing(false);
+        return;
+      }
+
+      if (!result.userId) {
+        Alert.alert(
+          "Check your email",
+          "Confirm your email address, then sign in to finish your profile."
+        );
+        setFinishing(false);
+        return;
+      }
+
+      profileId = result.userId;
+      profile.id = result.userId;
+      await savePendingOnboardingProfile(profile);
+
+      if (!result.session) {
+        shouldSavePendingProfile = true;
+      }
+    }
+
+    if (shouldSavePendingProfile) {
       reset();
       setFinishing(false);
       router.replace({

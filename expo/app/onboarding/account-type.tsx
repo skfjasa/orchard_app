@@ -10,6 +10,17 @@ import { useOnboarding } from "@/providers/onboarding-provider";
 export default function AccountTypeScreen() {
   const { draft, setAccountType } = useOnboarding();
   const selected = draft.accountType;
+  const continueSetup = () => {
+    if (!draft.ageConfirmed || !draft.legalAcceptedAt) {
+      router.push({
+        pathname: "/onboarding/legal",
+        params: { next: "/onboarding/basics" },
+      });
+      return;
+    }
+
+    router.push("/onboarding/basics");
+  };
 
   return (
     <View style={styles.root}>
@@ -54,7 +65,7 @@ export default function AccountTypeScreen() {
       <View style={styles.footer}>
         <Button
           label="Continue"
-          onPress={() => router.push("/onboarding/basics")}
+          onPress={continueSetup}
           testID="continue-type"
         />
       </View>
