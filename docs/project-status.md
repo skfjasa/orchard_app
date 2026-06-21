@@ -12,6 +12,7 @@ Last updated: 2026-06-21
 - Backend: Supabase client, email/password auth wiring, hosted profile/member persistence, Supabase Storage-backed profile photo upload, hardened schema/RLS/RPC draft with single/couple profile member support, initial Supabase service adapters, backend/mock service factory, gated swipe persistence hook, and hosted `orchard-dev` project linked/applied through migration `202606200002`; discovery/matching/chat behavior is not fully backend source-of-truth yet
 - Persistence: local `AsyncStorage`
 - Checks: `bun run typecheck`, `bun run lint`, `expo\node_modules\.bin\supabase db reset`, and `expo\node_modules\.bin\supabase test db`
+- CI: GitHub Actions workflow `.github/workflows/expo-checks.yml` runs `bun install --frozen-lockfile`, `bun run typecheck`, and `bun run lint` from `expo/` on pushes to `main` and pull requests. Manual workflow `.github/workflows/supabase-db-tests.yml` starts local Supabase, resets the database, and runs `supabase test db`; it has not been validated on GitHub-hosted runners yet.
 - Branch: `main`
 - MVP monetization: disabled
 - Local Docker: Docker Desktop is operational after enabling firmware virtualization. `docker version` reports Docker Desktop with a Linux engine, and WSL default distribution is `docker-desktop`.
@@ -106,6 +107,10 @@ Last updated: 2026-06-21
 - Real Supabase email/password auth is now wired into sign-in and final onboarding completion when Supabase env vars are present.
 - Supabase signup now passes an app redirect URL for confirmation emails. On web, it defaults to the current browser origin plus `/onboarding/sign-in`; `EXPO_PUBLIC_AUTH_REDIRECT_URL` can override it. The Supabase client detects auth sessions from web confirmation URLs.
 - If hosted Supabase requires email confirmation and signup returns a user id without a session, the app now saves a pending onboarding profile locally without local credentials. After the confirmation link returns with a session, `ProfileProvider` resumes backend profile/member/photo persistence. Web-selected onboarding photos are stored as data URIs for this pending-confirmation path so they are not lost when the browser opens a new tab.
+- The auth provider now explicitly processes Supabase confirmation callback URLs on web, including both hash-token and `?code=` callback formats, and routes authenticated users through the root loader while pending profile restoration completes instead of restarting onboarding.
+- A dedicated pending-confirmation screen now appears after Supabase accepts signup but requires email confirmation, and Supabase email rate-limit / unconfirmed-email errors are mapped to user-readable messages.
+- The sign-in screen includes a development-only local test data reset control that signs out, clears local prototype profile state, and clears pending onboarding state for cleaner auth smoke tests.
+- Initial GitHub Actions CI now covers Expo dependency install, typecheck, and lint. A separate manual Supabase DB test workflow exists for migration/RLS checks.
 - In Supabase mode, the root route requires an active Supabase session before entering the tab app.
 - Final onboarding creates a Supabase auth user first and uses the Supabase user id as the local prototype profile id when a session is returned.
 - Profile/account-deletion sign-out now clears both local prototype state and the Supabase auth session.
@@ -123,13 +128,13 @@ Last updated: 2026-06-21
 
 ## Current Task
 
-Smoke-test the Supabase Storage-backed profile photo path in hosted `orchard-dev` after the email-confirmation resume path is available in the running preview.
+Retest the hosted Supabase email-confirmation resume flow with a selected local photo and confirm the callback restores the session, resumes pending profile persistence, and enters the logged-in app without restarting onboarding.
 
 ## Next Planned Tasks
 
 1. Create Apple Developer Program account.
 2. Restart the browser preview and smoke-test onboarding in Supabase mode with a real selected photo and the email confirmation link.
-3. Add a focused CI workflow for `bun run lint`, `bun run typecheck`, and database tests once remote/local DB command reliability is confirmed.
+3. Validate the manual Supabase DB test workflow on GitHub Actions, then decide whether to make it automatic for Supabase migration pull requests.
 4. Continue reducing `ProfileProvider` responsibility by moving backend-backed behavior behind services.
 
 ## Human Decisions Needed

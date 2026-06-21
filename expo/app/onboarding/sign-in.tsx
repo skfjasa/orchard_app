@@ -19,6 +19,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "@/components/ui";
 import { useAuth } from "@/providers/auth-provider";
 import { useProfile } from "@/providers/profile-provider";
+import { resetStoredProfileState } from "@/services/local-profile-storage";
+import { clearPendingOnboardingProfile } from "@/services/pending-onboarding-storage";
 
 type SocialProvider = "google" | "instagram" | "tiktok" | "twitter";
 
@@ -87,18 +89,20 @@ export default function SignInScreen() {
     mode,
     session,
     signInWithEmail,
+    signOut,
   } = useAuth();
   const { profile } = useProfile();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
+  const [resetting, setResetting] = useState<boolean>(false);
+  const showDevReset = process.env.NODE_ENV !== "production";
 
   useEffect(() => {
     if (mode !== "supabase") return;
     if (!authInitialized || !session) return;
-    if (!profile) return;
-    router.replace("/(tabs)/discover");
+    router.replace(profile ? "/(tabs)/discover" : "/");
   }, [authInitialized, mode, profile, session]);
 
   const onEmailSignIn = async () => {
@@ -128,7 +132,7 @@ export default function SignInScreen() {
         return;
       }
 
-      router.replace(profile ? "/(tabs)/discover" : "/onboarding/legal");
+      router.replace(profile ? "/(tabs)/discover" : "/");
       return;
     }
 
@@ -164,6 +168,26 @@ export default function SignInScreen() {
       "Coming soon",
       `Sign in with ${provider[0].toUpperCase() + provider.slice(1)} will be available soon.`
     );
+  };
+
+  const resetLocalTestState = async () => {
+    if (resetting) return;
+    setResetting(true);
+    try {
+      await signOut();
+      await Promise.all([
+        resetStoredProfileState(),
+        clearPendingOnboardingProfile(),
+      ]);
+      setEmail("");
+      setPassword("");
+      Alert.alert("Local test data reset", "Refresh the page before starting the next auth test.");
+    } catch (error) {
+      console.log("[sign-in] reset local test data failed", error);
+      Alert.alert("Reset failed", "Try clearing site data from browser settings.");
+    } finally {
+      setResetting(false);
+    }
   };
 
   return (
@@ -283,6 +307,22 @@ export default function SignInScreen() {
                 <Text style={styles.footerLink}>Create a profile</Text>
               </Pressable>
             </View>
+
+            {showDevReset && (
+              <Pressable
+                onPress={resetLocalTestState}
+                disabled={resetting}
+                style={({ pressed }) => [
+                  styles.devReset,
+                  (pressed || resetting) && { opacity: 0.72 },
+                ]}
+                testID="reset-local-test-state"
+              >
+                <Text style={styles.devResetText}>
+                  {resetting ? "Resetting test data..." : "Reset local test data"}
+                </Text>
+              </Pressable>
+            )}
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -426,6 +466,21 @@ const styles = StyleSheet.create({
   footerLink: {
     color: "#FFD36B",
     fontSize: 14,
+    fontWeight: "800" as const,
+  },
+  devReset: {
+    alignSelf: "center",
+    marginTop: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.18)",
+    backgroundColor: "rgba(255,255,255,0.04)",
+  },
+  devResetText: {
+    color: "rgba(246,238,225,0.72)",
+    fontSize: 12,
     fontWeight: "800" as const,
   },
 });

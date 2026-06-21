@@ -7,9 +7,11 @@ import { useProfile } from "@/providers/profile-provider";
 
 export default function Index() {
   const { initialized: authInitialized, mode, session } = useAuth();
-  const { profile, hydrated } = useProfile();
+  const { profile, hydrated, backendProfileHydrated } = useProfile();
+  const waitingForBackendProfile =
+    mode === "supabase" && !!session && !profile && !backendProfileHydrated;
 
-  if (!hydrated || !authInitialized) {
+  if (!hydrated || !authInitialized || waitingForBackendProfile) {
     return (
       <View style={styles.center} testID="boot-loader">
         <ActivityIndicator color={Colors.light.accent} />

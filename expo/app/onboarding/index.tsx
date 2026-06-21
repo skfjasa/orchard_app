@@ -1,7 +1,7 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React from "react";
-import { Image, Platform, StyleSheet, Text, View } from "react-native";
+import { Image, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -50,12 +50,21 @@ export default function WelcomeScreen() {
             textColor="#1F1320"
           />
           <View style={{ height: 12 }} />
-          <Button
-            label="I already have an account"
-            variant="ghost"
-            onPress={() => router.push("/onboarding/sign-in")}
-            textColor="#FFFFFF"
-          />
+          <Pressable
+            onPress={() => {
+              console.log("[welcome] sign-in pressed");
+              router.replace("/onboarding/sign-in");
+            }}
+            testID="already-account-btn"
+            style={({ pressed }) => [
+              styles.signInButton,
+              pressed && styles.signInButtonPressed,
+            ]}
+          >
+            <Text style={styles.signInButtonText}>
+              I already have an account
+            </Text>
+          </Pressable>
         </View>
       </SafeAreaView>
     </View>
@@ -117,6 +126,26 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   bottom: {},
+  signInButton: {
+    minHeight: 54,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 20,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.18)",
+  },
+  signInButtonPressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.98 }],
+  },
+  signInButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "800" as const,
+    letterSpacing: 0.2,
+  },
   headlineWrap: { alignSelf: "stretch", alignItems: "center" },
   headline: {
     fontSize: 40,

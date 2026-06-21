@@ -213,11 +213,12 @@ export default function PhotosScreen() {
 
     if (shouldSavePendingProfile) {
       await savePendingOnboardingProfile(profile);
-      Alert.alert(
-        "Check your email",
-        "Confirm your email address, then return to Orchard. We'll finish saving your profile after you're confirmed."
-      );
+      reset();
       setFinishing(false);
+      router.replace({
+        pathname: "/onboarding/pending-confirmation",
+        params: ownerEmail ? { email: ownerEmail } : undefined,
+      });
       return;
     }
 

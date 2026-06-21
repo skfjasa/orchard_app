@@ -24,6 +24,7 @@ export default function OnboardingLayout() {
         <Stack.Screen name="interests" />
         <Stack.Screen name="preferences" />
         <Stack.Screen name="photos" />
+        <Stack.Screen name="pending-confirmation" options={{ headerShown: false }} />
         <Stack.Screen name="sign-in" options={{ headerShown: false }} />
       </Stack>
     </OnboardingProvider>

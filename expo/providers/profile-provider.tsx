@@ -175,40 +175,49 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     let cancelled = false;
     void appServices.profiles.getCurrentProfile().then(async (result) => {
       if (cancelled) return;
-      setBackendProfileHydrated(true);
 
       if (!result.ok) {
         console.log("[profile-provider] backend profile load failed", {
           code: result.error.code,
           message: result.error.message,
         });
+        setBackendProfileHydrated(true);
         return;
       }
 
       if (!result.value) {
         const pendingProfile = await loadPendingOnboardingProfile(userId);
-        if (!pendingProfile) return;
+        if (cancelled) return;
+        if (!pendingProfile) {
+          setBackendProfileHydrated(true);
+          return;
+        }
 
         const pendingResult = await appServices.profiles.completeOnboarding({
           profile: pendingProfile,
         });
+        if (cancelled) return;
 
         if (!pendingResult.ok) {
           console.log("[profile-provider] pending profile save failed", {
             code: pendingResult.error.code,
             message: pendingResult.error.message,
           });
+          setBackendProfileHydrated(true);
           return;
         }
 
         await clearPendingOnboardingProfile();
+        if (cancelled) return;
         setProfile(pendingResult.value);
         saveProfileMutation.mutate(pendingResult.value);
+        setBackendProfileHydrated(true);
         return;
       }
 
       setProfile(result.value);
       saveProfileMutation.mutate(result.value);
+      setBackendProfileHydrated(true);
     });
 
     return () => {
@@ -850,6 +859,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       likedIds,
       passedIds,
       hydrated,
+      backendProfileHydrated,
       isLoading: loadQuery.isLoading,
       totalSlots,
       slotsUsed,
@@ -895,6 +905,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       likedIds,
       passedIds,
       hydrated,
+      backendProfileHydrated,
       loadQuery.isLoading,
       totalSlots,
       slotsUsed,

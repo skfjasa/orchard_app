@@ -1,0 +1,36 @@
+name: Supabase DB Tests
+
+on:
+  workflow_dispatch:
+
+jobs:
+  database-tests:
+    name: Database and RLS tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Expo dependencies
+        working-directory: expo
+        run: bun install --frozen-lockfile
+
+      - name: Start local Supabase
+        run: expo/node_modules/.bin/supabase start
+
+      - name: Reset local database
+        run: expo/node_modules/.bin/supabase db reset
+
+      - name: Run database tests
+        run: expo/node_modules/.bin/supabase test db
+
+      - name: Stop local Supabase
+        if: always()
+        run: expo/node_modules/.bin/supabase stop --no-backup

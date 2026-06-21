@@ -17,6 +17,18 @@ const BOOST_KEY = "duet.boostedUntil.v1";
 const SUPERLIKE_BALANCE_KEY = "duet.superLikeBalance.v1";
 const SUPERLIKE_LAST_USE_KEY = "duet.superLikeLastUse.v1";
 const SUBSCRIPTION_KEY = "duet.subscription.v1";
+const STORED_PROFILE_STATE_KEYS = [
+  PROFILE_KEY,
+  CONVOS_KEY,
+  LIKES_KEY,
+  PASSES_KEY,
+  SUPERLIKES_KEY,
+  EXTRA_SLOTS_KEY,
+  BOOST_KEY,
+  SUPERLIKE_BALANCE_KEY,
+  SUPERLIKE_LAST_USE_KEY,
+  SUBSCRIPTION_KEY,
+];
 
 export interface SubscriptionState {
   id: SubscriptionId;
@@ -85,6 +97,10 @@ export async function loadStoredProfileState(): Promise<StoredProfileState> {
     console.log("[local-profile-storage] load error", e);
     return emptyStoredProfileState();
   }
+}
+
+export async function resetStoredProfileState() {
+  await AsyncStorage.multiRemove(STORED_PROFILE_STATE_KEYS);
 }
 
 export async function saveStoredProfile(profile: Profile | null) {
