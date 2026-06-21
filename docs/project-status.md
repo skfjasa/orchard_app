@@ -20,6 +20,7 @@ Last updated: 2026-06-21
 
 ## Latest Foundation Commits
 
+- `aa5dae7` - Stabilize onboarding and fixture match flow
 - `ce27578` - update docs
 - `1f0f211` - Track GitHub Actions Node warning
 - `e4695be` - Record CI workflow validation
@@ -152,7 +153,7 @@ Last updated: 2026-06-21
 - A browser funnel test reached `/onboarding/photos`, sent a Supabase confirmation email, and exposed two hosted auth setup gaps: the redirect URL was still pointing at `http://localhost:3000`, and emails still used default Supabase Auth branding. App-side redirect handling has been patched; hosted Supabase Auth redirect allow-list, Site URL, and email templates/sender still need Dashboard review.
 - User updated Supabase Auth URL Configuration redirect entries for the browser preview. Supabase Dashboard currently requires SMTP configuration before auth email templates can be customized; SMTP fields are still blank except project auth secrets.
 - Project review recommendations remain relevant: avoid a broad `ProfileProvider` rewrite, keep moving behavior behind services, and add CI/database automation after the auth/profile path has a little more coverage.
-- Latest implementation checkpoint `0bc2ffd` is pushed to `origin/main`; latest handoff/status commit is `ce27578`.
+- Latest implementation checkpoint `aa5dae7` is pushed to `origin/main`; a final handoff/status refresh follows for safe session close.
 
 ## Current Task
 

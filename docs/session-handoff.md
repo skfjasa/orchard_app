@@ -81,7 +81,7 @@ RPCs:
 
 ## Latest Commits
 
-- Pending commit - fixture profiles, onboarding/sign-in fixes, match UX, and handoff refresh
+- `aa5dae7` - Stabilize onboarding and fixture match flow
 - `ce27578` - update docs
 - `1f0f211` - Track GitHub Actions Node warning
 - `e4695be` - Record CI workflow validation
@@ -93,8 +93,8 @@ RPCs:
 
 - Branch: `main`
 - Remote: `origin/main`
-- Current handoff state before commit: runtime/docs changes are staged for handoff commit and push.
-- Latest pushed commit before this handoff commit: `ce27578` - update docs
+- Current handoff state: implementation checkpoint `aa5dae7` is pushed to `origin/main`; this handoff refresh is being committed after that checkpoint for safe session close.
+- Latest pushed implementation checkpoint: `aa5dae7` - Stabilize onboarding and fixture match flow
 - Local-only ignored files may exist for Supabase credentials/env: `.local/`, `expo/.env`, and `supabase/.temp/`.
 - `personal-os` may have unrelated dirty files; do not revert them.
 
