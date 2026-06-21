@@ -28,6 +28,7 @@ Backend foundation currently exists for:
 
 - Env-gated Supabase client setup
 - Auth/session provider foundation with email/password sign-in and account creation
+- Resumable hosted Supabase email-confirmation flow for onboarding/profile persistence
 - Initial Supabase schema/RLS/RPC migration draft
 - Hosted `orchard-dev` migration apply and Dashboard verification
 - Profile/member persistence to Supabase `profiles` and `profile_members`

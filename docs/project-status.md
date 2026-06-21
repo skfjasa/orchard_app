@@ -1,11 +1,11 @@
 # Project Status
 
-Last updated: 2026-06-20
+Last updated: 2026-06-21
 
 ## Current Repo State
 
 - Repo: `skfjasa/orchard_app`
-- Handoff checkpoint: 2026-06-20 Supabase auth/profile persistence handoff
+- Handoff checkpoint: 2026-06-21 auth confirmation resume handoff
 - App code: `expo/`
 - Runtime: Expo React Native with Expo Router and TypeScript
 - Package manager: Bun
@@ -19,6 +19,10 @@ Last updated: 2026-06-20
 
 ## Latest Foundation Commits
 
+- `19f3a05` - Resume onboarding after email confirmation
+- `d840619` - Fix Supabase signup redirect handling
+- `01952d5` - Record hosted storage verification
+- `8cc71a0` - Refresh photo storage status docs
 - `6100fc5` - Add Supabase profile photo storage
 - `e87e9f0` - Wire Supabase auth and profile persistence
 - `1be95cd` - Add Gemini project review
@@ -100,6 +104,7 @@ Last updated: 2026-06-20
 - CLI post-apply dry-run verification was temporarily blocked by Supabase's remote auth circuit breaker after failed temporary-role auth attempts; dashboard verification completed the hosted setup check.
 - Real Supabase email/password auth is now wired into sign-in and final onboarding completion when Supabase env vars are present.
 - Supabase signup now passes an app redirect URL for confirmation emails. On web, it defaults to the current browser origin plus `/onboarding/sign-in`; `EXPO_PUBLIC_AUTH_REDIRECT_URL` can override it. The Supabase client detects auth sessions from web confirmation URLs.
+- If hosted Supabase requires email confirmation and signup returns a user id without a session, the app now saves a pending onboarding profile locally without local credentials. After the confirmation link returns with a session, `ProfileProvider` resumes backend profile/member/photo persistence. Web-selected onboarding photos are stored as data URIs for this pending-confirmation path so they are not lost when the browser opens a new tab.
 - In Supabase mode, the root route requires an active Supabase session before entering the tab app.
 - Final onboarding creates a Supabase auth user first and uses the Supabase user id as the local prototype profile id when a session is returned.
 - Profile/account-deletion sign-out now clears both local prototype state and the Supabase auth session.
@@ -111,17 +116,18 @@ Last updated: 2026-06-20
 - Hosted SQL verification on 2026-06-20 confirmed `202606200002` is recorded in `supabase_migrations.schema_migrations`, the `profile-photos` bucket is private, four owner-scoped storage object policies exist, and `profile_photos_profile_member_sort_unique` exists.
 - A hosted anon-client smoke test attempted to create a fresh test auth user and was blocked by Supabase's email rate limit before a session was returned. Retest after the rate limit clears or with an existing confirmed dev account.
 - A browser funnel test reached `/onboarding/photos`, sent a Supabase confirmation email, and exposed two hosted auth setup gaps: the redirect URL was still pointing at `http://localhost:3000`, and emails still used default Supabase Auth branding. App-side redirect handling has been patched; hosted Supabase Auth redirect allow-list, Site URL, and email templates/sender still need Dashboard review.
+- User updated Supabase Auth URL Configuration redirect entries for the browser preview. Supabase Dashboard currently requires SMTP configuration before auth email templates can be customized; SMTP fields are still blank except project auth secrets.
 - Project review recommendations remain relevant: avoid a broad `ProfileProvider` rewrite, keep moving behavior behind services, and add CI/database automation after the auth/profile path has a little more coverage.
-- Latest implementation checkpoint `6100fc5` is pushed to `origin/main`.
+- Latest local implementation checkpoint is `19f3a05`. It was created after `d840619`; push state should be verified before closing.
 
 ## Current Task
 
-Smoke-test the Supabase Storage-backed profile photo path in hosted `orchard-dev` with an existing confirmed dev account or after the email rate limit clears.
+Smoke-test the Supabase Storage-backed profile photo path in hosted `orchard-dev` after the email-confirmation resume path is available in the running preview.
 
 ## Next Planned Tasks
 
 1. Create Apple Developer Program account.
-2. Smoke-test onboarding in Supabase mode with a real selected photo.
+2. Restart the browser preview and smoke-test onboarding in Supabase mode with a real selected photo and the email confirmation link.
 3. Add a focused CI workflow for `bun run lint`, `bun run typecheck`, and database tests once remote/local DB command reliability is confirmed.
 4. Continue reducing `ProfileProvider` responsibility by moving backend-backed behavior behind services.
 
@@ -129,8 +135,7 @@ Smoke-test the Supabase Storage-backed profile photo path in hosted `orchard-dev
 
 - Apple Developer account creation.
 - Real domain for public legal/support URLs before productionization.
-- Supabase Auth redirect allow-list/Site URL for browser and native testing.
-- Supabase Auth email sender/template branding for Orchard.
+- Supabase Auth email sender/template branding for Orchard requires custom SMTP setup.
 
 ## Status Tracking Rule
 

@@ -1,6 +1,6 @@
 # Session Handoff
 
-Last updated: 2026-06-20
+Last updated: 2026-06-21
 
 ## Current Context
 
@@ -93,6 +93,7 @@ When these docs become large, compact them by preserving active state, blockers,
 - Onboarding includes a required 18+ and legal acceptance screen before account type selection; acceptance is stored on the local prototype profile.
 - Safety/legal URLs and support contact are env-configurable via `expo/constants/legal.ts` and `expo/.env.example`; final public values are still human decisions.
 - Supabase signup now passes an app redirect URL for confirmation emails. On web, it defaults to the current browser origin plus `/onboarding/sign-in`; `EXPO_PUBLIC_AUTH_REDIRECT_URL` can override it. The Supabase client detects auth sessions from web confirmation URLs.
+- If hosted Supabase requires email confirmation and returns a user id without a session, the app saves a pending onboarding profile locally without local credentials. When the confirmation link returns with a session, `ProfileProvider` resumes backend profile/member/photo persistence. Web-selected photos are stored as data URIs for this pending path so selected browser photos survive the confirmation/new-tab flow.
 - In Supabase mode, the root route requires an active Supabase session before entering the tab app. Final onboarding creates a Supabase auth user first and uses the Supabase user id as the local prototype profile id when a session is returned.
 - A Supabase profile adapter persists onboarding/profile rows to `profiles` and `profile_members`; the provider can hydrate a signed-in user's local prototype profile from those backend rows.
 - A Supabase storage adapter now uploads selected local onboarding profile photos to a private `profile-photos` bucket, writes `profile_photos.member_id` metadata rows, and hydrates signed current-profile photo URLs locally.
@@ -144,8 +145,14 @@ A hosted anon-client smoke test attempted to create a fresh test auth user but S
 
 A browser funnel test reached `/onboarding/photos`, sent a Supabase confirmation email, and exposed hosted auth setup gaps: the confirmation link redirected to `http://localhost:3000`, and the email used default Supabase Auth branding. App-side redirect handling has been patched; Supabase Dashboard still needs redirect allow-list/Site URL review and Orchard-branded auth email sender/templates before external tests.
 
+User completed the Supabase Auth URL Configuration redirect setup for the browser preview. Supabase Dashboard requires SMTP configuration before email templates can be customized; SMTP fields remain blank except project auth secrets. Email branding therefore remains an external setup item, not an app-code blocker.
+
 ## Latest Commits
 
+- `19f3a05` - Resume onboarding after email confirmation
+- `d840619` - Fix Supabase signup redirect handling
+- `01952d5` - Record hosted storage verification
+- `8cc71a0` - Refresh photo storage status docs
 - `6100fc5` - Add Supabase profile photo storage
 - `0b5570c` - Refresh Supabase handoff status
 - `e87e9f0` - Wire Supabase auth and profile persistence
@@ -172,12 +179,12 @@ A browser funnel test reached `/onboarding/photos`, sent a Supabase confirmation
 
 ## Current Repo Status
 
-As of the 2026-06-20 Supabase auth/profile persistence handoff:
+As of the 2026-06-21 auth confirmation resume handoff:
 
 - Branch: `main`
 - Remote: `origin/main`
-- Latest pushed commit: `6100fc5` - Add Supabase profile photo storage.
-- Working tree should contain only this handoff doc refresh before the handoff commit.
+- Latest local implementation commit: `19f3a05` - Resume onboarding after email confirmation.
+- Working tree should contain only handoff/status doc refreshes before the handoff commit.
 - Local-only ignored files exist for Supabase credentials/env: `.local/`, `expo/.env`, and `supabase/.temp/`.
 - Local Supabase database is running via Docker Desktop. Non-database Supabase services are stopped, which was sufficient for `supabase test db`.
 - `personal-os` already had unrelated dirty files before this handoff; do not revert them.
@@ -189,6 +196,15 @@ Run from `expo/` after `6100fc5`:
 ```bash
 bun run lint
 bun run typecheck
+```
+
+Both passed.
+
+Run from `expo/` after `19f3a05`:
+
+```bash
+bun run typecheck
+bun run lint
 ```
 
 Both passed.
@@ -231,6 +247,8 @@ All passed; `supabase test db` reports 1 file, 25 tests.
 
 Latest implementation checkpoint:
 
+- `19f3a05` adds a pending onboarding profile store for hosted Supabase email-confirmation flows, resumes backend profile/photo persistence after confirmation, stores web-selected photos as data URIs for that pending path, and avoids redirecting away from sign-in before pending profile restoration can complete.
+- `d840619` fixes Supabase signup redirect handling by passing the current web origin plus `/onboarding/sign-in` and enabling web URL session detection.
 - `6100fc5` adds Supabase profile photo storage, a private `profile-photos` bucket migration, owner-scoped storage object policies, `profile_photos.member_id` metadata writes, signed current-profile photo hydration, and expanded local database tests.
 - `e87e9f0` wires Supabase email/password sign-in and account creation while preserving mock mode.
 - Adds Supabase profile/member persistence through `expo/services/supabase-profile-service.ts`.
@@ -268,7 +286,7 @@ Existing unrelated dirty files in `personal-os` should be preserved and not reve
 ## Next Best Tasks
 
 1. Create Apple Developer Program account.
-2. Smoke-test onboarding in Supabase mode with a selected local photo using an existing confirmed dev account or after the hosted auth email rate limit clears.
+2. Restart the browser preview and smoke-test onboarding in Supabase mode with a selected local photo and the email confirmation link.
 3. Add focused CI for lint, typecheck, and database tests once remote/local DB command reliability is confirmed.
 4. Replace swipe/match/chat local state as source of truth only after auth/profile persistence works.
 5. Add EAS build config and TestFlight metadata when backend/legal placeholders are acceptable.
@@ -277,8 +295,7 @@ Existing unrelated dirty files in `personal-os` should be preserved and not reve
 
 - Apple Developer account creation.
 - Real public domain/legal URLs before productionization.
-- Supabase Auth redirect allow-list/Site URL for browser and native testing.
-- Supabase Auth email sender/template branding for Orchard.
+- Supabase Auth email sender/template branding for Orchard requires custom SMTP setup.
 
 ## Cautions
 
