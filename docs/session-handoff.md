@@ -92,6 +92,7 @@ When these docs become large, compact them by preserving active state, blockers,
 - Direct chat routes and provider send helpers are guarded so the local app only shows/writes chat for active local matches.
 - Onboarding includes a required 18+ and legal acceptance screen before account type selection; acceptance is stored on the local prototype profile.
 - Safety/legal URLs and support contact are env-configurable via `expo/constants/legal.ts` and `expo/.env.example`; final public values are still human decisions.
+- Supabase signup now passes an app redirect URL for confirmation emails. On web, it defaults to the current browser origin plus `/onboarding/sign-in`; `EXPO_PUBLIC_AUTH_REDIRECT_URL` can override it. The Supabase client detects auth sessions from web confirmation URLs.
 - In Supabase mode, the root route requires an active Supabase session before entering the tab app. Final onboarding creates a Supabase auth user first and uses the Supabase user id as the local prototype profile id when a session is returned.
 - A Supabase profile adapter persists onboarding/profile rows to `profiles` and `profile_members`; the provider can hydrate a signed-in user's local prototype profile from those backend rows.
 - A Supabase storage adapter now uploads selected local onboarding profile photos to a private `profile-photos` bucket, writes `profile_photos.member_id` metadata rows, and hydrates signed current-profile photo URLs locally.
@@ -140,6 +141,8 @@ Hosted SQL verification on 2026-06-20 confirmed:
 - `profile_photos_profile_member_sort_unique` exists.
 
 A hosted anon-client smoke test attempted to create a fresh test auth user but Supabase returned `email rate limit exceeded` before a session was returned. Retest the app photo upload flow after the hosted auth email rate limit clears or with an existing confirmed dev account.
+
+A browser funnel test reached `/onboarding/photos`, sent a Supabase confirmation email, and exposed hosted auth setup gaps: the confirmation link redirected to `http://localhost:3000`, and the email used default Supabase Auth branding. App-side redirect handling has been patched; Supabase Dashboard still needs redirect allow-list/Site URL review and Orchard-branded auth email sender/templates before external tests.
 
 ## Latest Commits
 
@@ -274,6 +277,8 @@ Existing unrelated dirty files in `personal-os` should be preserved and not reve
 
 - Apple Developer account creation.
 - Real public domain/legal URLs before productionization.
+- Supabase Auth redirect allow-list/Site URL for browser and native testing.
+- Supabase Auth email sender/template branding for Orchard.
 
 ## Cautions
 

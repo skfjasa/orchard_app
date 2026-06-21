@@ -1,7 +1,7 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router, Stack } from "expo-router";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   Image,
@@ -82,8 +82,10 @@ function SocialButton({ provider, onPress }: SocialButtonProps) {
 
 export default function SignInScreen() {
   const {
+    initialized: authInitialized,
     loading: authLoading,
     mode,
+    session,
     signInWithEmail,
   } = useAuth();
   const { profile } = useProfile();
@@ -91,6 +93,12 @@ export default function SignInScreen() {
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (mode !== "supabase") return;
+    if (!authInitialized || !session) return;
+    router.replace(profile ? "/(tabs)/discover" : "/onboarding/legal");
+  }, [authInitialized, mode, profile, session]);
 
   const onEmailSignIn = async () => {
     const id = email.trim();

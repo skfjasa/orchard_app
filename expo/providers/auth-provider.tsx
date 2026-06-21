@@ -1,9 +1,31 @@
 import createContextHook from "@nkzw/create-context-hook";
 import type { Session } from "@supabase/supabase-js";
+import * as Linking from "expo-linking";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Platform } from "react-native";
 
 import { getBackendMode, supabase } from "@/lib/supabase";
 import type { AuthCredentials } from "@/services";
+
+const AUTH_CALLBACK_PATH = "/onboarding/sign-in";
+
+type WebLocationLike = {
+  origin?: string;
+};
+
+function getAuthRedirectUrl(): string | undefined {
+  const configuredUrl = process.env.EXPO_PUBLIC_AUTH_REDIRECT_URL?.trim();
+  if (configuredUrl) return configuredUrl;
+
+  if (Platform.OS === "web") {
+    const location = (globalThis as typeof globalThis & {
+      location?: WebLocationLike;
+    }).location;
+    if (location?.origin) return `${location.origin}${AUTH_CALLBACK_PATH}`;
+  }
+
+  return Linking.createURL(AUTH_CALLBACK_PATH.replace(/^\//, ""));
+}
 
 export const [AuthProvider, useAuth] = createContextHook(() => {
   const [session, setSession] = useState<Session | null>(null);
@@ -72,9 +94,11 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     }
     setLoading(true);
     try {
+      const emailRedirectTo = getAuthRedirectUrl();
       const { data, error } = await supabase.auth.signUp({
         email: credentials.email,
         password: credentials.password,
+        options: emailRedirectTo ? { emailRedirectTo } : undefined,
       });
       if (error) throw error;
       setSession(data.session ?? null);

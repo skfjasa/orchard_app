@@ -99,6 +99,7 @@ Last updated: 2026-06-20
 - Supabase Dashboard verification confirmed the hosted Orchard tables exist, RLS is enabled on public Orchard tables, and `supabase_migrations.schema_migrations` contains `202606190001`.
 - CLI post-apply dry-run verification was temporarily blocked by Supabase's remote auth circuit breaker after failed temporary-role auth attempts; dashboard verification completed the hosted setup check.
 - Real Supabase email/password auth is now wired into sign-in and final onboarding completion when Supabase env vars are present.
+- Supabase signup now passes an app redirect URL for confirmation emails. On web, it defaults to the current browser origin plus `/onboarding/sign-in`; `EXPO_PUBLIC_AUTH_REDIRECT_URL` can override it. The Supabase client detects auth sessions from web confirmation URLs.
 - In Supabase mode, the root route requires an active Supabase session before entering the tab app.
 - Final onboarding creates a Supabase auth user first and uses the Supabase user id as the local prototype profile id when a session is returned.
 - Profile/account-deletion sign-out now clears both local prototype state and the Supabase auth session.
@@ -109,6 +110,7 @@ Last updated: 2026-06-20
 - The storage migration `202606200002_profile_photo_storage.sql` has been pushed to hosted `orchard-dev`; follow-up dry run reports the remote database is up to date. A full app smoke test with a selected local photo is still pending.
 - Hosted SQL verification on 2026-06-20 confirmed `202606200002` is recorded in `supabase_migrations.schema_migrations`, the `profile-photos` bucket is private, four owner-scoped storage object policies exist, and `profile_photos_profile_member_sort_unique` exists.
 - A hosted anon-client smoke test attempted to create a fresh test auth user and was blocked by Supabase's email rate limit before a session was returned. Retest after the rate limit clears or with an existing confirmed dev account.
+- A browser funnel test reached `/onboarding/photos`, sent a Supabase confirmation email, and exposed two hosted auth setup gaps: the redirect URL was still pointing at `http://localhost:3000`, and emails still used default Supabase Auth branding. App-side redirect handling has been patched; hosted Supabase Auth redirect allow-list, Site URL, and email templates/sender still need Dashboard review.
 - Project review recommendations remain relevant: avoid a broad `ProfileProvider` rewrite, keep moving behavior behind services, and add CI/database automation after the auth/profile path has a little more coverage.
 - Latest implementation checkpoint `6100fc5` is pushed to `origin/main`.
 
@@ -127,6 +129,8 @@ Smoke-test the Supabase Storage-backed profile photo path in hosted `orchard-dev
 
 - Apple Developer account creation.
 - Real domain for public legal/support URLs before productionization.
+- Supabase Auth redirect allow-list/Site URL for browser and native testing.
+- Supabase Auth email sender/template branding for Orchard.
 
 ## Status Tracking Rule
 

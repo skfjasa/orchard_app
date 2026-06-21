@@ -140,6 +140,7 @@ Expected variables:
 ```text
 EXPO_PUBLIC_SUPABASE_URL=
 EXPO_PUBLIC_SUPABASE_ANON_KEY=
+EXPO_PUBLIC_AUTH_REDIRECT_URL=
 EXPO_PUBLIC_POSTHOG_KEY=
 EXPO_PUBLIC_POSTHOG_HOST=
 EXPO_PUBLIC_SENTRY_DSN=
@@ -158,6 +159,12 @@ Rules:
 - `EXPO_PUBLIC_*` variables are bundled into the client and must not contain service-role keys.
 - Analytics and Sentry should be optional.
 - If Supabase variables are missing, the app should run in mock mode.
+
+Supabase hosted auth setup:
+
+- Add the local/web preview URL to the Supabase Auth redirect allow-list before browser sign-up testing. For Rork/Expo tunnel testing this may be the current `https://...exp.direct` origin; for local web it may be `http://localhost:8081`.
+- `EXPO_PUBLIC_AUTH_REDIRECT_URL` can pin a redirect URL when the dynamic browser origin should not be used. Leave it blank to use the current web origin on web and the Expo app link on native.
+- Update Supabase Auth email sender/templates before external testing so confirmation emails use Orchard branding instead of default Supabase Auth branding.
 
 ## Useful Files
 

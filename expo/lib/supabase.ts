@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { Platform } from "react-native";
 
 export type BackendMode = "mock" | "supabase";
 
@@ -292,7 +293,7 @@ function createSupabaseClient(): SupabaseClient<Database> | null {
       storage: AsyncStorage,
       autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUrl: false,
+      detectSessionInUrl: Platform.OS === "web",
     },
   });
 }
