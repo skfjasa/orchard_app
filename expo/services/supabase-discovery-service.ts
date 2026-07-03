@@ -3,11 +3,19 @@ import {
   fromBackendProfileId,
   toBackendProfileId,
 } from "@/constants/mock-profile-ids";
-import { supabase } from "@/lib/supabase";
+import { supabase, type Database } from "@/lib/supabase";
 import { rankProfiles } from "@/utils/match";
 
 import type { DiscoveryService } from "./discovery-service";
+import {
+  buildPhotosByMemberId,
+  toAppProfile,
+} from "./supabase-profile-service";
 import { fail, ok, requireSupabase } from "./supabase-service-response";
+
+type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
+type ProfileMemberRow = Database["public"]["Tables"]["profile_members"]["Row"];
+type ProfilePhotoRow = Database["public"]["Tables"]["profile_photos"]["Row"];
 
 export function createSupabaseDiscoveryService(): DiscoveryService {
   return {
@@ -42,7 +50,7 @@ export function createSupabaseDiscoveryService(): DiscoveryService {
       const limit = filters.limit ?? 50;
       const { data, error } = await client.value
         .from("profiles")
-        .select("id")
+        .select("*")
         .neq("id", filters.profileId)
         .limit(Math.max(limit * 3, 50));
 
@@ -50,19 +58,71 @@ export function createSupabaseDiscoveryService(): DiscoveryService {
         return fail("discovery_failed", "Could not load profiles.", error);
       }
 
-      const profiles = (data ?? [])
-        .filter((row) => {
-          if (excludedBackendIds.has(row.id)) return false;
-          if (!filters.includePassed && swipedBackendIds.has(row.id)) {
-            return false;
-          }
-          return true;
-        })
-        .map((row) => {
-          const localId = fromBackendProfileId(row.id);
-          return MOCK_PROFILES.find((profile) => profile.id === localId);
-        })
-        .filter((profile): profile is (typeof MOCK_PROFILES)[number] => !!profile);
+      const profileRows = (data ?? []).filter((row) => {
+        if (excludedBackendIds.has(row.id)) return false;
+        if (!filters.includePassed && swipedBackendIds.has(row.id)) {
+          return false;
+        }
+        return true;
+      }) as ProfileRow[];
+
+      const profileIds = profileRows.map((row) => row.id);
+      let memberRows: ProfileMemberRow[] = [];
+      let photoRows: ProfilePhotoRow[] = [];
+
+      if (profileIds.length > 0) {
+        const { data: members, error: membersError } = await client.value
+          .from("profile_members")
+          .select("*")
+          .in("profile_id", profileIds)
+          .order("sort_order", { ascending: true });
+
+        if (membersError) {
+          return fail(
+            "discovery_members_failed",
+            "Could not load profile members.",
+            membersError
+          );
+        }
+
+        const { data: photos, error: photosError } = await client.value
+          .from("profile_photos")
+          .select("*")
+          .in("profile_id", profileIds)
+          .order("sort_order", { ascending: true });
+
+        if (photosError) {
+          return fail(
+            "discovery_photos_failed",
+            "Could not load profile photos.",
+            photosError
+          );
+        }
+
+        memberRows = (members ?? []) as ProfileMemberRow[];
+        photoRows = (photos ?? []) as ProfilePhotoRow[];
+      }
+
+      const membersByProfileId = memberRows.reduce<Record<string, ProfileMemberRow[]>>(
+        (acc, row) => {
+          acc[row.profile_id] = [...(acc[row.profile_id] ?? []), row];
+          return acc;
+        },
+        {}
+      );
+      const photosByMemberId = await buildPhotosByMemberId(photoRows);
+
+      const profiles = profileRows.map((row) => {
+        const localId = fromBackendProfileId(row.id);
+        const mockProfile = MOCK_PROFILES.find((profile) => profile.id === localId);
+        if (mockProfile) return mockProfile;
+
+        return toAppProfile(
+          row,
+          membersByProfileId[row.id] ?? [],
+          photosByMemberId
+        );
+      });
 
       const ranked = filters.viewerProfile
         ? rankProfiles(filters.viewerProfile, profiles)

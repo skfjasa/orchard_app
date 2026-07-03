@@ -148,7 +148,7 @@ function toUserSettings(profile: Profile): UserSettingsInsert {
   };
 }
 
-function toAppProfile(
+export function toAppProfile(
   row: ProfileRow,
   members: ProfileMemberRow[],
   photosByMemberId: Record<string, string[]> = {}
@@ -203,7 +203,7 @@ function isUploadablePhotoUri(uri: string | undefined): uri is string {
   return !uri.startsWith("http://") && !uri.startsWith("https://");
 }
 
-async function buildPhotosByMemberId(
+export async function buildPhotosByMemberId(
   photoRows: ProfilePhotoRow[]
 ): Promise<Record<string, string[]>> {
   const grouped: Record<string, string[]> = {};

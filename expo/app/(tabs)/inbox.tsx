@@ -28,13 +28,15 @@ function formatTime(t: number): string {
 }
 
 export default function InboxScreen() {
-  const { profile, conversations, typingProfileIds } = useProfile();
+  const { profile, knownProfiles, conversations, typingProfileIds } = useProfile();
   const isCouple = profile?.accountType === "couple";
 
   const items = useMemo(() => {
     return conversations
       .map<InboxItem | null>((c) => {
-        const other = MOCK_PROFILES.find((p) => p.id === c.profileId);
+        const other =
+          knownProfiles.find((p) => p.id === c.profileId) ??
+          MOCK_PROFILES.find((p) => p.id === c.profileId);
         if (!other) return null;
         const messages = Array.isArray(c.messages) ? c.messages : [];
         const lastMessage = messages[messages.length - 1] ?? null;
@@ -50,7 +52,7 @@ export default function InboxScreen() {
         const tb = b.lastMessage?.at ?? 0;
         return tb - ta;
       });
-  }, [conversations]);
+  }, [conversations, knownProfiles]);
 
   return (
     <View style={styles.root}>

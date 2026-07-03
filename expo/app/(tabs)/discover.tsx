@@ -49,6 +49,7 @@ export default function DiscoverScreen() {
     passedIds,
     likeProfile,
     passProfile,
+    rememberProfiles,
     totalSlots,
     slotsRemaining,
     isAtMatchLimit,
@@ -83,13 +84,14 @@ export default function DiscoverScreen() {
           setRanked([]);
           return;
         }
+        rememberProfiles(result.value.map((item) => item.profile));
         setRanked(result.value);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [appServices, profile, likedIds, passedIds]);
+  }, [appServices, profile, likedIds, passedIds, rememberProfiles]);
 
   const pan = useRef(new Animated.ValueXY()).current;
   const swipingRef = useRef<boolean>(false);

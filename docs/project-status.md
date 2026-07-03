@@ -22,6 +22,7 @@ Last updated: 2026-07-03
 ## Latest Foundation Commits
 
 - `5723aed` - Refresh handoff after fixture checkpoint
+- `438bafa` - Advance Supabase fixture chat flows
 - `aa5dae7` - Stabilize onboarding and fixture match flow
 - `ce27578` - update docs
 - `1f0f211` - Track GitHub Actions Node warning
@@ -154,6 +155,9 @@ Last updated: 2026-07-03
 - Rematch timestamp/state semantics were fixed in migration `202607030001_rematch_active_match_history.sql`: inactive match history is preserved, only one active match per user pair is allowed, and a later rematch creates a fresh active match row with a fresh `created_at`. The migration was applied to hosted `orchard-dev`; follow-up dry run reports the remote database is up to date and migration list shows local/remote aligned through `202607030001`.
 - After the rematch migration, local `expo\node_modules\.bin\supabase db reset` passed and local `expo\node_modules\.bin\supabase test db` passed: 1 file, 41 tests.
 - Supabase-mode discovery now uses a `createSupabaseDiscoveryService` adapter for hosted fixture eligibility: the backend/RLS decides which seeded fixture profile ids are discoverable, then the adapter maps those fixture UUIDs back to existing local mock profile objects so current Discover, match detail, chat, and mock-mode UI behavior remain stable.
+- Supabase discovery can now return arbitrary real backend profiles as app `Profile` objects by loading `profiles`, `profile_members`, and `profile_photos` through RLS and signing discovered photo URLs. Seeded fixture profiles still map back to the richer local mock cards.
+- Discovery remembers service-returned profiles in `ProfileProvider`, and match detail, chat, matches, and inbox screens now look up remembered backend profiles before falling back to `MOCK_PROFILES`.
+- Supabase match listing now attaches the other profile where RLS allows it, so hosted real-user matches can hydrate profile data into local match/thread state after sign-in.
 - Backend match/thread hydration now runs after a signed-in Supabase profile is hydrated. Active hosted fixture matches are mapped back into local `likedIds` and conversations, and hosted text messages are merged into existing local conversations by message id without wiping local simulated/photo messages.
 - Backend chat persistence has started behind the service boundary: Supabase mode now uses `createSupabaseChatService`, and `ProfileProvider.sendMessage` non-blockingly persists outbound text messages to the hosted `messages` table when a matching active backend match exists. Visible chat state, simulated replies, read receipts, deletes, and photo messages remain local/mock for now.
 - Chat persistence now repairs one likely hosted UAT drift case: if local chat is allowed from `likedIds` but no active Supabase match is found, `ProfileProvider` records the backend like once through the swipe service and uses the returned fixture auto-match id before sending the text message. This preserves mock/local UI behavior and lets stale local fixture matches become backend-backed before message insert.
@@ -162,28 +166,28 @@ Last updated: 2026-07-03
 - Profile-tab sign-out now clears profile/auth state before routing to `/onboarding`, preventing the user from landing on Discover with no profile/data loaded.
 - Remaining observed behavior to decide/fix later: after sign-out/sign-in, only hosted messages are restored; local fixture greeting/simulated messages are intentionally not persisted to hosted chat yet.
 - The original generated onboarding background was recovered from the previous remote URL, vendored as `expo/assets/images/welcome-background.png`, and the welcome, sign-in, and pending-confirmation screens now use the local bundled asset instead of the app icon background or a remote Rork URL.
+- Hosted onboarding/profile-photo confirmation smoke passed: after reaching the pending-confirmation page, opening email in a new tab and following the Supabase confirmation link opened another tab on Discover; the created profile's name, email, and selected photo hydrated correctly from the Profile tab while the original pending-confirmation tab remained idle.
 - After the auth confirmation route fix, local `bun run typecheck` and `bun run lint` pass from `expo/`.
-- The storage migration `202606200002_profile_photo_storage.sql` has been pushed to hosted `orchard-dev`; follow-up dry run reports the remote database is up to date. A full app smoke test with a selected local photo is still pending.
+- The storage migration `202606200002_profile_photo_storage.sql` has been pushed to hosted `orchard-dev`; follow-up dry run reports the remote database is up to date. Hosted onboarding/profile-photo confirmation with a selected local photo passed in browser UAT on 2026-07-03.
 - Hosted SQL verification on 2026-06-20 confirmed `202606200002` is recorded in `supabase_migrations.schema_migrations`, the `profile-photos` bucket is private, four owner-scoped storage object policies exist, and `profile_photos_profile_member_sort_unique` exists.
 - A hosted anon-client smoke test attempted to create a fresh test auth user and was blocked by Supabase's email rate limit before a session was returned. Retest after the rate limit clears or with an existing confirmed dev account.
 - A browser funnel test reached `/onboarding/photos`, sent a Supabase confirmation email, and exposed two hosted auth setup gaps: the redirect URL was still pointing at `http://localhost:3000`, and emails still used default Supabase Auth branding. App-side redirect handling has been patched; hosted Supabase Auth redirect allow-list, Site URL, and email templates/sender still need Dashboard review.
 - User updated Supabase Auth URL Configuration redirect entries for the browser preview. Supabase Dashboard currently requires SMTP configuration before auth email templates can be customized; SMTP fields are still blank except project auth secrets.
 - Project review recommendations remain relevant: avoid a broad `ProfileProvider` rewrite, keep moving behavior behind services, and add CI/database automation after the auth/profile path has a little more coverage.
-- Latest local implementation/status checkpoint `f964503` - Advance Supabase fixture chat flows. Local `main` is ahead of `origin/main` by 1 commit.
+- Latest committed implementation/status checkpoint before the current working slice: `438bafa` - Advance Supabase fixture chat flows. Local `main` is ahead of `origin/main` by 1 commit before committing the backend profile discovery/display slice.
 
 ## Current Task
 
-Continue backend source-of-truth work after the verified hosted fixture discovery/match/chat slice.
+Verify arbitrary real-user backend discovery/profile display, then continue backend source-of-truth work for chat reads/inbox and message attachments.
 
 ## Next Planned Tasks
 
-1. Continue backend source-of-truth work for arbitrary real-user discovery/profile display, chat reads/inbox, and message attachments.
-2. Restart the browser preview and smoke-test onboarding in Supabase mode with a real selected photo and the email confirmation link.
-3. Create Apple Developer Program account.
-4. Decide whether to ingest fixture profile images into Supabase Storage for backend-backed discovery; the current dev fixtures intentionally omit `profile_photos` because mock image URLs are remote assets, not storage object paths.
-5. Decide whether to make Supabase DB tests automatic for Supabase migration pull requests.
-6. Continue reducing local/mock screen reads by routing match detail, inbox, and matches screens through service boundaries where practical.
-7. Track and resolve the GitHub Actions Node 20 deprecation warning from `actions/checkout@v4`.
+1. Browser-test arbitrary real-user backend discovery/profile display with at least two hosted non-fixture profiles.
+2. Create Apple Developer Program account.
+3. Decide whether to ingest fixture profile images into Supabase Storage for backend-backed discovery; the current dev fixtures intentionally omit `profile_photos` because mock image URLs are remote assets, not storage object paths.
+4. Decide whether to make Supabase DB tests automatic for Supabase migration pull requests.
+5. Continue reducing local/mock screen reads by routing match detail, inbox, and matches screens through service boundaries where practical.
+6. Track and resolve the GitHub Actions Node 20 deprecation warning from `actions/checkout@v4`.
 
 ## Human Decisions Needed
 

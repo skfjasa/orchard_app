@@ -126,6 +126,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const lastBackendProfileUserId = useRef<string | null>(null);
   const lastBackendMatchHydrationKey = useRef<string | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [knownProfiles, setKnownProfiles] = useState<Profile[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [likedIds, setLikedIds] = useState<string[]>([]);
   const [passedIds, setPassedIds] = useState<string[]>([]);
@@ -326,6 +327,23 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     userId,
   ]);
 
+  const rememberProfiles = useCallback((profilesToRemember: Profile[]) => {
+    if (profilesToRemember.length === 0) return;
+
+    setKnownProfiles((prev) => {
+      const byId = new Map(prev.map((item) => [item.id, item]));
+      let changed = false;
+
+      for (const item of profilesToRemember) {
+        if (byId.get(item.id) === item) continue;
+        byId.set(item.id, item);
+        changed = true;
+      }
+
+      return changed ? [...byId.values()] : prev;
+    });
+  }, []);
+
   useEffect(() => {
     if (mode !== "supabase") return;
     if (appServices.capabilities.matches !== "supabase") return;
@@ -355,14 +373,15 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         profileId: string;
         messages: Message[];
       }[] = [];
+      const matchedProfilesToRemember: Profile[] = [];
 
       for (const match of matchResult.value) {
         const otherBackendProfileId =
           match.userA === userId ? match.userB : match.userA;
         const otherLocalProfileId = fromBackendProfileId(otherBackendProfileId);
-        const otherProfile = MOCK_PROFILES.find(
-          (item) => item.id === otherLocalProfileId
-        );
+        const otherProfile =
+          MOCK_PROFILES.find((item) => item.id === otherLocalProfileId) ??
+          match.otherProfile;
 
         if (!otherProfile) {
           console.log("[profile-provider] backend match skipped: no local profile", {
@@ -371,7 +390,10 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
           continue;
         }
 
-        matchedLocalProfileIds.add(otherLocalProfileId);
+        matchedLocalProfileIds.add(otherProfile.id);
+        if (match.otherProfile) {
+          matchedProfilesToRemember.push(match.otherProfile);
+        }
 
         const threadResult = await appServices.chat.getThread(match.id);
         if (!threadResult.ok) {
@@ -385,12 +407,14 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         }
 
         backendConversations.push({
-          profileId: otherLocalProfileId,
+          profileId: otherProfile.id,
           messages: threadResult.value.messages,
         });
       }
 
       if (cancelled) return;
+
+      rememberProfiles(matchedProfilesToRemember);
 
       setLikedIds((prev) => {
         let next = prev;
@@ -426,6 +450,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     hydrated,
     mode,
     profile,
+    rememberProfiles,
     saveConvosMutation,
     saveLikesMutation,
     session?.access_token,
@@ -489,6 +514,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       void signOutAuth();
     }
     setProfile(null);
+    setKnownProfiles([]);
     setConversations([]);
     setLikedIds([]);
     setPassedIds([]);
@@ -1167,6 +1193,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   return useMemo(
     () => ({
       profile,
+      knownProfiles,
       conversations,
       likedIds,
       passedIds,
@@ -1186,6 +1213,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       superLikeRechargeAt,
       subscription,
       completeOnboarding,
+      rememberProfiles,
       updateProfile,
       signOut,
       likeProfile,
@@ -1213,6 +1241,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     }),
     [
       profile,
+      knownProfiles,
       conversations,
       likedIds,
       passedIds,
@@ -1232,6 +1261,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       superLikeRechargeAt,
       subscription,
       completeOnboarding,
+      rememberProfiles,
       updateProfile,
       signOut,
       likeProfile,

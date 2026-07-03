@@ -11,14 +11,18 @@ import { useProfile } from "@/providers/profile-provider";
 import { Profile } from "@/types";
 
 export default function MatchesScreen() {
-  const { likedIds } = useProfile();
+  const { knownProfiles, likedIds } = useProfile();
 
   const matches = useMemo(
     () =>
       likedIds
-        .map((id) => MOCK_PROFILES.find((p) => p.id === id))
+        .map(
+          (id) =>
+            knownProfiles.find((p) => p.id === id) ??
+            MOCK_PROFILES.find((p) => p.id === id)
+        )
         .filter((p): p is Profile => !!p),
-    [likedIds]
+    [knownProfiles, likedIds]
   );
 
   return (

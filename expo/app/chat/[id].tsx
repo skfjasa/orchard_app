@@ -109,6 +109,7 @@ export default function ChatScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const {
     profile,
+    knownProfiles,
     conversations,
     likedIds,
     sendMessage,
@@ -122,7 +123,12 @@ export default function ChatScreen() {
     setDraft,
     typingProfileIds,
   } = useProfile();
-  const other = useMemo(() => MOCK_PROFILES.find((p) => p.id === id), [id]);
+  const other = useMemo(
+    () =>
+      knownProfiles.find((p) => p.id === id) ??
+      MOCK_PROFILES.find((p) => p.id === id),
+    [id, knownProfiles]
+  );
   const convo = useMemo(
     () => conversations.find((c) => c.profileId === id),
     [conversations, id]

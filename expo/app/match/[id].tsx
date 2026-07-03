@@ -47,9 +47,9 @@ const { width: W } = Dimensions.get("window");
 
 export default function MatchDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const other = useMemo(() => MOCK_PROFILES.find((p) => p.id === id), [id]);
   const {
     profile,
+    knownProfiles,
     likeProfile,
     passProfile,
     likedIds,
@@ -57,6 +57,12 @@ export default function MatchDetail() {
     superLikedIds,
     blockProfile,
   } = useProfile();
+  const other = useMemo(
+    () =>
+      knownProfiles.find((p) => p.id === id) ??
+      MOCK_PROFILES.find((p) => p.id === id),
+    [id, knownProfiles]
+  );
 
   const allPhotos: string[] = useMemo(() => {
     if (!other) return [];
