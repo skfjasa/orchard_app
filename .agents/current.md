@@ -7,8 +7,9 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 ## Branch And Commit
 
 - Branch: `main`
-- Latest committed checkpoint before current working slice: `438bafa` - Advance Supabase fixture chat flows
-- Local branch is ahead of `origin/main` by 1 commit before committing the current working slice.
+- Latest implementation checkpoint: `00df6be` - Support backend profile discovery display
+- Previous checkpoint: `438bafa` - Advance Supabase fixture chat flows
+- Local branch is ahead of `origin/main`.
 
 ## Recent Changes
 

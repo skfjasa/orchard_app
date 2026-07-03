@@ -22,6 +22,7 @@ Last updated: 2026-07-03
 ## Latest Foundation Commits
 
 - `5723aed` - Refresh handoff after fixture checkpoint
+- `00df6be` - Support backend profile discovery display
 - `438bafa` - Advance Supabase fixture chat flows
 - `aa5dae7` - Stabilize onboarding and fixture match flow
 - `ce27578` - update docs
@@ -174,7 +175,7 @@ Last updated: 2026-07-03
 - A browser funnel test reached `/onboarding/photos`, sent a Supabase confirmation email, and exposed two hosted auth setup gaps: the redirect URL was still pointing at `http://localhost:3000`, and emails still used default Supabase Auth branding. App-side redirect handling has been patched; hosted Supabase Auth redirect allow-list, Site URL, and email templates/sender still need Dashboard review.
 - User updated Supabase Auth URL Configuration redirect entries for the browser preview. Supabase Dashboard currently requires SMTP configuration before auth email templates can be customized; SMTP fields are still blank except project auth secrets.
 - Project review recommendations remain relevant: avoid a broad `ProfileProvider` rewrite, keep moving behavior behind services, and add CI/database automation after the auth/profile path has a little more coverage.
-- Latest committed implementation/status checkpoint before the current working slice: `438bafa` - Advance Supabase fixture chat flows. Local `main` is ahead of `origin/main` by 1 commit before committing the backend profile discovery/display slice.
+- Latest implementation checkpoint: `00df6be` - Support backend profile discovery display. Local `main` is ahead of `origin/main`.
 
 ## Current Task
 
