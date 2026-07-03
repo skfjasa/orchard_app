@@ -7,9 +7,10 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 ## Branch And Commit
 
 - Branch: `main`
+- Latest handoff checkpoint: `eec5771` - Refresh handoff after backend profile display
 - Latest implementation checkpoint: `00df6be` - Support backend profile discovery display
 - Previous checkpoint: `438bafa` - Advance Supabase fixture chat flows
-- Local branch is ahead of `origin/main`.
+- Branch is clean and synced with `origin/main`.
 
 ## Recent Changes
 
