@@ -86,21 +86,40 @@ Use `bun run lint` and `bun run typecheck` from `expo/` for code changes.
 - Do not implement production behavior in docs-only tasks.
 - Keep `docs/project-status.md` current when commits change status, plans, or blockers.
 
-## Session Start Shortcut
+## Agent Workflow Trigger Phrases
 
-When the user says `status report` in any capitalization, treat it as the standard session-start command for this repo.
+### `status report`
 
-Do this:
+Treat `status report` in any capitalization as the default lightweight session-start command for this repo.
 
-1. Read `AGENTS.md`, `docs/session-handoff.md`, `docs/project-status.md`, and `docs/backend-migration-plan.md`.
-2. Inspect `git status` and recent commits.
-3. Do not modify files yet.
-4. Summarize current repo state, implementation status, latest completed commit, next recommended task, and blockers/human decisions.
-5. Wait for user confirmation before making changes.
+Read only:
+
+1. `C:\Users\skfja\Projects\AGENTS.md`
+2. `AGENTS.md`
+3. `.agents/current.md`
+4. `.agents/next.md`
+5. Git status, current branch, and latest commit
+
+Do not read long docs, archived handoffs, planning docs, architecture maps, or dated session history unless `.agents/current.md` explicitly says they are needed for the next task. Do not edit files.
+
+Output current branch, dirty files, latest commit, current objective, validation status, likely relevant files, and recommended next step. Then wait for the user.
+
+### `handoff sync`
+
+Treat `handoff sync` or `session handoff` in any capitalization as the default lightweight end-of-session command.
+
+Update `.agents/current.md` and `.agents/next.md`. Archive a detailed handoff under `.agents/sessions/` only if meaningful code, architecture, schema, workflow, or process changed. Keep `.agents/current.md` concise, ideally under 100-150 lines.
+
+Also update the compact central mirror in `personal-os\03-projects\handoffs\orchard_app\latest.md` when status materially changed. Do not edit runtime code unless explicitly asked.
 
 ## Project Handoff Files
 
-For this repo, the global session handoff shortcut should refresh these project-specific files when they are relevant:
+For this repo, lightweight startup state lives in:
+
+- `.agents/current.md`
+- `.agents/next.md`
+
+Detailed or compatibility handoff/status files should be refreshed only when they are relevant or would otherwise become stale:
 
 - `docs/session-handoff.md`
 - `docs/project-status.md`
@@ -111,15 +130,16 @@ For this repo, the global session handoff shortcut should refresh these project-
 
 ## Session Handoff Shortcut
 
-When the user says `handoff sync` or `session handoff` in any capitalization, follow the global session-end handoff command and keep the update repo-specific.
+When the user says `handoff sync` or `session handoff` in any capitalization, update `.agents/current.md` and `.agents/next.md` first, then update broader repo-specific docs only when status materially changed.
 
 Do this:
 
 1. Inspect `git status` and recent commits.
-2. Update the relevant project handoff/status markdown files listed above with the current repo state, latest completed work, checks run or skipped, blockers, and the next recommended task.
-3. Update central `personal-os` mirrors when available and relevant.
-4. Do not change runtime code unless the user explicitly asks.
-5. Summarize changed docs, current blockers, and exact next-session startup steps.
+2. Update `.agents/current.md` and `.agents/next.md`.
+3. Update the relevant project handoff/status markdown files listed above when they would otherwise be stale.
+4. Update central `personal-os` mirrors when available and relevant.
+5. Do not change runtime code unless the user explicitly asks.
+6. Summarize changed docs, current blockers, and exact next-session startup steps.
 
 ## Handoff Cleanup
 
