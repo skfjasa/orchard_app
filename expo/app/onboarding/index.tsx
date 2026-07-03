@@ -12,9 +12,7 @@ export default function WelcomeScreen() {
   return (
     <View style={styles.root} testID="welcome-screen">
       <Image
-        source={{
-          uri: "https://r2-pub.rork.com/generated-images/72b141b5-997b-4d4d-b90c-6ee5ce90f32f.png",
-        }}
+        source={require("../../assets/images/icon.png")}
         style={StyleSheet.absoluteFillObject}
         resizeMode="cover"
       />

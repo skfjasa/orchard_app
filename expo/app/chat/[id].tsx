@@ -1,11 +1,11 @@
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
-import { router, Stack, useLocalSearchParams } from "expo-router";
-import { useHeaderHeight } from "@react-navigation/elements";
+import { router, useLocalSearchParams } from "expo-router";
 import * as Clipboard from "expo-clipboard";
 import {
   Check,
   CheckCheck,
+  ChevronLeft,
   ImagePlus,
   Lock,
   MessageCircle,
@@ -32,7 +32,7 @@ import {
 import Colors from "@/constants/colors";
 import { MOCK_PROFILES } from "@/mocks/profiles";
 import { useProfile } from "@/providers/profile-provider";
-import { Message, MessageStatus } from "@/types";
+import { Message, MessageStatus, Profile } from "@/types";
 
 function formatClock(t: number): string {
   const d = new Date(t);
@@ -72,6 +72,39 @@ type Row =
 
 const TIME_GAP_MS = 10 * 60 * 1000;
 
+function normalizeMessages(messages: unknown): Message[] {
+  if (!Array.isArray(messages)) return [];
+
+  return messages
+    .map((message, index) => {
+      if (!message || typeof message !== "object") return null;
+      const raw = message as Partial<Message>;
+      const at = typeof raw.at === "number" && Number.isFinite(raw.at)
+        ? raw.at
+        : Date.now();
+      const kind = raw.kind === "photo" ? "photo" : "text";
+      const text =
+        typeof raw.text === "string"
+          ? raw.text
+          : kind === "photo"
+          ? "Photo request"
+          : "";
+
+      return {
+        ...raw,
+        id:
+          typeof raw.id === "string" && raw.id.length > 0
+            ? raw.id
+            : `legacy-${at}-${index}`,
+        fromMe: raw.fromMe === true,
+        text,
+        at,
+        kind,
+      } as Message;
+    })
+    .filter((message): message is Message => !!message);
+}
+
 export default function ChatScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const {
@@ -97,11 +130,16 @@ export default function ChatScreen() {
 
   const [text, setText] = useState<string>("");
   const [activePersonIdx, setActivePersonIdx] = useState<number>(0);
+  const [safetyMenuOpen, setSafetyMenuOpen] = useState<boolean>(false);
   const listRef = useRef<FlatList<Row>>(null);
   const isCouple = profile?.accountType === "couple";
   const activeName = profile?.people[activePersonIdx]?.name;
   const isTyping = !!id && typingProfileIds.includes(id);
   const hasActiveLocalMatch = !!id && likedIds.includes(id);
+  const messages = useMemo(
+    () => normalizeMessages(convo?.messages),
+    [convo?.messages]
+  );
 
   useEffect(() => {
     if (id) markRead(id);
@@ -121,7 +159,7 @@ export default function ChatScreen() {
   );
 
   const rows = useMemo<Row[]>(() => {
-    const msgs = convo?.messages ?? [];
+    const msgs = messages;
     const out: Row[] = [];
     let lastAt = 0;
     msgs.forEach((m, i) => {
@@ -145,9 +183,7 @@ export default function ChatScreen() {
       out.push({ type: "typing", id: "typing" });
     }
     return out;
-  }, [convo?.messages, isCouple, isTyping]);
-
-  const headerHeight = useHeaderHeight();
+  }, [messages, isCouple, isTyping]);
 
   const send = useCallback(() => {
     const trimmed = text.trim();
@@ -180,49 +216,38 @@ export default function ChatScreen() {
       Alert.alert("Block failed", result.error ?? "Try again in a moment.");
       return;
     }
-    Alert.alert("Profile blocked", "The conversation was removed.", [
-      { text: "OK", onPress: () => router.replace("/(tabs)/inbox") },
-    ]);
+    router.replace("/(tabs)/inbox");
   }, [id, blockProfile]);
 
   const unmatchConversation = useCallback(() => {
     if (!id) return;
     unmatch(id);
-    Alert.alert("Unmatched", "The conversation was removed.", [
-      { text: "OK", onPress: () => router.replace("/(tabs)/inbox") },
-    ]);
+    router.replace("/(tabs)/inbox");
   }, [id, unmatch]);
 
   const openSafetyActions = useCallback(() => {
     if (!id) return;
-    Alert.alert("Conversation safety", undefined, [
-      {
-        text: "Report or block",
-        style: "destructive",
-        onPress: () => {
-          Alert.alert("Report or block", undefined, [
-            {
-              text: "Report profile",
-              style: "destructive",
-              onPress: () => openReport(),
-            },
-            {
-              text: "Block profile",
-              style: "destructive",
-              onPress: () => void blockConversation(),
-            },
-            { text: "Cancel", style: "cancel" },
-          ]);
-        },
-      },
-      {
-        text: "Unmatch",
-        style: "destructive",
-        onPress: unmatchConversation,
-      },
-      { text: "Cancel", style: "cancel" },
-    ]);
-  }, [id, openReport, blockConversation, unmatchConversation]);
+    setSafetyMenuOpen((open) => !open);
+  }, [id]);
+
+  const goBackToInbox = useCallback(() => {
+    router.replace("/(tabs)/inbox");
+  }, []);
+
+  const reportConversation = useCallback(() => {
+    setSafetyMenuOpen(false);
+    openReport();
+  }, [openReport]);
+
+  const blockFromMenu = useCallback(() => {
+    setSafetyMenuOpen(false);
+    void blockConversation();
+  }, [blockConversation]);
+
+  const unmatchFromMenu = useCallback(() => {
+    setSafetyMenuOpen(false);
+    unmatchConversation();
+  }, [unmatchConversation]);
 
   const onLongPressMessage = useCallback(
     (m: Message) => {
@@ -299,180 +324,263 @@ export default function ChatScreen() {
 
   if (!other || !hasActiveLocalMatch) {
     return (
-      <>
-        <Stack.Screen options={{ title: "Chat" }} />
-        <View style={styles.notFoundRoot}>
-          <View style={styles.notFoundIcon}>
-            <MessageCircle size={28} color={Colors.light.accent} />
-          </View>
-          <Text style={styles.notFoundTitle}>Conversation unavailable</Text>
-          <Text style={styles.notFoundSub}>
-            Chat is only available after an active match.
-          </Text>
-          <Pressable
-            onPress={() => {
-              if (router.canGoBack()) router.back();
-              else router.replace("/(tabs)/inbox");
-            }}
-            style={({ pressed }) => [
-              styles.notFoundBtn,
-              pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
-            ]}
-            testID="chat-notfound-back"
-          >
-            <Text style={styles.notFoundBtnText}>Back to inbox</Text>
-          </Pressable>
+      <View style={styles.notFoundRoot}>
+        <View style={styles.notFoundIcon}>
+          <MessageCircle size={28} color={Colors.light.accent} />
         </View>
-      </>
+        <Text style={styles.notFoundTitle}>Conversation unavailable</Text>
+        <Text style={styles.notFoundSub}>
+          Chat is only available after an active match.
+        </Text>
+        <Pressable
+          onPress={() => {
+            if (router.canGoBack()) router.back();
+            else router.replace("/(tabs)/inbox");
+          }}
+          style={({ pressed }) => [
+            styles.notFoundBtn,
+            pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+          ]}
+          testID="chat-notfound-back"
+        >
+          <Text style={styles.notFoundBtnText}>Back to inbox</Text>
+        </Pressable>
+      </View>
     );
   }
 
+  return (
+    <KeyboardAvoidingView
+      style={styles.root}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={0}
+    >
+      <ChatHeader
+        other={other}
+        onBack={goBackToInbox}
+        onSafetyPress={openSafetyActions}
+      />
+      {safetyMenuOpen && (
+        <SafetyMenu
+          onReport={reportConversation}
+          onBlock={blockFromMenu}
+          onUnmatch={unmatchFromMenu}
+          onCancel={() => setSafetyMenuOpen(false)}
+        />
+      )}
+      <FlatList
+        ref={listRef}
+        data={rows}
+        keyExtractor={(r) => r.id}
+        contentContainerStyle={styles.list}
+        onContentSizeChange={() =>
+          listRef.current?.scrollToEnd({ animated: false })
+        }
+        renderItem={({ item }) => {
+          if (item.type === "divider") {
+            return (
+              <View style={styles.dividerWrap}>
+                <Text style={styles.dividerText}>{formatDivider(item.at)}</Text>
+              </View>
+            );
+          }
+          if (item.type === "typing") {
+            return <TypingBubble />;
+          }
+          return (
+            <Bubble
+              message={item.message}
+              onDecide={onDecide}
+              onLongPress={onLongPressMessage}
+              showAuthor={item.showAuthor}
+            />
+          );
+        }}
+        ListEmptyComponent={
+          <Text style={styles.emptyMsg}>
+            Say hi! This is the start of your conversation.
+          </Text>
+        }
+      />
+
+      {isCouple && profile && (
+        <View style={styles.personSwitch}>
+          <Users size={14} color={Colors.light.textMuted} />
+          <Text style={styles.personSwitchLabel}>Send as</Text>
+          {profile.people.map((p, i) => (
+            <Pressable
+              key={i}
+              onPress={() => setActivePersonIdx(i)}
+              style={[
+                styles.personChip,
+                activePersonIdx === i && styles.personChipOn,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.personChipText,
+                  activePersonIdx === i && { color: "#FFF" },
+                ]}
+              >
+                {p.name}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
+
+      <View style={styles.composer}>
+        <Pressable
+          onPress={pickPhoto}
+          style={({ pressed }) => [
+            styles.attachBtn,
+            pressed && { opacity: 0.7 },
+          ]}
+          testID="attach-photo"
+        >
+          <ImagePlus color={Colors.light.accent} size={22} />
+        </Pressable>
+        <TextInput
+          value={text}
+          onChangeText={onChangeText}
+          placeholder={isCouple ? `Message as ${activeName}...` : "Message..."}
+          placeholderTextColor={Colors.light.textMuted}
+          style={styles.input}
+          multiline
+          testID="chat-input"
+        />
+        <Pressable
+          onPress={send}
+          hitSlop={10}
+          style={({ pressed }) => [
+            styles.sendBtn,
+            { opacity: !text.trim() ? 0.4 : pressed ? 0.85 : 1 },
+          ]}
+          testID="send-btn"
+        >
+          <Send color="#FFF" size={18} />
+        </Pressable>
+      </View>
+    </KeyboardAvoidingView>
+  );
+}
+
+function ChatHeader({
+  other,
+  onBack,
+  onSafetyPress,
+}: {
+  other: Profile;
+  onBack: () => void;
+  onSafetyPress: () => void;
+}) {
   const otherIsCouple = other.accountType === "couple";
   const headerTitle = otherIsCouple
     ? `${other.people[0].name} & ${other.people[1]?.name}`
     : other.people[0].name;
 
   return (
-    <>
-      <Stack.Screen
-        options={{
-          headerTitle: () => (
-            <View style={styles.headerTitle}>
-              <View style={styles.headerAvatars}>
-                <Image
-                  source={{ uri: other.people[0].photo }}
-                  style={styles.headerAvatar}
-                  contentFit="cover"
-                />
-                {otherIsCouple && other.people[1] && (
-                  <Image
-                    source={{ uri: other.people[1].photo }}
-                    style={[styles.headerAvatar, { marginLeft: -12 }]}
-                    contentFit="cover"
-                  />
-                )}
-              </View>
-              <View>
-                <Text style={styles.headerName}>{headerTitle}</Text>
-                <Text style={styles.headerCity}>{other.location.city}</Text>
-              </View>
-            </View>
-          ),
-          headerRight: () => (
-            <Pressable
-              onPress={openSafetyActions}
-              hitSlop={10}
-              style={({ pressed }) => [
-                styles.headerAction,
-                pressed && { opacity: 0.7 },
-              ]}
-              testID="chat-safety"
-            >
-              <MoreHorizontal size={22} color={Colors.light.text} />
-            </Pressable>
-          ),
-        }}
-      />
-      <KeyboardAvoidingView
-        style={styles.root}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? headerHeight : 0}
+    <View style={styles.inlineHeader}>
+      <Pressable
+        onPress={onBack}
+        hitSlop={10}
+        style={({ pressed }) => [
+          styles.headerBack,
+          pressed && { opacity: 0.7 },
+        ]}
+        testID="chat-back"
       >
-        <FlatList
-          ref={listRef}
-          data={rows}
-          keyExtractor={(r) => r.id}
-          contentContainerStyle={styles.list}
-          onContentSizeChange={() =>
-            listRef.current?.scrollToEnd({ animated: false })
-          }
-          renderItem={({ item }) => {
-            if (item.type === "divider") {
-              return (
-                <View style={styles.dividerWrap}>
-                  <Text style={styles.dividerText}>{formatDivider(item.at)}</Text>
-                </View>
-              );
-            }
-            if (item.type === "typing") {
-              return <TypingBubble />;
-            }
-            return (
-              <Bubble
-                message={item.message}
-                onDecide={onDecide}
-                onLongPress={onLongPressMessage}
-                showAuthor={item.showAuthor}
-              />
-            );
-          }}
-          ListEmptyComponent={
-            <Text style={styles.emptyMsg}>
-              Say hi! This is the start of your conversation.
-            </Text>
-          }
-        />
-
-        {isCouple && profile && (
-          <View style={styles.personSwitch}>
-            <Users size={14} color={Colors.light.textMuted} />
-            <Text style={styles.personSwitchLabel}>Send as</Text>
-            {profile.people.map((p, i) => (
-              <Pressable
-                key={i}
-                onPress={() => setActivePersonIdx(i)}
-                style={[
-                  styles.personChip,
-                  activePersonIdx === i && styles.personChipOn,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.personChipText,
-                    activePersonIdx === i && { color: "#FFF" },
-                  ]}
-                >
-                  {p.name}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        )}
-
-        <View style={styles.composer}>
-          <Pressable
-            onPress={pickPhoto}
-            style={({ pressed }) => [
-              styles.attachBtn,
-              pressed && { opacity: 0.7 },
-            ]}
-            testID="attach-photo"
-          >
-            <ImagePlus color={Colors.light.accent} size={22} />
-          </Pressable>
-          <TextInput
-            value={text}
-            onChangeText={onChangeText}
-            placeholder={isCouple ? `Message as ${activeName}...` : "Message..."}
-            placeholderTextColor={Colors.light.textMuted}
-            style={styles.input}
-            multiline
-            testID="chat-input"
+        <ChevronLeft size={24} color={Colors.light.text} />
+      </Pressable>
+      <View style={styles.headerTitle}>
+        <View style={styles.headerAvatars}>
+          <Image
+            source={{ uri: other.people[0].photo }}
+            style={styles.headerAvatar}
+            contentFit="cover"
           />
-          <Pressable
-            onPress={send}
-            hitSlop={10}
-            style={({ pressed }) => [
-              styles.sendBtn,
-              { opacity: !text.trim() ? 0.4 : pressed ? 0.85 : 1 },
-            ]}
-            testID="send-btn"
-          >
-            <Send color="#FFF" size={18} />
-          </Pressable>
+          {otherIsCouple && other.people[1] && (
+            <Image
+              source={{ uri: other.people[1].photo }}
+              style={[styles.headerAvatar, { marginLeft: -12 }]}
+              contentFit="cover"
+            />
+          )}
         </View>
-      </KeyboardAvoidingView>
-    </>
+        <View>
+          <Text style={styles.headerName}>{headerTitle}</Text>
+          <Text style={styles.headerCity}>{other.location.city}</Text>
+        </View>
+      </View>
+      <Pressable
+        onPress={onSafetyPress}
+        hitSlop={10}
+        style={({ pressed }) => [
+          styles.headerAction,
+          pressed && { opacity: 0.7 },
+        ]}
+        testID="chat-safety"
+      >
+        <MoreHorizontal size={22} color={Colors.light.text} />
+      </Pressable>
+    </View>
+  );
+}
+
+function SafetyMenu({
+  onReport,
+  onBlock,
+  onUnmatch,
+  onCancel,
+}: {
+  onReport: () => void;
+  onBlock: () => void;
+  onUnmatch: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <View style={styles.safetyMenu} testID="chat-safety-menu">
+      <Pressable
+        onPress={onReport}
+        style={({ pressed }) => [
+          styles.safetyMenuItem,
+          pressed && styles.safetyMenuItemPressed,
+        ]}
+        testID="chat-report-profile"
+      >
+        <Text style={styles.safetyMenuDangerText}>Report profile</Text>
+      </Pressable>
+      <Pressable
+        onPress={onBlock}
+        style={({ pressed }) => [
+          styles.safetyMenuItem,
+          pressed && styles.safetyMenuItemPressed,
+        ]}
+        testID="chat-block-profile"
+      >
+        <Text style={styles.safetyMenuDangerText}>Block profile</Text>
+      </Pressable>
+      <Pressable
+        onPress={onUnmatch}
+        style={({ pressed }) => [
+          styles.safetyMenuItem,
+          pressed && styles.safetyMenuItemPressed,
+        ]}
+        testID="chat-unmatch"
+      >
+        <Text style={styles.safetyMenuDangerText}>Unmatch</Text>
+      </Pressable>
+      <Pressable
+        onPress={onCancel}
+        style={({ pressed }) => [
+          styles.safetyMenuItem,
+          pressed && styles.safetyMenuItemPressed,
+        ]}
+        testID="chat-safety-cancel"
+      >
+        <Text style={styles.safetyMenuText}>Cancel</Text>
+      </Pressable>
+    </View>
   );
 }
 
@@ -717,7 +825,31 @@ function PhotoBubble({
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: Colors.light.background },
-  headerTitle: { flexDirection: "row", alignItems: "center", gap: 10 },
+  inlineHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: Colors.light.line,
+    backgroundColor: Colors.light.background,
+  },
+  headerBack: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.light.surface,
+  },
+  headerTitle: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginHorizontal: 10,
+  },
   headerAvatars: { flexDirection: "row" },
   headerAvatar: {
     width: 34,
@@ -743,6 +875,42 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: Colors.light.surface,
+  },
+  safetyMenu: {
+    alignSelf: "flex-end",
+    minWidth: 190,
+    marginTop: 8,
+    marginRight: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: Colors.light.line,
+    backgroundColor: Colors.light.surface,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 4,
+    zIndex: 5,
+  },
+  safetyMenuItem: {
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: Colors.light.line,
+  },
+  safetyMenuItemPressed: {
+    backgroundColor: Colors.light.surfaceAlt,
+  },
+  safetyMenuText: {
+    color: Colors.light.text,
+    fontSize: 14,
+    fontWeight: "700" as const,
+  },
+  safetyMenuDangerText: {
+    color: Colors.palette.coral,
+    fontSize: 14,
+    fontWeight: "800" as const,
   },
   list: { padding: 16, gap: 6, flexGrow: 1 },
   emptyMsg: {

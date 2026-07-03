@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { MOCK_PROFILES } from "@/mocks/profiles";
+import { isBackendProfileId, toBackendProfileId } from "@/constants/mock-profile-ids";
 import { MVP_MONETIZATION_ENABLED } from "@/constants/features";
 import { useAuth } from "@/providers/auth-provider";
 import { createAppServices } from "@/services/app-services";
@@ -390,6 +391,57 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     [appServices, mode, profile, userId]
   );
 
+  const persistBackendChatMessage = useCallback(
+    (targetId: string, text: string) => {
+      if (mode !== "supabase") return;
+      if (appServices.capabilities.chat !== "supabase") return;
+      if (appServices.capabilities.matches !== "supabase") return;
+      if (!profile || !userId || profile.id !== userId) return;
+
+      const targetProfileId = toBackendProfileId(targetId);
+      if (!isBackendProfileId(targetProfileId)) return;
+
+      void appServices.matches
+        .listMatches(userId)
+        .then(async (matchResult) => {
+          if (!matchResult.ok) {
+            console.log("[profile-provider] backend match lookup failed", {
+              code: matchResult.error.code,
+              message: matchResult.error.message,
+            });
+            return;
+          }
+
+          const match = matchResult.value.find(
+            (item) =>
+              (item.userA === userId && item.userB === targetProfileId) ||
+              (item.userA === targetProfileId && item.userB === userId)
+          );
+
+          if (!match) {
+            console.log("[profile-provider] backend chat match not found", {
+              targetProfileId,
+            });
+            return;
+          }
+
+          const result = await appServices.chat.sendMessage({
+            matchId: match.id,
+            senderId: userId,
+            body: text,
+          });
+
+          if (!result.ok) {
+            console.log("[profile-provider] backend message send failed", {
+              code: result.error.code,
+              message: result.error.message,
+            });
+          }
+        });
+    },
+    [appServices, mode, profile, userId]
+  );
+
   const likeProfile = useCallback(
     (id: string): { ok: boolean; reason?: "limit" } => {
       if (likedIds.includes(id)) return { ok: true };
@@ -635,6 +687,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         return next;
       });
 
+      persistBackendChatMessage(profileId, text);
+
       const other = MOCK_PROFILES.find((p) => p.id === profileId);
       if (!other) return;
       const reply = makeSimulatedReply(other);
@@ -647,7 +701,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         });
       }, delay);
     },
-    [likedIds, saveConvosMutation]
+    [likedIds, saveConvosMutation, persistBackendChatMessage]
   );
 
   const deleteMessage = useCallback(
@@ -721,6 +775,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     (profileId: string) => {
       setConversations((prev) => {
         const next = markConversationRead(prev, profileId);
+        if (next === prev) return prev;
         saveConvosMutation.mutate(next);
         return next;
       });

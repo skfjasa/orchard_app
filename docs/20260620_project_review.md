@@ -149,10 +149,10 @@ Before wiring profiles to Supabase:
 *   **Utilize Zustand:** Since Zustand is already a dependency in `package.json`, use it to store global cache states (like matching decks, unread counts, and active matches), keeping React Contexts lightweight.
 
 ### 3. Polish the Android Configuration
-The app is iOS-first, but since it is built with Expo, it will eventually run on Android. Currently, in [app.json](file:///c:/Users/skfja/Projects/orchard_app/expo/app.json#L25), the Android package name is still the Rork default template:
+The app is iOS-first, but since it is built with Expo, it will eventually run on Android. This review originally noted that the Android package name was still the legacy generated default:
 ```json
 "android": {
-  "package": "app.rork.h12kndiz6neur3chkh3q1"
+  "package": "com.orchardapp.android"
 }
 ```
 *   **Recommendation:** Change the Android package name to `com.orchardapp.android` (or similar) to match the custom iOS bundle identifier `com.orchardapp.ios`.

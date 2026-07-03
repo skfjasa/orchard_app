@@ -11,6 +11,7 @@ import type { ServiceMode } from "./service-types";
 import type { StorageService } from "./storage-service";
 import type { SwipeService } from "./swipe-service";
 import { createSupabaseMatchService } from "./supabase-match-service";
+import { createSupabaseChatService } from "./supabase-chat-service";
 import { createSupabaseProfileService } from "./supabase-profile-service";
 import { createSupabaseSafetyService } from "./supabase-safety-service";
 import { createSupabaseStorageService } from "./supabase-storage-service";
@@ -62,6 +63,7 @@ function createMockCapabilities(): AppServiceCapabilities {
 function createSupabaseCapabilities(): AppServiceCapabilities {
   return {
     ...createMockCapabilities(),
+    chat: "supabase",
     matches: "supabase",
     profiles: "supabase",
     safety: "supabase",
@@ -90,6 +92,7 @@ export function createAppServices(
     mode,
     mockState: mockServices.state,
     capabilities: createSupabaseCapabilities(),
+    chat: createSupabaseChatService(),
     matches: createSupabaseMatchService(),
     profiles: createSupabaseProfileService(),
     safety: createSupabaseSafetyService(),

@@ -211,9 +211,7 @@ export default function SignInScreen() {
     <View style={styles.root} testID="sign-in-screen">
       <Stack.Screen options={{ headerShown: true, headerTransparent: true, headerTintColor: "#FFE6A1", title: "" }} />
       <Image
-        source={{
-          uri: "https://r2-pub.rork.com/generated-images/72b141b5-997b-4d4d-b90c-6ee5ce90f32f.png",
-        }}
+        source={require("../../assets/images/icon.png")}
         style={StyleSheet.absoluteFillObject}
         resizeMode="cover"
       />

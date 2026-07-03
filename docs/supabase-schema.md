@@ -1,11 +1,13 @@
 # Supabase Schema Draft
 
-This is the first MVP schema draft for Orchard. It is not yet applied to a live Supabase project.
+This is the MVP schema track for Orchard. The listed migrations have been applied to the hosted `orchard-dev` Supabase project and should still be reviewed before staging or production use.
 
 Migration files:
 
 - `supabase/migrations/202606190001_initial_mvp_schema.sql`
 - `supabase/migrations/202606200002_profile_photo_storage.sql`
+- `supabase/migrations/202606210001_fixture_profiles_and_settings.sql`
+- `supabase/migrations/202607030001_rematch_active_match_history.sql`
 
 ## Scope
 
@@ -28,6 +30,18 @@ Storage migration `202606200002_profile_photo_storage.sql` adds:
 - Owner-scoped storage object select/insert/update/delete policies keyed by the first path segment.
 - `profile_photos(profile_id, member_id, sort_order)` unique constraint for metadata upserts.
 
+Fixture/settings migration `202606210001_fixture_profiles_and_settings.sql` adds:
+
+- `profiles.is_test_fixture`.
+- Automatic default `user_settings` creation/backfill.
+- Dev-only fixture auto-match behavior for real users liking seeded fixture profiles.
+
+Rematch migration `202607030001_rematch_active_match_history.sql` adds:
+
+- Historical inactive match rows for unmatched pairs.
+- A partial unique index that allows only one active match per user pair.
+- Rematch behavior that creates a fresh active match row after a prior unmatch.
+
 ## Key Product Rules Represented
 
 - Users own one account-level profile row keyed by `auth.users.id`.
@@ -35,7 +49,7 @@ Storage migration `202606200002_profile_photo_storage.sql` adds:
 - Profile photos are tied to both the owning profile and a specific profile member.
 - Discovery should only expose visible, non-suspended, unblocked profiles.
 - Swipes are unique per swiper/target pair.
-- Matches are unique per user pair and only chat when `status = 'active'`.
+- Matches allow inactive history per user pair, enforce at most one active match per user pair, and only chat when `status = 'active'`.
 - Messages require an active match membership.
 - Blocks are bidirectional for discovery, match, and chat exclusion.
 - Reports are create-only from authenticated users in the mobile app.
@@ -43,13 +57,13 @@ Storage migration `202606200002_profile_photo_storage.sql` adds:
 
 ## Draft RPCs
 
-- `create_swipe(target_profile_id, swipe_decision)` persists like/pass decisions and creates an active match only when a reciprocal like exists.
+- `create_swipe(target_profile_id, swipe_decision)` persists like/pass decisions, creates an active match when a reciprocal like exists, auto-matches eligible dev fixture likes, and creates a fresh active row when a previously unmatched pair rematches.
 - `unmatch_match(target_match_id)` lets a match member mark an active match as unmatched.
-- `block_profile(blocked_profile_id)` creates a block and marks any existing match between the two users as blocked.
+- `block_profile(blocked_profile_id)` creates a block and marks any active match between the two users as blocked.
 - `submit_report(reported_profile_id, report_reason, report_details, reported_message_id)` derives reporter identity from `auth.uid()` and creates a moderation report.
 - `request_account_deletion(deletion_reason)` derives profile identity from `auth.uid()` and creates an account deletion request.
 
-These functions are granted to authenticated users only. Initial database/RLS tests exist at `supabase/tests/database/202606200001_mvp_security.sql` and pass against the local Supabase database: 1 file, 25 tests.
+These functions are granted to authenticated users only. Database/RLS tests exist at `supabase/tests/database/202606200001_mvp_security.sql` and pass against the local Supabase database: 1 file, 41 tests.
 
 ## Known Gaps Before Applying
 

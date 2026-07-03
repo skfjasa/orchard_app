@@ -214,6 +214,26 @@ export interface Database {
         };
         Relationships: [];
       };
+      messages: {
+        Row: {
+          id: string;
+          match_id: string;
+          sender_id: string;
+          body: string;
+          moderation_status: "visible" | "hidden" | "flagged";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          match_id: string;
+          sender_id: string;
+          body: string;
+          moderation_status?: "visible" | "hidden" | "flagged";
+          created_at?: string;
+        };
+        Update: never;
+        Relationships: [];
+      };
       reports: {
         Row: {
           id: string;

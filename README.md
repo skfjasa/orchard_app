@@ -1,6 +1,6 @@
 # Orchard
 
-Orchard is an iOS-first dating app MVP project for polyamorous / ENM users. The current codebase is a Rork-generated Expo React Native prototype that is being converted into a functional closed-beta app suitable for TestFlight.
+Orchard is an iOS-first dating app MVP project for polyamorous / ENM users. The current codebase is an Expo React Native prototype that is being converted into a functional closed-beta app suitable for TestFlight.
 
 The product goal is not to build a generic swipe app with different labels. The MVP should validate whether structured relationship context improves dating outcomes for poly/ENM users: relationship structure, partnered status, dating mode, boundaries, and expectations should be clear before matching and chatting.
 
@@ -46,8 +46,7 @@ Backend foundation currently exists for:
 ├── android/              # Root-level generated Android asset folder
 ├── assets/               # Root-level generated assets
 ├── docs/                 # Project audit, MVP plan, setup notes
-├── expo/                 # Main Expo React Native app
-└── rork.json             # Rork project metadata
+└── expo/                 # Main Expo React Native app
 ```
 
 Important app files:
@@ -149,7 +148,7 @@ The app should continue to run in mock mode when Supabase environment variables 
 
 ## Development Principles
 
-- Preserve the working Rork prototype UI where practical.
+- Preserve the working prototype UI where practical.
 - Replace mocked data gradually.
 - Keep mock mode available.
 - Keep changes PR-sized.

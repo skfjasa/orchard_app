@@ -9,7 +9,7 @@
 - Package manager: Bun
 - Current persistence: local AsyncStorage
 - Current backend: Supabase foundation exists, but production backend behavior is not wired as source of truth
-- Current mode: Rork prototype with mock/local behavior
+- Current mode: Expo prototype with mock/local behavior
 - Local Docker/Supabase status: Docker Desktop is operational after enabling firmware virtualization, and `expo\node_modules\.bin\supabase test db` passes locally
 
 ## Commands
@@ -24,7 +24,7 @@ bun run start-web
 bun run lint
 ```
 
-Use the existing Rork start commands in `expo/package.json`. Do not replace them unless explicitly asked.
+Use the Expo CLI scripts in `expo/package.json`.
 
 ## Working Rules
 
@@ -34,7 +34,7 @@ Use the existing Rork start commands in `expo/package.json`. Do not replace them
 - Do not bulk-rewrite `expo/providers/profile-provider.tsx`.
 - Preserve local/mock behavior until each backend-backed feature is ready.
 - Prefer adapter/service extraction before replacing local state.
-- Preserve the Rork-generated UI unless asked to redesign.
+- Preserve the existing prototype UI unless asked to redesign.
 - Do not add paid services without human approval.
 - Do not add secrets.
 - Do not remove existing docs unless obsolete and replaced.

@@ -6,7 +6,7 @@ Purpose: document the current provider before extracting services/adapters. This
 
 ## Current Role
 
-`ProfileProvider` is the central app-state provider for the Rork prototype. It still owns UI-facing local state and coordinates persistence, but the first service boundaries have been extracted.
+`ProfileProvider` is the central app-state provider for the prototype. It still owns UI-facing local state and coordinates persistence, but the first service boundaries have been extracted.
 
 Current persistence is local through `AsyncStorage` via `expo/services/local-profile-storage.ts` and React Query mutations. Supabase swipe persistence can run as a gated, non-blocking hook when Supabase mode has a matching authenticated profile id, but backend data is not the UI source of truth.
 

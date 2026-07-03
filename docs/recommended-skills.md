@@ -6,7 +6,7 @@ Do not install these automatically. This document defines project-specific Skill
 
 When to use:
 
-- After Rork changes.
+- After generated-app changes.
 - After repo restructuring.
 - After generated-code changes.
 

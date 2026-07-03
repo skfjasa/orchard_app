@@ -2,7 +2,7 @@
 
 ## 1. Current State
 
-The current app is a local/mock Rork prototype.
+The current app is a local/mock Expo React Native prototype.
 
 - `ProfileProvider` owns too much local behavior.
 - Persistence is local via AsyncStorage.

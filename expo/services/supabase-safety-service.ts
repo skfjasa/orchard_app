@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { isBackendProfileId, toBackendProfileId } from "@/constants/mock-profile-ids";
 
 import type { SafetyService } from "./safety-service";
 import { fail, ok, requireSupabase } from "./supabase-service-response";
@@ -9,8 +10,13 @@ export function createSupabaseSafetyService(): SafetyService {
       const client = requireSupabase(supabase);
       if (!client.ok) return client;
 
+      const blockedProfileId = toBackendProfileId(input.blockedId);
+      if (!isBackendProfileId(blockedProfileId)) {
+        return fail("invalid_blocked_profile", "Blocked profile is not a backend profile id.");
+      }
+
       const { error } = await client.value.rpc("block_profile", {
-        blocked_profile_id: input.blockedId,
+        blocked_profile_id: blockedProfileId,
       });
 
       if (error) {
@@ -24,8 +30,13 @@ export function createSupabaseSafetyService(): SafetyService {
       const client = requireSupabase(supabase);
       if (!client.ok) return client;
 
+      const reportedProfileId = toBackendProfileId(input.reportedUserId);
+      if (!isBackendProfileId(reportedProfileId)) {
+        return fail("invalid_reported_profile", "Reported profile is not a backend profile id.");
+      }
+
       const { error } = await client.value.rpc("submit_report", {
-        reported_profile_id: input.reportedUserId,
+        reported_profile_id: reportedProfileId,
         report_reason: input.reason,
         report_details: input.details ?? null,
         reported_message_id: input.reportedMessageId ?? null,

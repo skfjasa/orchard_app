@@ -162,14 +162,13 @@ Rules:
 
 Supabase hosted auth setup:
 
-- Add the local/web preview URL to the Supabase Auth redirect allow-list before browser sign-up testing. For Rork/Expo tunnel testing this may be the current `https://...exp.direct` origin; for local web it may be `http://localhost:8081`.
+- Add the local/web preview URL to the Supabase Auth redirect allow-list before browser sign-up testing. For local web this may be `http://localhost:8081`; for Expo tunnel testing use the current tunnel origin.
 - `EXPO_PUBLIC_AUTH_REDIRECT_URL` can pin a redirect URL when the dynamic browser origin should not be used. Leave it blank to use the current web origin on web and the Expo app link on native.
 - Supabase-hosted auth email template edits require custom SMTP configuration in the Dashboard. Until SMTP is configured, confirmation emails may use default Supabase Auth branding.
 - For external testing, configure custom SMTP, set an Orchard sender name/from address, then update the confirm-signup email template.
 
 ## Useful Files
 
-- `rork.json`: Rork app metadata
 - `expo/package.json`: scripts and dependencies
 - `supabase/config.toml`: local Supabase config
 - `supabase/migrations/202606190001_initial_mvp_schema.sql`: hardened MVP schema/RLS/RPC migration draft

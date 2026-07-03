@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(38);
+select plan(41);
 
 insert into auth.users (
   id,
@@ -603,6 +603,39 @@ select throws_ok(
   'unmatched match cannot receive new messages'
 );
 
+select lives_ok(
+  $$ select * from public.create_swipe(
+    '00000000-0000-0000-0000-000000000002',
+    'like'
+  ) $$,
+  'previously unmatched pair can match again after a fresh like'
+);
+
+reset role;
+
+select is(
+  (
+    select count(*)::int
+    from public.matches
+    where user_a = '00000000-0000-0000-0000-000000000001'
+      and user_b = '00000000-0000-0000-0000-000000000002'
+  ),
+  2,
+  'rematch preserves prior inactive match history'
+);
+
+select is(
+  (
+    select count(*)::int
+    from public.matches
+    where user_a = '00000000-0000-0000-0000-000000000001'
+      and user_b = '00000000-0000-0000-0000-000000000002'
+      and status = 'active'
+  ),
+  1,
+  'rematch creates one new active match row'
+);
+
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000004', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
@@ -640,13 +673,14 @@ reset role;
 
 select is(
   (
-    select status
+    select count(*)::int
     from public.matches
     where user_a = '00000000-0000-0000-0000-000000000001'
       and user_b = '00000000-0000-0000-0000-000000000002'
+      and status = 'blocked'
   ),
-  'blocked',
-  'blocking marks existing match blocked'
+  1,
+  'blocking marks active match blocked'
 );
 
 set local role authenticated;

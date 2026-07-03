@@ -4,7 +4,7 @@ Audit date: 2026-06-19
 
 ## Summary
 
-This repository contains a Rork-generated Expo React Native dating app prototype named Orchard. The Git repo root is `orchard_app`, and the actual mobile app lives in `expo/`.
+This repository contains an Expo React Native dating app prototype named Orchard. The Git repo root is `orchard_app`, and the actual mobile app lives in `expo/`.
 
 The app is currently suitable as a prototype/demo, not yet as a functional MVP. Core product behavior is local or mocked: profile persistence, auth, discovery, swipes, matches, chat, purchases, and subscriptions all run without a backend.
 
@@ -28,7 +28,7 @@ The app is an Expo React Native app using Expo Router.
 
 Key files:
 
-- `rork.json`
+- Legacy generator metadata has been removed.
 - `expo/package.json`
 - `expo/app.json`
 - `expo/app/_layout.tsx`
@@ -233,7 +233,7 @@ Major blockers before TestFlight:
 - No block/report/unmatch/account deletion flows
 - No moderation workflow
 - No `eas.json`
-- Rork-style bundle identifier still present
+- Legacy generated bundle identifier still present
 - Simulated purchases should be removed or hidden for MVP unless real IAP is implemented
 - Privacy policy, terms, community standards, support, and deletion URLs are not in place
 - Permission strings and App Store Connect metadata need review

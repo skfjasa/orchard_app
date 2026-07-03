@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-06-21
+Last updated: 2026-07-03
 
 ## Current Repo State
 
@@ -17,9 +17,11 @@ Last updated: 2026-06-21
 - MVP monetization: disabled
 - Local Docker: Docker Desktop is operational after enabling firmware virtualization. `docker version` reports Docker Desktop with a Linux engine, and WSL default distribution is `docker-desktop`.
 - Handoff procedure: global `handoff sync` / `session handoff` behavior is being recorded in global/workspace instructions and Orchard-specific docs.
+- Active legacy-generator toolchain coupling has been removed: app scripts now call Expo CLI directly, Metro uses the default Expo config, app scheme/package identifiers are Orchard-specific, generator metadata has been removed, and onboarding backgrounds use bundled Orchard assets instead of externally hosted generated image URLs.
 
 ## Latest Foundation Commits
 
+- `5723aed` - Refresh handoff after fixture checkpoint
 - `aa5dae7` - Stabilize onboarding and fixture match flow
 - `ce27578` - update docs
 - `1f0f211` - Track GitHub Actions Node warning
@@ -146,6 +148,13 @@ Last updated: 2026-06-21
 - After adding local match confirmation, match/inbox tab badges, and Inbox row hardening, local `bun run typecheck` and `bun run lint` pass from `expo/`.
 - After adding dev fixture profile support and default user settings, local `expo\node_modules\.bin\supabase db reset` passes, `expo\node_modules\.bin\supabase test db` passes with 38 tests, and hosted `orchard-dev` was migrated/seeded with 22 fixture profiles, 30 fixture members, and 22 fixture settings.
 - Hosted `orchard-dev` verification after backfill reports 23 total profiles, 22 fixture profiles, and 23 `user_settings` rows.
+- Post-decoupling verification on 2026-07-03: `bun run typecheck` passed, `bun run lint` passed, `git diff --check` passed, and `bun run start-web` served the app through Expo CLI at `http://localhost:8081`. The legacy-generator reference scan returned no matches. Browser UAT confirmed the app loads, sign-in works, Discover loads, fixture likes work through the visible UI, the match confirmation modal appears, Matches/Inbox badges update, Inbox opens cleanly, a conversation opens, in-screen chat back returns to Inbox, the three-dot safety menu opens, local text send works, local photo attach/send works, Cancel closes the safety menu, Report profile submits without crashing, Block profile returns to Inbox/removes the conversation, and Unmatch removes the conversation. Hosted SQL verification confirmed a fresh `swipes` row from the fixture-like test; `matches` rows exist for fixture matches, but no fresh match timestamp appeared for the retested pair, likely because an existing pair row suppresses rematch timestamps. Text/photo chat sends are still local-only and should not be expected in hosted `messages` yet.
+- The chat route now avoids an Expo Router web maximum-update loop by rendering its own in-screen header/actions instead of setting native stack options from the route. Chat read marking now avoids no-op persistence writes, preventing a second TanStack Query update loop when returning from chat.
+- The Supabase safety adapter now maps seeded mock fixture ids to backend profile UUIDs for Report profile and Block profile RPC calls, matching the existing swipe adapter behavior. Block was retested against a sacrificial fixture conversation and passed.
+- Rematch timestamp/state semantics were fixed in migration `202607030001_rematch_active_match_history.sql`: inactive match history is preserved, only one active match per user pair is allowed, and a later rematch creates a fresh active match row with a fresh `created_at`. The migration was applied to hosted `orchard-dev`; follow-up dry run reports the remote database is up to date and migration list shows local/remote aligned through `202607030001`.
+- After the rematch migration, local `expo\node_modules\.bin\supabase db reset` passed and local `expo\node_modules\.bin\supabase test db` passed: 1 file, 41 tests.
+- Backend chat persistence has started behind the service boundary: Supabase mode now uses `createSupabaseChatService`, and `ProfileProvider.sendMessage` non-blockingly persists outbound text messages to the hosted `messages` table when a matching active backend match exists. Visible chat state, simulated replies, read receipts, deletes, and photo messages remain local/mock for now.
+- Hosted browser UAT did not yet verify backend message insertion: after sending a unique text message, the hosted `public.messages` query returned no row, and hosted `matches` did not show a fresh match row with today's timestamp. Next session should check whether the browser is using a backend-backed active match, whether local mock conversation ids are resolving to hosted fixture match ids correctly, and whether rematch creation is being exercised in hosted Supabase.
 - After the auth confirmation route fix, local `bun run typecheck` and `bun run lint` pass from `expo/`.
 - The storage migration `202606200002_profile_photo_storage.sql` has been pushed to hosted `orchard-dev`; follow-up dry run reports the remote database is up to date. A full app smoke test with a selected local photo is still pending.
 - Hosted SQL verification on 2026-06-20 confirmed `202606200002` is recorded in `supabase_migrations.schema_migrations`, the `profile-photos` bucket is private, four owner-scoped storage object policies exist, and `profile_photos_profile_member_sort_unique` exists.
@@ -153,21 +162,23 @@ Last updated: 2026-06-21
 - A browser funnel test reached `/onboarding/photos`, sent a Supabase confirmation email, and exposed two hosted auth setup gaps: the redirect URL was still pointing at `http://localhost:3000`, and emails still used default Supabase Auth branding. App-side redirect handling has been patched; hosted Supabase Auth redirect allow-list, Site URL, and email templates/sender still need Dashboard review.
 - User updated Supabase Auth URL Configuration redirect entries for the browser preview. Supabase Dashboard currently requires SMTP configuration before auth email templates can be customized; SMTP fields are still blank except project auth secrets.
 - Project review recommendations remain relevant: avoid a broad `ProfileProvider` rewrite, keep moving behavior behind services, and add CI/database automation after the auth/profile path has a little more coverage.
-- Latest implementation checkpoint `aa5dae7` is pushed to `origin/main`; a final handoff/status refresh follows for safe session close.
+- Latest docs/status checkpoint `5723aed` is clean and synced with `origin/main`.
+- Latest implementation checkpoint `aa5dae7` is pushed to `origin/main`.
 
 ## Current Task
 
-Retest the logged-in prototype app over the browser/ngrok preview: confirm match confirmation appears on mobile likes/super-likes, Matches/Inbox badges update, Inbox opens cleanly when matches exist, and hosted `swipes`/`matches` rows appear when liking seeded fixture profiles.
+Continue backend source-of-truth work for chat reads/inbox and message attachments.
 
 ## Next Planned Tasks
 
-1. Create Apple Developer Program account.
-2. Restart the browser preview and smoke-test onboarding in Supabase mode with a real selected photo and the email confirmation link.
-3. Verify hosted Supabase swipe persistence in the `swipes`/`matches` tables from the browser/ngrok app after liking seeded fixture profiles.
-4. Decide whether to ingest fixture profile images into Supabase Storage for backend-backed discovery; the current dev fixtures intentionally omit `profile_photos` because mock image URLs are remote assets, not storage object paths.
-5. Decide whether to make Supabase DB tests automatic for Supabase migration pull requests.
-6. Continue reducing local/mock screen reads by routing match detail, inbox, and matches screens through service boundaries where practical.
-7. Track and resolve the GitHub Actions Node 20 deprecation warning from `actions/checkout@v4`.
+1. Debug hosted backend-backed active match resolution for chat persistence; current UAT did not produce a hosted `messages` row or fresh hosted `matches` timestamp.
+2. Continue backend source-of-truth work for chat reads/inbox and message attachments.
+3. Restart the browser preview and smoke-test onboarding in Supabase mode with a real selected photo and the email confirmation link.
+4. Create Apple Developer Program account.
+5. Decide whether to ingest fixture profile images into Supabase Storage for backend-backed discovery; the current dev fixtures intentionally omit `profile_photos` because mock image URLs are remote assets, not storage object paths.
+6. Decide whether to make Supabase DB tests automatic for Supabase migration pull requests.
+7. Continue reducing local/mock screen reads by routing match detail, inbox, and matches screens through service boundaries where practical.
+8. Track and resolve the GitHub Actions Node 20 deprecation warning from `actions/checkout@v4`.
 
 ## Human Decisions Needed
 

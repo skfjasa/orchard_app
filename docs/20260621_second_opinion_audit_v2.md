@@ -4,7 +4,7 @@ This document serves as an independent, second-opinion audit of the Orchard proj
 
 ## 1. Comparison with Previous Audit
 
-The previous audit correctly identified several high-level architectural goals: splitting the `ProfileProvider`, removing stale "Rork/Duet" namespaces, wiring the remaining backend services (Discovery/Chat/Swipes), and using `expo-secure-store` for sensitive data. 
+The previous audit correctly identified several high-level architectural goals: splitting the `ProfileProvider`, removing stale generated/default namespaces, wiring the remaining backend services (Discovery/Chat/Swipes), and using `expo-secure-store` for sensitive data.
 
 However, a deeper inspection of the codebase reveals **several critical security and reliability flaws that the first audit missed**. These must be addressed before *any* user, even a trusted tester, installs the app.
 
@@ -33,7 +33,7 @@ Building on the previous audit, here are the revised engineering priorities to s
 ### A. Immediate Security Remediation
 1.  **Stop persisting passwords:** Refactor the onboarding flow to use Supabase Auth immediately without attaching the password to the `Profile` object. If temporary credential storage is needed for a pending state, use `expo-secure-store`.
 2.  **Secure Auth Tokens:** Update the Supabase client instantiation (`expo/lib/supabase.ts`) to use `expo-secure-store` as the storage adapter instead of `AsyncStorage`.
-3.  **Update URL Scheme:** Change `"scheme": "rork-app"` in `app.json` to an Orchard-specific scheme (e.g., `"orchard"`) to prevent deep link hijacking from other Rork-generated apps.
+3.  **Update URL Scheme:** Change the generic generated scheme in `app.json` to an Orchard-specific scheme (e.g., `"orchard"`) to prevent deep link hijacking from unrelated generated apps.
 
 ### B. Reliability and Architecture
 1.  **Implement Error Boundaries:** Wrap the main `<Stack>` in `expo/app/_layout.tsx` with a global Error Boundary to gracefully handle crashes and allow the user to reset the app state.
@@ -122,5 +122,5 @@ This section outlines the immediate code changes needed to resolve the critical 
 
 ### Deep Link Security
 
-*   **`expo/app.json`**: Change the generic `"scheme": "rork-app"` to `"scheme": "orchard"`.
-*   *Reason:* A generic scheme makes the app vulnerable to deep link hijacking if another Rork-generated app is installed on the same device.
+*   **`expo/app.json`**: Change the generic generated scheme to `"scheme": "orchard"`.
+*   *Reason:* A generic scheme makes the app vulnerable to deep link hijacking if another generated app is installed on the same device.

@@ -2,7 +2,7 @@
 
 ## Project Summary
 
-Orchard is a Rork-generated dating app prototype being converted into an iOS-first MVP for polyamorous / ENM users. The product wedge is structured relationship-context matching: relationship structure, partnered status, dating mode, boundaries, looking-for intent, and compatibility expectations should be clear before chat.
+Orchard is an Expo React Native dating app prototype being converted into an iOS-first MVP for polyamorous / ENM users. The product wedge is structured relationship-context matching: relationship structure, partnered status, dating mode, boundaries, looking-for intent, and compatibility expectations should be clear before chat.
 
 This app should not become a generic swipe clone. Preserve the working prototype while replacing local/mock behavior incrementally.
 
@@ -31,7 +31,6 @@ There is currently no production backend wired as the app source of truth. Supab
 .
 ├── AGENTS.md
 ├── README.md
-├── rork.json
 ├── docs/
 ├── supabase/
 ├── android/
@@ -64,9 +63,9 @@ bun run lint
 
 Existing scripts:
 
-- `start`: `bunx rork start -p h12kndiz6neur3chkh3q1 --tunnel`
-- `start-web`: `bunx rork start -p h12kndiz6neur3chkh3q1 --web --tunnel`
-- `start-web-dev`: `DEBUG=expo* bunx rork start -p h12kndiz6neur3chkh3q1 --web --tunnel`
+- `start`: `expo start`
+- `start-web`: `expo start --web`
+- `start-web-dev`: `DEBUG=expo* expo start --web`
 - `lint`: `expo lint`
 - `typecheck`: `tsc --noEmit`
 
@@ -74,7 +73,7 @@ Use `bun run lint` and `bun run typecheck` from `expo/` for code changes.
 
 ## Coding Rules
 
-- Preserve the Rork-generated UI unless explicitly asked to redesign.
+- Preserve the existing prototype UI unless explicitly asked to redesign.
 - Keep changes small, repo-specific, and reversible.
 - Prefer PR-sized tasks.
 - Do not rewrite the app.
@@ -213,7 +212,7 @@ For code changes:
 
 - Relevant files were inspected first.
 - Change scope is small and clearly tied to the task.
-- Existing Rork UI and mock/demo behavior are preserved unless explicitly changed.
+- Existing prototype UI and mock/demo behavior are preserved unless explicitly changed.
 - `bun run lint` is run from `expo/` when practical.
 - `bun run typecheck` is run from `expo/` when practical.
 - `docs/project-status.md` is updated when the change affects status, plans, or blockers.

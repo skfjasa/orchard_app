@@ -50,7 +50,7 @@ Required development principle:
 
 ## What To Preserve
 
-The Rork prototype already has useful UI for:
+The existing prototype already has useful UI for:
 
 - Onboarding
 - Profile cards

@@ -175,13 +175,18 @@ export function markConversationRead(
   conversations: Conversation[],
   profileId: string
 ): Conversation[] {
-  return conversations.map((conversation) =>
-    conversation.profileId === profileId
-      ? { ...conversation, unread: 0 }
-      : conversation
-  );
-}
+  let changed = false;
+  const next = conversations.map((conversation) => {
+    if (conversation.profileId !== profileId) return conversation;
+    if (conversation.unread <= 0) return conversation;
+    changed = true;
+    return { ...conversation, unread: 0 };
+  });
 
+  if (!changed) return conversations;
+
+  return next;
+}
 function appendOrCreateConversation(
   conversations: Conversation[],
   profileId: string,

@@ -40,7 +40,7 @@ Tasks:
 - Extract domain/service boundaries without changing behavior.
 - Centralize mock data access behind adapters.
 - Add domain types if missing.
-- Preserve existing Rork UI and local behavior.
+- Preserve existing prototype UI and local behavior.
 - Add route/auth/onboarding state concepts without requiring backend yet.
 
 Acceptance:

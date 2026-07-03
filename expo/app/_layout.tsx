@@ -30,7 +30,7 @@ function RootLayoutNav() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen
         name="chat/[id]"
-        options={{ title: "", headerShadowVisible: false }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="match/[id]"

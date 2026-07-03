@@ -68,11 +68,11 @@ graph TD
 *   **The Problem:** If auth details or passwords ever need to be stored locally for offline resume or pending flows, they must not be kept in standard `AsyncStorage` (which stores data in plaintext files on the device).
 *   **Recommendation:** Use `expo-secure-store` for any sensitive data, session tokens, or keys. Standard profiles and caches can remain in `AsyncStorage`.
 
-### C. Clean up Stale Namespaces (Duet and Rork Leftovers)
+### C. Clean up Stale Namespaces
 *   **The Problem:** Stale references to previous app names can lead to code confusion and App Store rejection:
     *   Storage keys: Several keys use the `duet-` prefix (e.g., `duet-storage`, `duet.profile`).
-    *   Bundle Scheme: `app.json` uses `"scheme": "rork-app"` and `"origin": "https://rork.com/"`.
-    *   Package Name: Android uses `"package": "app.rork.h12kndiz6neur3chkh3q1"`.
+    *   Bundle Scheme: `app.json` used a generic generated scheme/origin.
+    *   Package Name: Android used a generic generated package name.
 *   **Recommendation:** Perform a clean global rename of these namespaces before generating production bundles.
 
 ### D. Keep a Strict DB/API Contract
