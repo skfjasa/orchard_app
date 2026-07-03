@@ -23,11 +23,22 @@ export const MOCK_PROFILE_BACKEND_IDS: Record<string, string> = {
   p22: "10000000-0000-4000-8000-000000000022",
 };
 
+const BACKEND_TO_MOCK_PROFILE_IDS: Record<string, string> = Object.fromEntries(
+  Object.entries(MOCK_PROFILE_BACKEND_IDS).map(([mockId, backendId]) => [
+    backendId,
+    mockId,
+  ])
+);
+
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function toBackendProfileId(profileId: string): string {
   return MOCK_PROFILE_BACKEND_IDS[profileId] ?? profileId;
+}
+
+export function fromBackendProfileId(profileId: string): string {
+  return BACKEND_TO_MOCK_PROFILE_IDS[profileId] ?? profileId;
 }
 
 export function isBackendProfileId(profileId: string): boolean {

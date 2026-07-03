@@ -130,6 +130,7 @@ export {
 
 export { createSupabaseMatchService } from "./supabase-match-service";
 export { createSupabaseChatService } from "./supabase-chat-service";
+export { createSupabaseDiscoveryService } from "./supabase-discovery-service";
 export { createSupabaseProfileService } from "./supabase-profile-service";
 export { createSupabaseSafetyService } from "./supabase-safety-service";
 export { createSupabaseStorageService } from "./supabase-storage-service";

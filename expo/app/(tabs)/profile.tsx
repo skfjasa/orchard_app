@@ -84,17 +84,12 @@ export default function ProfileScreen() {
   const performSignOut = React.useCallback(() => {
     try {
       console.log("[profile] signing out");
-      router.replace("/onboarding/sign-in");
-      setTimeout(() => {
-        try {
-          signOut();
-        } catch (e) {
-          console.log("[profile] signOut error", e);
-        }
-      }, 50);
+      signOut();
+      router.replace("/onboarding");
     } catch (e) {
       console.log("[profile] sign out nav error", e);
       signOut();
+      router.replace("/onboarding");
     }
   }, [signOut]);
 

@@ -3,7 +3,11 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { MOCK_PROFILES } from "@/mocks/profiles";
-import { isBackendProfileId, toBackendProfileId } from "@/constants/mock-profile-ids";
+import {
+  fromBackendProfileId,
+  isBackendProfileId,
+  toBackendProfileId,
+} from "@/constants/mock-profile-ids";
 import { MVP_MONETIZATION_ENABLED } from "@/constants/features";
 import { useAuth } from "@/providers/auth-provider";
 import { createAppServices } from "@/services/app-services";
@@ -55,6 +59,7 @@ import {
   Conversation,
   DEFAULT_MATCH_SLOTS,
   DEFAULT_SUPER_LIKES,
+  Message,
   Profile,
   PurchaseId,
   SUPER_LIKE_RECHARGE_MS,
@@ -64,11 +69,62 @@ import type { ReportReason } from "@/services/safety-service";
 
 export type { SubscriptionState } from "@/services/local-profile-storage";
 
+function mergeMessages(localMessages: Message[], backendMessages: Message[]) {
+  const byId = new Map<string, Message>();
+  for (const message of localMessages) {
+    byId.set(message.id, message);
+  }
+  for (const message of backendMessages) {
+    byId.set(message.id, message);
+  }
+
+  return [...byId.values()].sort((a, b) => a.at - b.at);
+}
+
+function mergeBackendConversation(
+  conversations: Conversation[],
+  profileId: string,
+  backendMessages: Message[]
+) {
+  const existing = conversations.find(
+    (conversation) => conversation.profileId === profileId
+  );
+
+  if (!existing) {
+    return [
+      {
+        id: `c-${profileId}`,
+        profileId,
+        messages: backendMessages,
+        unread: 0,
+      },
+      ...conversations,
+    ];
+  }
+
+  if (backendMessages.length === 0) return conversations;
+
+  const mergedMessages = mergeMessages(existing.messages, backendMessages);
+  if (
+    mergedMessages.length === existing.messages.length &&
+    mergedMessages.every((message, index) => message === existing.messages[index])
+  ) {
+    return conversations;
+  }
+
+  return conversations.map((conversation) =>
+    conversation.profileId === profileId
+      ? { ...conversation, messages: mergedMessages }
+      : conversation
+  );
+}
+
 export const [ProfileProvider, useProfile] = createContextHook(() => {
   const { mode, session, signOut: signOutAuth, userId } = useAuth();
   const appServices = useMemo(() => createAppServices(), []);
   const lastBackendProfileSessionKey = useRef<string | null>(null);
   const lastBackendProfileUserId = useRef<string | null>(null);
+  const lastBackendMatchHydrationKey = useRef<string | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [likedIds, setLikedIds] = useState<string[]>([]);
@@ -160,6 +216,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     if (mode !== "supabase") {
       lastBackendProfileSessionKey.current = null;
       lastBackendProfileUserId.current = null;
+      lastBackendMatchHydrationKey.current = null;
       setBackendProfileHydrated(false);
       return;
     }
@@ -167,6 +224,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     if (!userId) {
       lastBackendProfileSessionKey.current = null;
       lastBackendProfileUserId.current = null;
+      lastBackendMatchHydrationKey.current = null;
       setBackendProfileHydrated(false);
       return;
     }
@@ -268,6 +326,112 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     userId,
   ]);
 
+  useEffect(() => {
+    if (mode !== "supabase") return;
+    if (appServices.capabilities.matches !== "supabase") return;
+    if (appServices.capabilities.chat !== "supabase") return;
+    if (!hydrated || !backendProfileHydrated) return;
+    if (!profile || !userId || profile.id !== userId) return;
+
+    const sessionKey = session?.access_token ?? "";
+    const hydrationKey = `${userId}:${sessionKey}`;
+    if (lastBackendMatchHydrationKey.current === hydrationKey) return;
+    lastBackendMatchHydrationKey.current = hydrationKey;
+
+    let cancelled = false;
+    void appServices.matches.listMatches(userId).then(async (matchResult) => {
+      if (cancelled) return;
+
+      if (!matchResult.ok) {
+        console.log("[profile-provider] backend match hydration failed", {
+          code: matchResult.error.code,
+          message: matchResult.error.message,
+        });
+        return;
+      }
+
+      const matchedLocalProfileIds = new Set<string>();
+      const backendConversations: {
+        profileId: string;
+        messages: Message[];
+      }[] = [];
+
+      for (const match of matchResult.value) {
+        const otherBackendProfileId =
+          match.userA === userId ? match.userB : match.userA;
+        const otherLocalProfileId = fromBackendProfileId(otherBackendProfileId);
+        const otherProfile = MOCK_PROFILES.find(
+          (item) => item.id === otherLocalProfileId
+        );
+
+        if (!otherProfile) {
+          console.log("[profile-provider] backend match skipped: no local profile", {
+            otherBackendProfileId,
+          });
+          continue;
+        }
+
+        matchedLocalProfileIds.add(otherLocalProfileId);
+
+        const threadResult = await appServices.chat.getThread(match.id);
+        if (!threadResult.ok) {
+          console.log("[profile-provider] backend thread hydration failed", {
+            code: threadResult.error.code,
+            message: threadResult.error.message,
+            matchId: match.id,
+            profileId: otherLocalProfileId,
+          });
+          continue;
+        }
+
+        backendConversations.push({
+          profileId: otherLocalProfileId,
+          messages: threadResult.value.messages,
+        });
+      }
+
+      if (cancelled) return;
+
+      setLikedIds((prev) => {
+        let next = prev;
+        for (const profileId of matchedLocalProfileIds) {
+          next = addUniqueId(next, profileId);
+        }
+        if (next === prev) return prev;
+        saveLikesMutation.mutate(next);
+        return next;
+      });
+
+      setConversations((prev) => {
+        let next = prev;
+        for (const backendConversation of backendConversations) {
+          next = mergeBackendConversation(
+            next,
+            backendConversation.profileId,
+            backendConversation.messages
+          );
+        }
+        if (next === prev) return prev;
+        saveConvosMutation.mutate(next);
+        return next;
+      });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    appServices,
+    backendProfileHydrated,
+    hydrated,
+    mode,
+    profile,
+    saveConvosMutation,
+    saveLikesMutation,
+    session?.access_token,
+    userId,
+  ]);
+
   const completeOnboarding = useCallback(
     async (p: Profile): Promise<{ ok: boolean; error?: string }> => {
       let profileToStore = p;
@@ -335,6 +499,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     setSuperLikeLastUseAt(null);
     setSubscription(null);
     setBackendProfileHydrated(false);
+    lastBackendMatchHydrationKey.current = null;
     saveProfileMutation.mutate(null);
     saveConvosMutation.mutate([]);
     saveLikesMutation.mutate([]);
@@ -418,7 +583,26 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
               (item.userA === targetProfileId && item.userB === userId)
           );
 
-          if (!match) {
+          let matchId = match?.id;
+          if (!matchId && appServices.capabilities.swipes === "supabase") {
+            const swipeResult = await appServices.swipes.recordSwipe({
+              swiperId: userId,
+              targetId,
+              decision: "like",
+            });
+
+            if (!swipeResult.ok) {
+              console.log("[profile-provider] backend chat match repair failed", {
+                code: swipeResult.error.code,
+                message: swipeResult.error.message,
+                targetProfileId,
+              });
+            } else {
+              matchId = swipeResult.value.matchId;
+            }
+          }
+
+          if (!matchId) {
             console.log("[profile-provider] backend chat match not found", {
               targetProfileId,
             });
@@ -426,7 +610,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
           }
 
           const result = await appServices.chat.sendMessage({
-            matchId: match.id,
+            matchId,
             senderId: userId,
             body: text,
           });
@@ -491,8 +675,47 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         saveConvosMutation.mutate(next);
         return next;
       });
+
+      if (
+        mode === "supabase" &&
+        appServices.capabilities.matches === "supabase" &&
+        profile &&
+        userId &&
+        profile.id === userId
+      ) {
+        const targetProfileId = toBackendProfileId(id);
+        if (isBackendProfileId(targetProfileId)) {
+          void appServices.matches.listMatches(userId).then(async (matchResult) => {
+            if (!matchResult.ok) {
+              console.log("[profile-provider] backend unmatch lookup failed", {
+                code: matchResult.error.code,
+                message: matchResult.error.message,
+                targetProfileId,
+              });
+              return;
+            }
+
+            const match = matchResult.value.find(
+              (item) =>
+                (item.userA === userId && item.userB === targetProfileId) ||
+                (item.userA === targetProfileId && item.userB === userId)
+            );
+
+            if (!match) return;
+
+            const result = await appServices.matches.unmatch(match.id, userId);
+            if (!result.ok) {
+              console.log("[profile-provider] backend unmatch failed", {
+                code: result.error.code,
+                message: result.error.message,
+                targetProfileId,
+              });
+            }
+          });
+        }
+      }
     },
-    [saveLikesMutation, saveConvosMutation]
+    [appServices, mode, profile, saveLikesMutation, saveConvosMutation, userId]
   );
 
   const reportProfile = useCallback(

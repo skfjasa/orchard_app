@@ -211,7 +211,7 @@ export default function SignInScreen() {
     <View style={styles.root} testID="sign-in-screen">
       <Stack.Screen options={{ headerShown: true, headerTransparent: true, headerTintColor: "#FFE6A1", title: "" }} />
       <Image
-        source={require("../../assets/images/icon.png")}
+        source={require("../../assets/images/welcome-background.png")}
         style={StyleSheet.absoluteFillObject}
         resizeMode="cover"
       />

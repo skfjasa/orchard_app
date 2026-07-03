@@ -188,6 +188,18 @@ export interface Database {
         };
         Relationships: [];
       };
+      swipes: {
+        Row: {
+          id: string;
+          swiper_id: string;
+          target_id: string;
+          decision: "like" | "pass" | "super_like";
+          created_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       matches: {
         Row: {
           id: string;

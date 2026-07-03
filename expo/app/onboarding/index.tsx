@@ -12,7 +12,7 @@ export default function WelcomeScreen() {
   return (
     <View style={styles.root} testID="welcome-screen">
       <Image
-        source={require("../../assets/images/icon.png")}
+        source={require("../../assets/images/welcome-background.png")}
         style={StyleSheet.absoluteFillObject}
         resizeMode="cover"
       />

@@ -27,7 +27,7 @@ export default function PendingConfirmationScreen() {
     <View style={styles.root} testID="pending-confirmation-screen">
       <Stack.Screen options={{ headerShown: false }} />
       <Image
-        source={require("../../assets/images/icon.png")}
+        source={require("../../assets/images/welcome-background.png")}
         style={StyleSheet.absoluteFillObject}
         resizeMode="cover"
       />
