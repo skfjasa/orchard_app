@@ -1,26 +1,28 @@
 # Next Task
 
-Choose and start the next project track now that the active UAT list is banked.
+UAT the Realtime-triggered match/message refresh slice.
 
 ## Likely Areas
 
 - `docs/project-status.md`
-- `docs/backend-migration-plan.md`
-- `docs/supabase-hardening-plan.md`
 - `expo/providers/profile-provider.tsx`
-- `expo/services/`
-- `.github/workflows/`
+- `expo/services/realtime-service.ts`
+- `expo/services/supabase-realtime-service.ts`
+- `expo/mocks/adapters/mock-realtime-service.ts`
+- `supabase/migrations/202607040003_enable_match_message_realtime.sql`
 
 ## Pre-Edit Checks
 
 - Inspect git status and latest commit.
-- Pick whether the next slice is human setup, backend/source-of-truth hardening, or service-boundary cleanup.
-- Re-read the relevant plan doc only for the chosen slice.
+- Confirm local typecheck/lint/diff check still pass.
+- Confirm local `supabase db reset` and `supabase test db` pass after the migration.
+- Confirm hosted `orchard-dev` remains aligned through `202607040003` if needed.
 
 ## Definition Of Done
 
-- The next task is scoped to one PR-sized slice.
-- Mock mode and hosted Supabase mode remain intact.
+- Incoming hosted matches/messages trigger Matches/Inbox refresh through Realtime without needing a swipe or waiting for the 10-second fallback.
+- Existing 10-second polling and app-active refresh remain as fallback behavior.
+- Mock mode remains intact through the no-op realtime adapter.
 - `docs/project-status.md` remains current after any material change.
 
 ## Validation
@@ -32,7 +34,7 @@ Choose and start the next project track now that the active UAT list is banked.
 
 ## Manual QA
 
-1. Human setup track: create Apple Developer Program account, then prepare iOS/TestFlight prerequisites.
-2. Backend track: continue moving discovery/matches/inbox/chat toward Supabase as the source of truth, including Realtime or tighter refresh behavior.
-3. Fixture/media track: decide whether to ingest fixture profile images into Supabase Storage for backend-backed discovery.
-4. CI track: decide whether to make Supabase DB tests automatic for migration pull requests and address the GitHub Actions Node warning.
+1. Sign in as `t`; keep Matches/Inbox visible.
+2. In another tab/session, sign in as `tt` or `test2` and create/send a reciprocal match/message involving `t`.
+3. Confirm `t` sees the new match/message update promptly without making a swipe and without waiting for the polling fallback.
+4. Repeat from the other profile direction if practical.

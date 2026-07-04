@@ -6,6 +6,7 @@ import type { ChatService } from "./chat-service";
 import type { DiscoveryService } from "./discovery-service";
 import type { MatchService } from "./match-service";
 import type { ProfileService } from "./profile-service";
+import type { RealtimeService } from "./realtime-service";
 import type { SafetyService } from "./safety-service";
 import type { ServiceMode } from "./service-types";
 import type { StorageService } from "./storage-service";
@@ -14,6 +15,7 @@ import { createSupabaseMatchService } from "./supabase-match-service";
 import { createSupabaseChatService } from "./supabase-chat-service";
 import { createSupabaseDiscoveryService } from "./supabase-discovery-service";
 import { createSupabaseProfileService } from "./supabase-profile-service";
+import { createSupabaseRealtimeService } from "./supabase-realtime-service";
 import { createSupabaseSafetyService } from "./supabase-safety-service";
 import { createSupabaseStorageService } from "./supabase-storage-service";
 import { createSupabaseSwipeService } from "./supabase-swipe-service";
@@ -24,6 +26,7 @@ export interface AppServiceCapabilities {
   discovery: ServiceMode;
   matches: ServiceMode;
   profiles: ServiceMode;
+  realtime: ServiceMode;
   safety: ServiceMode;
   storage: ServiceMode;
   swipes: ServiceMode;
@@ -38,6 +41,7 @@ export interface AppServices {
   discovery: DiscoveryService;
   matches: MatchService;
   profiles: ProfileService;
+  realtime: RealtimeService;
   safety: SafetyService;
   storage: StorageService;
   swipes: SwipeService;
@@ -55,6 +59,7 @@ function createMockCapabilities(): AppServiceCapabilities {
     discovery: "mock",
     matches: "mock",
     profiles: "mock",
+    realtime: "mock",
     safety: "mock",
     storage: "mock",
     swipes: "mock",
@@ -68,6 +73,7 @@ function createSupabaseCapabilities(): AppServiceCapabilities {
     discovery: "supabase",
     matches: "supabase",
     profiles: "supabase",
+    realtime: "supabase",
     safety: "supabase",
     storage: "supabase",
     swipes: "supabase",
@@ -98,6 +104,7 @@ export function createAppServices(
     discovery: createSupabaseDiscoveryService(),
     matches: createSupabaseMatchService(),
     profiles: createSupabaseProfileService(),
+    realtime: createSupabaseRealtimeService(),
     safety: createSupabaseSafetyService(),
     storage: createSupabaseStorageService(),
     swipes: createSupabaseSwipeService(),

@@ -176,6 +176,7 @@ type MatchActionResult = {
 };
 
 const BACKEND_MATCH_REFRESH_INTERVAL_MS = 10_000;
+const BACKEND_REALTIME_REFRESH_DELAY_MS = 250;
 
 const FALLBACK_BACKEND_PROFILE_PHOTO =
   "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=900&q=80";
@@ -219,6 +220,9 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [likedIds, setLikedIds] = useState<string[]>([]);
   const [newMatchIds, setNewMatchIds] = useState<string[]>([]);
+  const [backendActiveMatchIds, setBackendActiveMatchIds] = useState<string[]>(
+    []
+  );
   const [readWatermarks, setReadWatermarks] = useState<
     Record<string, Record<string, number>>
   >({});
@@ -323,6 +327,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       lastBackendProfileUserId.current = null;
       lastBackendMatchHydrationKey.current = null;
       inFlightBackendMatchHydrationKey.current = null;
+      setBackendActiveMatchIds([]);
       setBackendProfileHydrated(false);
       return;
     }
@@ -332,6 +337,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       lastBackendProfileUserId.current = null;
       lastBackendMatchHydrationKey.current = null;
       inFlightBackendMatchHydrationKey.current = null;
+      setBackendActiveMatchIds([]);
       setBackendProfileHydrated(false);
       return;
     }
@@ -346,6 +352,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
     lastBackendProfileSessionKey.current = sessionKey;
     lastBackendProfileUserId.current = userId;
+    setBackendActiveMatchIds([]);
     setBackendProfileHydrated(false);
   }, [mode, session?.access_token, userId]);
 
@@ -474,6 +481,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       }
 
       const matchedLocalProfileIds = new Set<string>();
+      const activeBackendMatchIds = matchResult.value.map((match) => match.id);
       const backendConversations: {
         profileId: string;
         messages: Message[];
@@ -522,6 +530,9 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       }
 
       rememberProfiles(matchedProfilesToRemember);
+      setBackendActiveMatchIds((prev) =>
+        sameStringSet(prev, activeBackendMatchIds) ? prev : activeBackendMatchIds
+      );
       setLikedIds((prev) => {
         const localOnlyLikedIds = prev.filter((id) => !isBackendProfileId(id));
         const next = [...matchedLocalProfileIds, ...localOnlyLikedIds];
@@ -612,6 +623,51 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       subscription.remove();
     };
   }, [
+    backendProfileHydrated,
+    hydrated,
+    mode,
+    profile,
+    refreshBackendMatches,
+    userId,
+  ]);
+
+  useEffect(() => {
+    if (mode !== "supabase") return;
+    if (appServices.capabilities.realtime !== "supabase") return;
+    if (!hydrated || !backendProfileHydrated) return;
+    if (!profile || !userId || profile.id !== userId) return;
+
+    let refreshTimeout: ReturnType<typeof setTimeout> | null = null;
+    const subscriptionResult =
+      appServices.realtime.subscribeToMatchAndMessageChanges({
+        profileId: userId,
+        matchIds: backendActiveMatchIds,
+        onChange: () => {
+          if (refreshTimeout) return;
+          refreshTimeout = setTimeout(() => {
+            refreshTimeout = null;
+            void refreshBackendMatches();
+          }, BACKEND_REALTIME_REFRESH_DELAY_MS);
+        },
+      });
+
+    if (!subscriptionResult.ok) {
+      console.log("[profile-provider] backend realtime unavailable", {
+        code: subscriptionResult.error.code,
+        message: subscriptionResult.error.message,
+      });
+      return;
+    }
+
+    return () => {
+      if (refreshTimeout) {
+        clearTimeout(refreshTimeout);
+      }
+      subscriptionResult.value.unsubscribe();
+    };
+  }, [
+    appServices,
+    backendActiveMatchIds,
     backendProfileHydrated,
     hydrated,
     mode,

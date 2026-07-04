@@ -45,6 +45,13 @@ export type {
 export type { MatchRecord, MatchService, MatchStatus } from "./match-service";
 
 export type {
+  MatchMessageRealtimeInput,
+  RealtimeChangeReason,
+  RealtimeService,
+  RealtimeSubscription,
+} from "./realtime-service";
+
+export type {
   ChatService,
   ChatThread,
   SendMessageInput,
@@ -132,6 +139,7 @@ export { createSupabaseMatchService } from "./supabase-match-service";
 export { createSupabaseChatService } from "./supabase-chat-service";
 export { createSupabaseDiscoveryService } from "./supabase-discovery-service";
 export { createSupabaseProfileService } from "./supabase-profile-service";
+export { createSupabaseRealtimeService } from "./supabase-realtime-service";
 export { createSupabaseSafetyService } from "./supabase-safety-service";
 export { createSupabaseStorageService } from "./supabase-storage-service";
 export { createSupabaseSwipeService } from "./supabase-swipe-service";

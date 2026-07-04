@@ -7,8 +7,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 ## Branch And Commit
 
 - Branch: `main`
-- Latest pushed implementation checkpoint: `85d6ba8` - Remove sign-in header artifact
-- Previous implementation checkpoint: `5fa9745` - Fix onboarding background sizing
+- Latest pushed implementation checkpoint: `42d39d9` - Bank onboarding visual UAT
+- Previous implementation checkpoint: `85d6ba8` - Remove sign-in header artifact
 
 ## Recent Changes
 
@@ -41,6 +41,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - Current working fix gives the welcome, sign-in, and pending-confirmation onboarding roots explicit web viewport height and full-size background image dimensions while keeping the recovered local background asset and existing content intact.
 - Current working cleanup removes the original Rork-era sign-in screen header override so the onboarding layout's headerless `sign-in` route applies and the blank white header strip above "Welcome back" disappears.
 - User UAT confirmed the onboarding background sizing and sign-in header cleanup look correct.
+- Current working backend hardening slice adds a Realtime service boundary, a mock no-op realtime adapter, Supabase match/message Realtime subscriptions, and migration `202607040003_enable_match_message_realtime.sql` to publish `public.matches` and `public.messages`.
+- Backend match/thread hydration still runs immediately after sign-in, on app-active, and every 10 seconds as a fallback; Realtime now triggers a debounced refresh when active matches change or a message is inserted into a currently known active match.
 
 ## Validation State
 
@@ -58,11 +60,13 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - Real-profile UAT found and the current working slice addresses: false auto-match on one-sided real likes, stale local-only A-side conversations from earlier UAT, misleading chat availability before reciprocal match, and visible profiles showing default/fallback photos instead of uploaded photos.
 - `expo\node_modules\.bin\supabase db reset`: passed after storage policy migration.
 - `expo\node_modules\.bin\supabase test db`: passed, 1 file / 42 tests.
-- Hosted `orchard-dev` is aligned through `202607040002` after `supabase db push`; migration list confirms local/remote alignment. A follow-up dry-run check timed out once after the push, but migration list showed the migration applied.
+- Realtime migration `202607040003_enable_match_message_realtime.sql`: local `supabase db reset` passed and local `supabase test db` passed, 1 file / 42 tests.
+- Hosted `orchard-dev` is aligned through `202607040003` after `supabase db push`; migration list confirms local/remote alignment. The Supabase CLI again printed a non-fatal pg-delta catalog-cache warning after the push.
 
 ## Current Risks / Blockers
 
 - Chat UI still preserves local simulated/photo behavior; only real text messages are persisted/hydrated from Supabase.
+- Realtime refresh still needs hosted browser UAT with two signed-in profiles.
 - Supabase Auth email sender/template branding still requires custom SMTP setup if branded emails are needed.
 
 ## Likely Relevant Files
@@ -71,6 +75,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - `expo/services/supabase-discovery-service.ts`
 - `expo/services/supabase-chat-service.ts`
 - `expo/services/supabase-match-service.ts`
+- `expo/services/realtime-service.ts`
+- `expo/services/supabase-realtime-service.ts`
 - `expo/services/supabase-swipe-service.ts`
 - `expo/services/supabase-profile-service.ts`
 - `expo/constants/mock-profile-ids.ts`
@@ -85,6 +91,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - `expo/app/onboarding/pending-confirmation.tsx`
 - `supabase/migrations/202607040001_profile_photo_visible_storage_reads.sql`
 - `supabase/migrations/202607040002_active_match_profile_reads.sql`
+- `supabase/migrations/202607040003_enable_match_message_realtime.sql`
 - `supabase/tests/database/202606200001_mvp_security.sql`
 - `docs/project-status.md`
 
@@ -97,4 +104,4 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 
 ## Next Recommended Task
 
-Choose the next project track: human setup for TestFlight readiness, Supabase/backend hardening, or service-boundary cleanup.
+UAT that incoming hosted matches/messages appear without a swipe and before the 10-second polling fallback.

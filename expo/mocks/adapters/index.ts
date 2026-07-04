@@ -4,6 +4,7 @@ import type {
   DiscoveryService,
   MatchService,
   ProfileService,
+  RealtimeService,
   SafetyService,
   StorageService,
   SwipeService,
@@ -14,6 +15,7 @@ import { createMockChatService } from "./mock-chat-service";
 import { createMockDiscoveryService } from "./mock-discovery-service";
 import { createMockMatchService } from "./mock-match-service";
 import { createMockProfileService } from "./mock-profile-service";
+import { createMockRealtimeService } from "./mock-realtime-service";
 import { createMockSafetyService } from "./mock-safety-service";
 import { createMockServiceState } from "./mock-service-state";
 import { createMockStorageService } from "./mock-storage-service";
@@ -27,6 +29,7 @@ export interface MockServices {
   discovery: DiscoveryService;
   matches: MatchService;
   profiles: ProfileService;
+  realtime: RealtimeService;
   safety: SafetyService;
   storage: StorageService;
   swipes: SwipeService;
@@ -42,6 +45,7 @@ export function createMockServices(
     discovery: createMockDiscoveryService(state),
     matches: createMockMatchService(state),
     profiles: createMockProfileService(state),
+    realtime: createMockRealtimeService(),
     safety: createMockSafetyService(state),
     storage: createMockStorageService(state),
     swipes: createMockSwipeService(state),
