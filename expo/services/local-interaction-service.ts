@@ -17,10 +17,6 @@ export function ensureGreetingConversation(
   kind: LocalGreetingKind
 ): Conversation[] {
   if (!other) return conversations;
-  if (conversations.find((conversation) => conversation.profileId === other.id)) {
-    return conversations;
-  }
-
   const greeting: Message = {
     id: `m-${Date.now()}`,
     fromMe: false,
@@ -28,6 +24,25 @@ export function ensureGreetingConversation(
     text: makeGreetingText(other, kind),
     at: Date.now(),
   };
+
+  const existing = conversations.find(
+    (conversation) => conversation.profileId === other.id
+  );
+  if (existing) {
+    if (existing.messages.some((message) => !message.fromMe)) {
+      return conversations;
+    }
+    return conversations.map((conversation) =>
+      conversation.profileId === other.id
+        ? {
+            ...conversation,
+            messages: [greeting, ...conversation.messages],
+            unread: conversation.unread + 1,
+          }
+        : conversation
+    );
+  }
+
   const convo: Conversation = {
     id: `c-${other.id}`,
     profileId: other.id,

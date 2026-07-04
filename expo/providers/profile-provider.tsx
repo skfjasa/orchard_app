@@ -34,6 +34,8 @@ import {
   saveStoredLikes,
   saveStoredPasses,
   saveStoredProfile,
+  saveStoredReadWatermarks,
+  saveStoredSeenMatchIds,
   saveStoredSubscription,
   saveStoredSuperLikeBalance,
   saveStoredSuperLikeLastUse,
@@ -86,7 +88,8 @@ function mergeMessages(localMessages: Message[], backendMessages: Message[]) {
 function mergeBackendConversation(
   conversations: Conversation[],
   profileId: string,
-  backendMessages: Message[]
+  backendMessages: Message[],
+  readThrough = 0
 ) {
   if (backendMessages.length === 0) return conversations;
 
@@ -100,7 +103,9 @@ function mergeBackendConversation(
         id: `c-${profileId}`,
         profileId,
         messages: backendMessages,
-        unread: backendMessages.filter((message) => !message.fromMe).length,
+        unread: backendMessages.filter(
+          (message) => !message.fromMe && message.at > readThrough
+        ).length,
       },
       ...conversations,
     ];
@@ -117,7 +122,10 @@ function mergeBackendConversation(
     return conversations;
   }
   const newlyUnread = backendMessages.filter(
-    (message) => !message.fromMe && !existingMessageIds.has(message.id)
+    (message) =>
+      !message.fromMe &&
+      message.at > readThrough &&
+      !existingMessageIds.has(message.id)
   ).length;
 
   return conversations.map((conversation) =>
@@ -135,6 +143,15 @@ function sameStringSet(a: string[], b: string[]) {
   if (a.length !== b.length) return false;
   const values = new Set(a);
   return b.every((item) => values.has(item));
+}
+
+function newestMessageAt(conversations: Conversation[], profileId: string) {
+  const conversation = conversations.find((item) => item.profileId === profileId);
+  if (!conversation) return 0;
+  return conversation.messages.reduce(
+    (latest, message) => Math.max(latest, message.at),
+    0
+  );
 }
 
 type MatchActionResult = {
@@ -187,6 +204,10 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [likedIds, setLikedIds] = useState<string[]>([]);
   const [newMatchIds, setNewMatchIds] = useState<string[]>([]);
+  const [readWatermarks, setReadWatermarks] = useState<
+    Record<string, Record<string, number>>
+  >({});
+  const [seenMatchIds, setSeenMatchIds] = useState<Record<string, string[]>>({});
   const [passedIds, setPassedIds] = useState<string[]>([]);
   const [superLikedIds, setSuperLikedIds] = useState<string[]>([]);
   const [extraSlots, setExtraSlots] = useState<number>(0);
@@ -221,6 +242,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       setSuperLikeBalance(loadQuery.data.superLikeBalance);
       setSuperLikeLastUseAt(loadQuery.data.superLikeLastUseAt);
       setSubscription(loadQuery.data.subscription);
+      setReadWatermarks(loadQuery.data.readWatermarks);
+      setSeenMatchIds(loadQuery.data.seenMatchIds);
       setHydrated(true);
       console.log("[profile-provider] hydrated", {
         hasProfile: !!loadQuery.data.profile,
@@ -269,6 +292,14 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
   const saveSubscriptionMutation = useMutation({
     mutationFn: saveStoredSubscription,
+  });
+
+  const saveReadWatermarksMutation = useMutation({
+    mutationFn: saveStoredReadWatermarks,
+  });
+
+  const saveSeenMatchIdsMutation = useMutation({
+    mutationFn: saveStoredSeenMatchIds,
   });
 
   useEffect(() => {
@@ -431,8 +462,11 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       const backendConversations: {
         profileId: string;
         messages: Message[];
+        isFixture: boolean;
       }[] = [];
       const matchedProfilesToRemember: Profile[] = [];
+      const currentSeenMatchIds = new Set(seenMatchIds[userId] ?? []);
+      const nextNewMatchIds = new Set<string>();
 
       for (const match of matchResult.value) {
         const otherBackendProfileId =
@@ -447,6 +481,9 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
           createFallbackBackendProfile(otherLocalProfileId);
 
         matchedLocalProfileIds.add(otherProfile.id);
+        if (!currentSeenMatchIds.has(otherProfile.id)) {
+          nextNewMatchIds.add(otherProfile.id);
+        }
         if (!mockProfile) {
           matchedProfilesToRemember.push(otherProfile);
         }
@@ -465,6 +502,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         backendConversations.push({
           profileId: otherProfile.id,
           messages: threadResult.value.messages,
+          isFixture: !!mockProfile,
         });
       }
 
@@ -477,17 +515,33 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         return next;
       });
 
+      setNewMatchIds((prev) => {
+        const next = [...nextNewMatchIds];
+        if (sameStringSet(prev, next)) return prev;
+        return next;
+      });
+
       setConversations((prev) => {
         const filtered = prev.filter((conversation) =>
           matchedLocalProfileIds.has(conversation.profileId)
         );
         let next = filtered.length === prev.length ? prev : filtered;
         for (const backendConversation of backendConversations) {
+          const readThrough =
+            readWatermarks[userId]?.[backendConversation.profileId] ?? 0;
           next = mergeBackendConversation(
             next,
             backendConversation.profileId,
-            backendConversation.messages
+            backendConversation.messages,
+            readThrough
           );
+          if (backendConversation.isFixture) {
+            const other =
+              MOCK_PROFILES.find(
+                (item) => item.id === backendConversation.profileId
+              ) ?? undefined;
+            next = ensureGreetingConversation(next, other, "like");
+          }
         }
         if (next === prev) return prev;
         saveConvosMutation.mutate(next);
@@ -505,9 +559,11 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     hydrated,
     mode,
     profile,
+    readWatermarks,
     rememberProfiles,
     saveConvosMutation,
     saveLikesMutation,
+    seenMatchIds,
     session?.access_token,
     userId,
   ]);
@@ -701,7 +757,16 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
   const markMatchSeen = useCallback((profileId: string) => {
     setNewMatchIds((prev) => removeId(prev, profileId));
-  }, []);
+    if (!profile?.id) return;
+    setSeenMatchIds((prev) => {
+      const ownerSeen = prev[profile.id] ?? [];
+      const nextOwnerSeen = addUniqueId(ownerSeen, profileId);
+      if (nextOwnerSeen === ownerSeen) return prev;
+      const next = { ...prev, [profile.id]: nextOwnerSeen };
+      saveSeenMatchIdsMutation.mutate(next);
+      return next;
+    });
+  }, [profile?.id, saveSeenMatchIdsMutation]);
 
   const persistBackendChatMessage = useCallback(
     (targetId: string, text: string) => {
@@ -802,6 +867,10 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       }
 
       if (mode === "supabase" && appServices.capabilities.swipes === "supabase") {
+        if (!isBackendProfileId(id)) {
+          activateLocalMatch(id, "like");
+          return { ok: true, matched: true };
+        }
         const swipe = await recordBackendSwipe(id, "like");
         if (!swipe?.matched) return { ok: true, matched: false };
         activateLocalMatch(id, "like");
@@ -1003,6 +1072,10 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       });
 
       if (mode === "supabase" && appServices.capabilities.swipes === "supabase") {
+        if (!isBackendProfileId(id)) {
+          activateLocalMatch(id, "super_like");
+          return { ok: true, matched: true };
+        }
         const swipe = await recordBackendSwipe(id, "super_like");
         if (!swipe?.matched) return { ok: true, matched: false };
         activateLocalMatch(id, "super_like");
@@ -1049,7 +1122,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         });
         return;
       }
-      if (mode === "supabase" && isBackendProfileId(profileId)) {
+      const localMockProfile = MOCK_PROFILES.find((p) => p.id === profileId);
+      if (mode === "supabase" && isBackendProfileId(profileId) && !localMockProfile) {
         persistBackendChatMessage(profileId, text);
         return;
       }
@@ -1069,13 +1143,12 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
       persistBackendChatMessage(profileId, text);
 
-      const other = MOCK_PROFILES.find((p) => p.id === profileId);
-      if (!other) return;
-      const reply = makeSimulatedReply(other);
+      if (!localMockProfile) return;
+      const reply = makeSimulatedReply(localMockProfile);
       const delay = 1800 + Math.floor(Math.random() * 2500);
       setTimeout(() => {
         setConversations((prev) => {
-          const next = appendIncomingTextReply(prev, profileId, other, reply);
+          const next = appendIncomingTextReply(prev, profileId, localMockProfile, reply);
           saveConvosMutation.mutate(next);
           return next;
         });
@@ -1153,6 +1226,24 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
   const markRead = useCallback(
     (profileId: string) => {
+      if (profile?.id) {
+        const readThrough = newestMessageAt(conversations, profileId);
+        if (readThrough > 0) {
+          setReadWatermarks((prev) => {
+            const ownerWatermarks = prev[profile.id] ?? {};
+            if ((ownerWatermarks[profileId] ?? 0) >= readThrough) return prev;
+            const next = {
+              ...prev,
+              [profile.id]: {
+                ...ownerWatermarks,
+                [profileId]: readThrough,
+              },
+            };
+            saveReadWatermarksMutation.mutate(next);
+            return next;
+          });
+        }
+      }
       setConversations((prev) => {
         const next = markConversationRead(prev, profileId);
         if (next === prev) return prev;
@@ -1160,7 +1251,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         return next;
       });
     },
-    [saveConvosMutation]
+    [conversations, profile?.id, saveConvosMutation, saveReadWatermarksMutation]
   );
 
   const purchase = useCallback(

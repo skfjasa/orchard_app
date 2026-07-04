@@ -17,6 +17,8 @@ const BOOST_KEY = "duet.boostedUntil.v1";
 const SUPERLIKE_BALANCE_KEY = "duet.superLikeBalance.v1";
 const SUPERLIKE_LAST_USE_KEY = "duet.superLikeLastUse.v1";
 const SUBSCRIPTION_KEY = "duet.subscription.v1";
+const READ_WATERMARKS_KEY = "duet.readWatermarks.v1";
+const SEEN_MATCHES_KEY = "duet.seenMatches.v1";
 const STORED_PROFILE_STATE_KEYS = [
   PROFILE_KEY,
   CONVOS_KEY,
@@ -28,6 +30,8 @@ const STORED_PROFILE_STATE_KEYS = [
   SUPERLIKE_BALANCE_KEY,
   SUPERLIKE_LAST_USE_KEY,
   SUBSCRIPTION_KEY,
+  READ_WATERMARKS_KEY,
+  SEEN_MATCHES_KEY,
 ];
 
 export interface SubscriptionState {
@@ -48,6 +52,8 @@ export interface StoredProfileState {
   superLikeBalance: number;
   superLikeLastUseAt: number | null;
   subscription: SubscriptionState | null;
+  readWatermarks: Record<string, Record<string, number>>;
+  seenMatchIds: Record<string, string[]>;
 }
 
 export function emptyStoredProfileState(): StoredProfileState {
@@ -62,12 +68,14 @@ export function emptyStoredProfileState(): StoredProfileState {
     superLikeBalance: DEFAULT_SUPER_LIKES,
     superLikeLastUseAt: null,
     subscription: null,
+    readWatermarks: {},
+    seenMatchIds: {},
   };
 }
 
 export async function loadStoredProfileState(): Promise<StoredProfileState> {
   try {
-    const [p, c, l, s, sl, es, b, slb, slu, sub] = await Promise.all([
+    const [p, c, l, s, sl, es, b, slb, slu, sub, rw, sm] = await Promise.all([
       AsyncStorage.getItem(PROFILE_KEY),
       AsyncStorage.getItem(CONVOS_KEY),
       AsyncStorage.getItem(LIKES_KEY),
@@ -78,6 +86,8 @@ export async function loadStoredProfileState(): Promise<StoredProfileState> {
       AsyncStorage.getItem(SUPERLIKE_BALANCE_KEY),
       AsyncStorage.getItem(SUPERLIKE_LAST_USE_KEY),
       AsyncStorage.getItem(SUBSCRIPTION_KEY),
+      AsyncStorage.getItem(READ_WATERMARKS_KEY),
+      AsyncStorage.getItem(SEEN_MATCHES_KEY),
     ]);
 
     return {
@@ -92,6 +102,10 @@ export async function loadStoredProfileState(): Promise<StoredProfileState> {
         slb !== null ? (JSON.parse(slb) as number) : DEFAULT_SUPER_LIKES,
       superLikeLastUseAt: slu ? (JSON.parse(slu) as number) : null,
       subscription: sub ? (JSON.parse(sub) as SubscriptionState) : null,
+      readWatermarks: rw
+        ? (JSON.parse(rw) as Record<string, Record<string, number>>)
+        : {},
+      seenMatchIds: sm ? (JSON.parse(sm) as Record<string, string[]>) : {},
     };
   } catch (e) {
     console.log("[local-profile-storage] load error", e);
@@ -160,4 +174,21 @@ export async function saveStoredSubscription(
   if (subscription === null) await AsyncStorage.removeItem(SUBSCRIPTION_KEY);
   else await AsyncStorage.setItem(SUBSCRIPTION_KEY, JSON.stringify(subscription));
   return subscription;
+}
+
+export async function saveStoredReadWatermarks(
+  readWatermarks: Record<string, Record<string, number>>
+) {
+  await AsyncStorage.setItem(
+    READ_WATERMARKS_KEY,
+    JSON.stringify(readWatermarks)
+  );
+  return readWatermarks;
+}
+
+export async function saveStoredSeenMatchIds(
+  seenMatchIds: Record<string, string[]>
+) {
+  await AsyncStorage.setItem(SEEN_MATCHES_KEY, JSON.stringify(seenMatchIds));
+  return seenMatchIds;
 }

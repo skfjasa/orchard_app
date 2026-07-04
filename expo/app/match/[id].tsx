@@ -75,6 +75,11 @@ export default function MatchDetail() {
     return list;
   }, [other]);
   const [superBurstVisible, setSuperBurstVisible] = useState<boolean>(false);
+  const [sentNotice, setSentNotice] = useState<{
+    title: string;
+    message: string;
+  } | null>(null);
+  const [matchNoticeVisible, setMatchNoticeVisible] = useState<boolean>(false);
 
   if (!other || !profile) return null;
 
@@ -90,44 +95,11 @@ export default function MatchDetail() {
       : other.people[0].name;
 
   const showSentAndReturn = (title: string, message: string) => {
-    if (Platform.OS === "web") {
-      if (typeof window !== "undefined") {
-        window.alert(message);
-      }
-      router.back();
-      return;
-    }
-
-    Alert.alert(title, message, [{ text: "OK", onPress: () => router.back() }]);
+    setSentNotice({ title, message });
   };
 
   const showMatchAndOfferChat = () => {
-    const message = `You and ${label} can start chatting now.`;
-    if (Platform.OS === "web") {
-      const goMessage =
-        typeof window !== "undefined" &&
-        window.confirm(`${message} Open the chat now?`);
-      if (goMessage) {
-        router.replace(`/chat/${other.id}`);
-      } else {
-        router.back();
-      }
-      return;
-    }
-
-    Alert.alert("It's a match", message, [
-      {
-        text: "Keep browsing",
-        style: "cancel",
-        onPress: () => router.back(),
-      },
-      {
-        text: "Message",
-        onPress: () => {
-          router.replace(`/chat/${other.id}`);
-        },
-      },
-    ]);
+    setMatchNoticeVisible(true);
   };
 
   const handleLike = () => {
@@ -501,8 +473,86 @@ export default function MatchDetail() {
             finalizeSuperLike();
           }}
         />
+        <DetailSentOverlay
+          notice={sentNotice}
+          onClose={() => {
+            setSentNotice(null);
+            router.back();
+          }}
+        />
+        <DetailMatchOverlay
+          visible={matchNoticeVisible}
+          label={label}
+          onClose={() => {
+            setMatchNoticeVisible(false);
+            router.back();
+          }}
+          onMessage={() => {
+            setMatchNoticeVisible(false);
+            router.replace(`/chat/${other.id}`);
+          }}
+        />
       </View>
     </>
+  );
+}
+
+function DetailSentOverlay({
+  notice,
+  onClose,
+}: {
+  notice: { title: string; message: string } | null;
+  onClose: () => void;
+}) {
+  if (!notice) return null;
+  return (
+    <View style={styles.detailOverlay} pointerEvents="auto">
+      <Pressable style={StyleSheet.absoluteFillObject} onPress={onClose} />
+      <View style={styles.detailOverlayCard}>
+        <Text style={styles.detailOverlayTitle}>{notice.title}</Text>
+        <Text style={styles.detailOverlaySub}>{notice.message}</Text>
+        <Pressable
+          onPress={onClose}
+          style={[styles.detailOverlayPrimary, styles.detailOverlaySinglePrimary]}
+        >
+          <Text style={styles.detailOverlayPrimaryText}>Done</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+function DetailMatchOverlay({
+  visible,
+  label,
+  onClose,
+  onMessage,
+}: {
+  visible: boolean;
+  label: string;
+  onClose: () => void;
+  onMessage: () => void;
+}) {
+  if (!visible) return null;
+  return (
+    <View style={styles.detailOverlay} pointerEvents="auto">
+      <Pressable style={StyleSheet.absoluteFillObject} onPress={onClose} />
+      <View style={styles.detailOverlayCard}>
+        <Text style={styles.detailOverlayTitle}>{"It's a match!"}</Text>
+        <Text style={styles.detailOverlaySub}>
+          You and {label} can start chatting now.
+        </Text>
+        <View style={styles.detailOverlayActions}>
+          <Pressable onPress={onClose} style={styles.detailOverlaySecondary}>
+            <Text style={styles.detailOverlaySecondaryText}>Keep browsing</Text>
+          </Pressable>
+          <Pressable onPress={onMessage} style={styles.detailOverlayPrimary}>
+            <MessageCircle color="#FFF" size={16} />
+            <Text style={styles.detailOverlayPrimaryText}>Message</Text>
+          </Pressable>
+        </View>
+      </View>
+    </View>
   );
 }
 
@@ -1282,5 +1332,71 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 16,
     fontWeight: "800" as const,
+  },
+  detailOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+    backgroundColor: "rgba(31,19,32,0.48)",
+    zIndex: 30,
+  },
+  detailOverlayCard: {
+    width: "100%",
+    maxWidth: 360,
+    alignItems: "center",
+    paddingHorizontal: 22,
+    paddingVertical: 24,
+    borderRadius: 24,
+    backgroundColor: Colors.light.background,
+    borderWidth: 1,
+    borderColor: Colors.light.line,
+  },
+  detailOverlayTitle: {
+    fontSize: 26,
+    fontWeight: "900" as const,
+    color: Colors.light.text,
+    textAlign: "center",
+  },
+  detailOverlaySub: {
+    marginTop: 6,
+    fontSize: 14,
+    lineHeight: 20,
+    color: Colors.light.textMuted,
+    textAlign: "center",
+  },
+  detailOverlayActions: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 20,
+  },
+  detailOverlaySecondary: {
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 999,
+    backgroundColor: Colors.light.surfaceAlt,
+  },
+  detailOverlaySecondaryText: {
+    fontSize: 13,
+    fontWeight: "800" as const,
+    color: Colors.light.text,
+  },
+  detailOverlayPrimary: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 999,
+    backgroundColor: Colors.palette.coral,
+  },
+  detailOverlaySinglePrimary: {
+    marginTop: 20,
+  },
+  detailOverlayPrimaryText: {
+    fontSize: 13,
+    fontWeight: "900" as const,
+    color: "#FFF",
   },
 });

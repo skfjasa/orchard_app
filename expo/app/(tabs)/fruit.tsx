@@ -1,8 +1,8 @@
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { Citrus, Flame, MapPin, Sparkles, Zap } from "lucide-react-native";
-import React, { useMemo } from "react";
+import { Citrus, Flame, Heart, MapPin, MessageCircle, Sparkles, Zap } from "lucide-react-native";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -17,13 +17,63 @@ import { MVP_MONETIZATION_ENABLED } from "@/constants/features";
 import { getPolyFruit } from "@/constants/poly-fruits";
 import { FRUIT_PROFILES } from "@/mocks/fruit-profiles";
 import { useProfile } from "@/providers/profile-provider";
+import { createAppServices } from "@/services/app-services";
+import { DiscoveryProfile } from "@/services";
 import { scoreMatch } from "@/utils/match";
+import { Profile } from "@/types";
 
 export default function FruitScreen() {
-  const { profile, likedIds, passedIds, purchase } = useProfile();
+  const appServices = useMemo(() => createAppServices(), []);
+  const {
+    profile,
+    likedIds,
+    passedIds,
+    likeProfile,
+    purchase,
+    rememberProfiles,
+  } = useProfile();
+  const [backendProfiles, setBackendProfiles] = useState<DiscoveryProfile[]>([]);
+  const [matchProfile, setMatchProfile] = useState<Profile | null>(null);
+  const [sentProfile, setSentProfile] = useState<Profile | null>(null);
+
+  useEffect(() => {
+    if (!profile) {
+      setBackendProfiles([]);
+      return;
+    }
+
+    let cancelled = false;
+    void appServices.discovery
+      .listProfiles({
+        profileId: profile.id,
+        viewerProfile: profile,
+        excludedProfileIds: [...likedIds, ...passedIds],
+        limit: 20,
+      })
+      .then((result) => {
+        if (cancelled) return;
+        if (!result.ok) {
+          console.log("[fruit] profile discovery failed", {
+            code: result.error.code,
+            message: result.error.message,
+          });
+          setBackendProfiles([]);
+          return;
+        }
+        rememberProfiles(result.value.map((item) => item.profile));
+        setBackendProfiles(result.value);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [appServices, profile, likedIds, passedIds, rememberProfiles]);
 
   const trending = useMemo(() => {
-    const pool = FRUIT_PROFILES.filter(
+    const byId = new Map<string, Profile>();
+    for (const item of FRUIT_PROFILES) byId.set(item.id, item);
+    for (const item of backendProfiles) byId.set(item.profile.id, item.profile);
+    const pool = [...byId.values()].filter(
       (p) => !likedIds.includes(p.id) && !passedIds.includes(p.id)
     );
     return pool
@@ -42,7 +92,19 @@ export default function FruitScreen() {
       })
       .sort((a, b) => b.combined - a.combined)
       .slice(0, 10);
-  }, [profile, likedIds, passedIds]);
+  }, [backendProfiles, profile, likedIds, passedIds]);
+
+  const handleLike = (candidate: Profile) => {
+    void likeProfile(candidate.id).then((result) => {
+      if (result.ok && result.matched) {
+        setMatchProfile(candidate);
+        return;
+      }
+      if (result.ok) {
+        setSentProfile(candidate);
+      }
+    });
+  };
 
   return (
     <View style={styles.root}>
@@ -183,6 +245,16 @@ export default function FruitScreen() {
                         </Text>
                       </View>
                     </View>
+                    <Pressable
+                      onPress={() => handleLike(p)}
+                      style={({ pressed }) => [
+                        styles.likeBtn,
+                        pressed && { opacity: 0.9, transform: [{ scale: 0.94 }] },
+                      ]}
+                      testID={`fruit-like-${p.id}`}
+                    >
+                      <Heart color="#FFF" size={18} fill="#FFF" />
+                    </Pressable>
                   </Pressable>
                 );
               })}
@@ -190,6 +262,85 @@ export default function FruitScreen() {
           )}
         </ScrollView>
       </SafeAreaView>
+      <FruitMatchOverlay
+        profile={matchProfile}
+        onClose={() => setMatchProfile(null)}
+        onMessage={(profileId) => {
+          setMatchProfile(null);
+          router.push(`/chat/${profileId}`);
+        }}
+      />
+      <FruitSentOverlay
+        profile={sentProfile}
+        onClose={() => setSentProfile(null)}
+      />
+    </View>
+  );
+}
+
+function profileLabel(profile: Profile) {
+  const primary = profile.people[0];
+  const secondary = profile.people[1];
+  return profile.accountType === "couple" && secondary
+    ? `${primary.name} & ${secondary.name}`
+    : primary.name;
+}
+
+function FruitMatchOverlay({
+  profile,
+  onClose,
+  onMessage,
+}: {
+  profile: Profile | null;
+  onClose: () => void;
+  onMessage: (profileId: string) => void;
+}) {
+  if (!profile) return null;
+  return (
+    <View style={styles.overlay} pointerEvents="auto">
+      <Pressable style={StyleSheet.absoluteFillObject} onPress={onClose} />
+      <View style={styles.overlayCard}>
+        <Text style={styles.overlayTitle}>{"It's a match!"}</Text>
+        <Text style={styles.overlaySub}>
+          You and {profileLabel(profile)} can start chatting now.
+        </Text>
+        <View style={styles.overlayActions}>
+          <Pressable onPress={onClose} style={styles.secondaryBtn}>
+            <Text style={styles.secondaryText}>Keep browsing</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => onMessage(profile.id)}
+            style={styles.primaryBtn}
+          >
+            <MessageCircle color="#FFF" size={16} />
+            <Text style={styles.primaryText}>Message</Text>
+          </Pressable>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function FruitSentOverlay({
+  profile,
+  onClose,
+}: {
+  profile: Profile | null;
+  onClose: () => void;
+}) {
+  if (!profile) return null;
+  return (
+    <View style={styles.overlay} pointerEvents="auto">
+      <Pressable style={StyleSheet.absoluteFillObject} onPress={onClose} />
+      <View style={styles.overlayCard}>
+        <Text style={styles.overlayTitle}>Like sent</Text>
+        <Text style={styles.overlaySub}>
+          {profileLabel(profile)} will see your like if you match.
+        </Text>
+        <Pressable onPress={onClose} style={[styles.primaryBtn, styles.singlePrimaryBtn]}>
+          <Text style={styles.primaryText}>Done</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -281,6 +432,19 @@ const styles = StyleSheet.create({
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 6 },
     elevation: 4,
+  },
+  likeBtn: {
+    position: "absolute",
+    right: 10,
+    bottom: 10,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.palette.coral,
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,0.9)",
   },
   boostTag: {
     position: "absolute",
@@ -383,5 +547,71 @@ const styles = StyleSheet.create({
     color: Colors.light.textMuted,
     marginTop: 6,
     textAlign: "center",
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+    backgroundColor: "rgba(31,19,32,0.48)",
+    zIndex: 20,
+  },
+  overlayCard: {
+    width: "100%",
+    maxWidth: 360,
+    alignItems: "center",
+    paddingHorizontal: 22,
+    paddingVertical: 24,
+    borderRadius: 24,
+    backgroundColor: Colors.light.background,
+    borderWidth: 1,
+    borderColor: Colors.light.line,
+  },
+  overlayTitle: {
+    fontSize: 26,
+    fontWeight: "900" as const,
+    color: Colors.light.text,
+    textAlign: "center",
+  },
+  overlaySub: {
+    marginTop: 6,
+    fontSize: 14,
+    lineHeight: 20,
+    color: Colors.light.textMuted,
+    textAlign: "center",
+  },
+  overlayActions: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 20,
+  },
+  secondaryBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 999,
+    backgroundColor: Colors.light.surfaceAlt,
+  },
+  secondaryText: {
+    fontSize: 13,
+    fontWeight: "800" as const,
+    color: Colors.light.text,
+  },
+  primaryBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 999,
+    backgroundColor: Colors.palette.coral,
+  },
+  singlePrimaryBtn: {
+    marginTop: 20,
+  },
+  primaryText: {
+    fontSize: 13,
+    fontWeight: "900" as const,
+    color: "#FFF",
   },
 });
