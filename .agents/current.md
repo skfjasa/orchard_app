@@ -7,8 +7,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 ## Branch And Commit
 
 - Branch: `main`
-- Latest local implementation checkpoint: `ea9c5c8` - Fix real profile match and photo UAT gaps
-- Previous pushed checkpoint before this slice: `7694349` - Stabilize session handoff wording
+- Latest pushed implementation checkpoint: `f81b17e` - Stabilize match hydration and highlights
+- Previous implementation checkpoint: `f283877` - Fix real profile match and photo UAT gaps
 
 ## Recent Changes
 
@@ -46,7 +46,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 
 ## Current Risks / Blockers
 
-- Current real-profile UAT fixes are implemented and hosted storage policy is applied, but browser retest is pending.
+- Latest real-profile UAT fixes are implemented, pushed, and ready for browser retest.
+- Backend match/message rows are persisting for the three dev profiles, but app-side hydration/display needs browser retest after `f81b17e`.
 - Chat UI still preserves local simulated/photo behavior; only real text messages are persisted/hydrated from Supabase.
 - Supabase Auth email sender/template branding still requires custom SMTP setup if branded emails are needed.
 
@@ -82,4 +83,4 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 
 ## Next Recommended Task
 
-Retest UI navigation and badge behavior around newly created matches/messages, then address the `/onboarding` background sizing regression.
+Retest UI navigation, match hydration, new-match highlights, and Inbox badge behavior around the existing `t`/`tt`/`test2` hosted rows, then address the `/onboarding` background sizing regression.

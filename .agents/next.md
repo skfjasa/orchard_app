@@ -1,6 +1,6 @@
 # Next Task
 
-Retest real non-fixture Supabase match badge and profile-detail entry points, then address the `/onboarding` background sizing regression.
+Retest real non-fixture Supabase match hydration, badge/highlight behavior, and profile-detail entry points, then address the `/onboarding` background sizing regression.
 
 ## Likely Areas
 
@@ -26,9 +26,9 @@ Retest real non-fixture Supabase match badge and profile-detail entry points, th
 ## Pre-Edit Checks
 
 - Inspect git status and latest commit.
-- Confirm the current real-profile UAT fix slice is committed after validation.
+- Confirm `main` is clean/synced at or after `f81b17e`.
 - Start `bun run start-web` from `expo/` if the preview is not already running.
-- Use two or three hosted non-fixture Supabase profiles with clean enough swipe state to create a fresh match/message.
+- Use the existing hosted `t`, `tt`, and `test2` rows, which currently have persisted three-way active matches and two messages from the latest UAT.
 
 ## Definition Of Done
 
@@ -42,6 +42,7 @@ Retest real non-fixture Supabase match badge and profile-detail entry points, th
 - `/onboarding` background sizing is restored to cover the full viewing space.
 - If code changes are needed, mock mode and existing prototype UI behavior remain intact.
 - Backend profile/photo rows and storage object behavior are verified where possible.
+- If the existing three-way rows still do not appear after browser refresh/sign-in, inspect app console logs for backend match/thread hydration failures.
 
 ## Validation
 
@@ -54,10 +55,10 @@ Retest real non-fixture Supabase match badge and profile-detail entry points, th
 
 For backend profile discovery/display smoke:
 
-1. Create a fresh reciprocal match between two hosted non-fixture profiles and verify the Matches tab badge appears.
-2. Open Matches and verify each unopened new match card is highlighted while the tab badge remains.
+1. Sign in as `t`, `tt`, and `test2` one at a time and verify Matches hydrates from the existing hosted active matches after refresh/sign-in.
+2. Open Matches where a new-match badge appears and verify each unopened new match card is highlighted while the tab badge remains.
 3. Tap a highlighted Matches card and verify it opens profile detail, not chat, and the badge/highlight decrements for that profile.
-4. Send messages from two matched profiles; sign in as the receiver and verify the Inbox tab badge counts total unread messages and each unread row is highlighted with its own count.
+4. Verify Inbox hydrates the persisted hosted messages and the tab badge counts total unread messages while each unread row is highlighted with its own count.
 5. Open one unread conversation and verify that row clears and the Inbox tab badge decrements by that row's unread count.
 6. Open Inbox and tap the avatar to profile detail; tap the message preview area to chat.
 7. In Chat, tap the avatar/name header area and verify it opens profile detail.
