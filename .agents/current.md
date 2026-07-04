@@ -29,6 +29,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - Hosted UAT confirmed backend reciprocal matches/messages hydrate after sign-out/sign-in.
 - Current working UI fix: Matches badge uses explicit new-match state and decrements when each matched profile detail is viewed; Inbox badge counts total unread messages; unread Inbox rows are highlighted with per-row count badges and clear when opened/read; Matches cards open profile detail; Inbox avatar opens profile detail; Chat header avatar/name opens profile detail.
 - Latest UAT follow-up found hosted rows were present for dev profiles `t`, `tt`, and `test2` (3 active matches, 2 messages), so the empty Matches/Inbox symptom was app hydration/display-side. The current fix keeps backend matches visible even if auxiliary profile member/photo loading fails and highlights unopened new match cards in Matches.
+- Account-switching follow-up found hosted rows still persisted for `t`, `tt`, and `test2` (3 active matches, 4 messages). Current fix awaits Supabase sign-out before routing, clears in-flight match hydration on session reset, and rejects match hydration if the Supabase client auth user does not match the profile being hydrated.
 - Follow-up visual issue: `/onboarding` background image no longer appears maximized across the whole viewing space compared with the pre-decoupling Rork rendering.
 
 ## Validation State
@@ -37,6 +38,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - `bun run lint`: passed.
 - `git diff --check`: passed.
 - Hosted SQL check after three-way dev UAT showed 3 active matches and 2 messages persisted for `t`, `tt`, and `test2`.
+- Hosted SQL check after account-switching UAT showed the same 3 active matches plus 4 messages persisted for `t`, `tt`, and `test2`.
 - Hosted browser UAT passed for fixture discovery, fixture like/match, hosted text persistence, sign-out/sign-in thread hydration, and hosted unmatch.
 - Hosted browser UAT passed for onboarding/profile-photo confirmation and hydration.
 - Real-profile UAT found and the current working slice addresses: false auto-match on one-sided real likes, stale local-only A-side conversations from earlier UAT, misleading chat availability before reciprocal match, and visible profiles showing default/fallback photos instead of uploaded photos.
@@ -47,7 +49,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 ## Current Risks / Blockers
 
 - Latest real-profile UAT fixes are implemented, pushed, and ready for browser retest.
-- Backend match/message rows are persisting for the three dev profiles, but app-side hydration/display needs browser retest after `f81b17e`.
+- Backend match/message rows are persisting for the three dev profiles, but app-side hydration/display needs browser retest after the account-switching sign-out/session guard fix.
 - Chat UI still preserves local simulated/photo behavior; only real text messages are persisted/hydrated from Supabase.
 - Supabase Auth email sender/template branding still requires custom SMTP setup if branded emails are needed.
 

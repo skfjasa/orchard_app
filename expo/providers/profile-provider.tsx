@@ -178,6 +178,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const lastBackendProfileSessionKey = useRef<string | null>(null);
   const lastBackendProfileUserId = useRef<string | null>(null);
   const lastBackendMatchHydrationKey = useRef<string | null>(null);
+  const inFlightBackendMatchHydrationKey = useRef<string | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [knownProfiles, setKnownProfiles] = useState<Profile[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -272,6 +273,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       lastBackendProfileSessionKey.current = null;
       lastBackendProfileUserId.current = null;
       lastBackendMatchHydrationKey.current = null;
+      inFlightBackendMatchHydrationKey.current = null;
       setBackendProfileHydrated(false);
       return;
     }
@@ -280,6 +282,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       lastBackendProfileSessionKey.current = null;
       lastBackendProfileUserId.current = null;
       lastBackendMatchHydrationKey.current = null;
+      inFlightBackendMatchHydrationKey.current = null;
       setBackendProfileHydrated(false);
       return;
     }
@@ -408,7 +411,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     const sessionKey = session?.access_token ?? "";
     const hydrationKey = `${userId}:${sessionKey}`;
     if (lastBackendMatchHydrationKey.current === hydrationKey) return;
-    lastBackendMatchHydrationKey.current = hydrationKey;
+    if (inFlightBackendMatchHydrationKey.current === hydrationKey) return;
+    inFlightBackendMatchHydrationKey.current = hydrationKey;
 
     let cancelled = false;
     void appServices.matches.listMatches(userId).then(async (matchResult) => {
@@ -490,6 +494,11 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         saveConvosMutation.mutate(next);
         return next;
       });
+      lastBackendMatchHydrationKey.current = hydrationKey;
+    }).finally(() => {
+      if (inFlightBackendMatchHydrationKey.current === hydrationKey) {
+        inFlightBackendMatchHydrationKey.current = null;
+      }
     });
 
     return () => {
@@ -560,9 +569,10 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     [appServices, mode, saveProfileMutation]
   );
 
-  const signOut = useCallback(() => {
+  const signOut = useCallback(async () => {
+    let result: Awaited<ReturnType<typeof signOutAuth>> | undefined;
     if (mode === "supabase") {
-      void signOutAuth();
+      result = await signOutAuth();
     }
     setProfile(null);
     setKnownProfiles([]);
@@ -578,6 +588,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     setSubscription(null);
     setBackendProfileHydrated(false);
     lastBackendMatchHydrationKey.current = null;
+    inFlightBackendMatchHydrationKey.current = null;
     saveProfileMutation.mutate(null);
     saveConvosMutation.mutate([]);
     saveLikesMutation.mutate([]);
@@ -588,6 +599,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     saveSuperLikeBalanceMutation.mutate(DEFAULT_SUPER_LIKES);
     saveSuperLikeLastUseMutation.mutate(null);
     saveSubscriptionMutation.mutate(null);
+    return result ?? { ok: true as const };
   }, [
     mode,
     signOutAuth,

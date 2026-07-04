@@ -26,9 +26,9 @@ Retest real non-fixture Supabase match hydration, badge/highlight behavior, and 
 ## Pre-Edit Checks
 
 - Inspect git status and latest commit.
-- Confirm `main` is clean/synced at or after `f81b17e`.
+- Confirm `main` is clean/synced at or after the account-switching sign-out/session guard fix.
 - Start `bun run start-web` from `expo/` if the preview is not already running.
-- Use the existing hosted `t`, `tt`, and `test2` rows, which currently have persisted three-way active matches and two messages from the latest UAT.
+- Use the existing hosted `t`, `tt`, and `test2` rows, which currently have persisted three-way active matches and four messages from the latest UAT.
 
 ## Definition Of Done
 
@@ -42,7 +42,7 @@ Retest real non-fixture Supabase match hydration, badge/highlight behavior, and 
 - `/onboarding` background sizing is restored to cover the full viewing space.
 - If code changes are needed, mock mode and existing prototype UI behavior remain intact.
 - Backend profile/photo rows and storage object behavior are verified where possible.
-- If the existing three-way rows still do not appear after browser refresh/sign-in, inspect app console logs for backend match/thread hydration failures.
+- If the existing three-way rows still do not appear after browser refresh/sign-in, inspect app console logs for backend match/thread hydration failures, especially `session_mismatch`.
 
 ## Validation
 

@@ -103,6 +103,16 @@ export function createSupabaseMatchService(): MatchService {
       const client = requireSupabase(supabase);
       if (!client.ok) return client;
 
+      const { data: authData, error: authError } =
+        await client.value.auth.getUser();
+      if (authError || authData.user?.id !== profileId) {
+        return fail(
+          "session_mismatch",
+          "Current auth session does not match the requested profile.",
+          authError
+        );
+      }
+
       const { data, error } = await client.value
         .from("matches")
         .select("*")

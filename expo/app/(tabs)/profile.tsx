@@ -81,14 +81,14 @@ export default function ProfileScreen() {
   } = useProfile();
   const [inviteOpen, setInviteOpen] = React.useState<boolean>(false);
 
-  const performSignOut = React.useCallback(() => {
+  const performSignOut = React.useCallback(async () => {
     try {
       console.log("[profile] signing out");
-      signOut();
+      await signOut();
       router.replace("/onboarding");
     } catch (e) {
       console.log("[profile] sign out nav error", e);
-      signOut();
+      await signOut();
       router.replace("/onboarding");
     }
   }, [signOut]);
