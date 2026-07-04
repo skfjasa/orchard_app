@@ -7,8 +7,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 ## Branch And Commit
 
 - Branch: `main`
-- Latest pushed implementation checkpoint: `028789c` - Fix Fruit fixture follow-up behavior
-- Previous implementation checkpoint: `2ab7c26` - Fix Fruit badges and fixture read state
+- Latest pushed implementation checkpoint: `85d6ba8` - Remove sign-in header artifact
+- Previous implementation checkpoint: `5fa9745` - Fix onboarding background sizing
 
 ## Recent Changes
 
@@ -40,14 +40,15 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - Follow-up visual issue: `/onboarding` background image no longer appears maximized across the whole viewing space compared with the pre-decoupling Rork rendering.
 - Current working fix gives the welcome, sign-in, and pending-confirmation onboarding roots explicit web viewport height and full-size background image dimensions while keeping the recovered local background asset and existing content intact.
 - Current working cleanup removes the original Rork-era sign-in screen header override so the onboarding layout's headerless `sign-in` route applies and the blank white header strip above "Welcome back" disappears.
+- User UAT confirmed the onboarding background sizing and sign-in header cleanup look correct.
 
 ## Validation State
 
 - `bun run typecheck`: passed.
 - `bun run lint`: passed.
 - `git diff --check`: passed.
-- Onboarding background sizing fix passed typecheck, lint, and diff check; browser visual confirmation is still needed because no browser backend was available in this session.
-- Sign-in header cleanup passed typecheck, lint, and diff check; visual confirmation is still needed in the browser.
+- Onboarding background sizing fix passed typecheck, lint, diff check, and browser visual UAT.
+- Sign-in header cleanup passed typecheck, lint, diff check, and browser visual UAT.
 - Hosted SQL check after three-way dev UAT showed 3 active matches and 2 messages persisted for `t`, `tt`, and `test2`.
 - Hosted SQL check after account-switching UAT showed the same 3 active matches plus 4 messages persisted for `t`, `tt`, and `test2`.
 - Backend match/thread refresh loop added after live-update UAT: immediate + 10-second interval + app-active refresh.
@@ -61,7 +62,6 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 
 ## Current Risks / Blockers
 
-- `/onboarding` background sizing fix is implemented but still needs visual UAT at desktop and mobile widths.
 - Chat UI still preserves local simulated/photo behavior; only real text messages are persisted/hydrated from Supabase.
 - Supabase Auth email sender/template branding still requires custom SMTP setup if branded emails are needed.
 
@@ -97,4 +97,4 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 
 ## Next Recommended Task
 
-Reload `/onboarding` and `/onboarding/sign-in` through the local/ngrok web preview and confirm the recovered background image fills the visible page area and the sign-in screen has no blank white header strip.
+Choose the next project track: human setup for TestFlight readiness, Supabase/backend hardening, or service-boundary cleanup.

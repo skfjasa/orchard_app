@@ -1,28 +1,27 @@
 # Next Task
 
-Visually confirm onboarding welcome/sign-in polish through the local/ngrok web preview.
+Choose and start the next project track now that the active UAT list is banked.
 
 ## Likely Areas
 
-- `expo/app/onboarding/photos.tsx`
-- `expo/app/onboarding/pending-confirmation.tsx`
-- `expo/app/onboarding/sign-in.tsx`
-- `expo/app/onboarding/index.tsx`
-- `expo/assets/images/welcome-background.png`
+- `docs/project-status.md`
+- `docs/backend-migration-plan.md`
+- `docs/supabase-hardening-plan.md`
+- `expo/providers/profile-provider.tsx`
+- `expo/services/`
+- `.github/workflows/`
 
 ## Pre-Edit Checks
 
 - Inspect git status and latest commit.
-- Start `bun run start-web` from `expo/` if the preview is not already running.
-- Reload the browser/phone preview so it picks up the latest local bundle.
+- Pick whether the next slice is human setup, backend/source-of-truth hardening, or service-boundary cleanup.
+- Re-read the relevant plan doc only for the chosen slice.
 
 ## Definition Of Done
 
-- `/onboarding` background image covers the full visible page area without blank margins.
-- `/onboarding/sign-in` has no blank white header strip above "Welcome back".
-- Welcome, sign-in, and pending-confirmation still use the recovered local background asset.
-- The existing onboarding layout remains intact and usable at desktop and mobile widths.
-- Mock mode and hosted Supabase mode remain unaffected.
+- The next task is scoped to one PR-sized slice.
+- Mock mode and hosted Supabase mode remain intact.
+- `docs/project-status.md` remains current after any material change.
 
 ## Validation
 
@@ -33,7 +32,7 @@ Visually confirm onboarding welcome/sign-in polish through the local/ngrok web p
 
 ## Manual QA
 
-1. Open `/onboarding` and verify the background image fills the visible page area without blank margins.
-2. Open `/onboarding/sign-in` and verify the same background behavior, with no blank white header strip above "Welcome back".
-3. Open `/onboarding/pending-confirmation` if reachable and verify the same background behavior.
-4. Recheck at one desktop width and one mobile width.
+1. Human setup track: create Apple Developer Program account, then prepare iOS/TestFlight prerequisites.
+2. Backend track: continue moving discovery/matches/inbox/chat toward Supabase as the source of truth, including Realtime or tighter refresh behavior.
+3. Fixture/media track: decide whether to ingest fixture profile images into Supabase Storage for backend-backed discovery.
+4. CI track: decide whether to make Supabase DB tests automatic for migration pull requests and address the GitHub Actions Node warning.
