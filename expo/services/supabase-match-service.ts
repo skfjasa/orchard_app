@@ -55,7 +55,12 @@ async function loadProfilesById(
     .in("profile_id", uniqueIds)
     .order("sort_order", { ascending: true });
 
-  if (memberError) return {};
+  if (memberError) {
+    console.log("[supabase-match-service] profile members unavailable", {
+      code: memberError.code,
+      message: memberError.message,
+    });
+  }
 
   const { data: photoRows, error: photoError } = await supabase
     .from("profile_photos")
@@ -63,7 +68,12 @@ async function loadProfilesById(
     .in("profile_id", uniqueIds)
     .order("sort_order", { ascending: true });
 
-  if (photoError) return {};
+  if (photoError) {
+    console.log("[supabase-match-service] profile photos unavailable", {
+      code: photoError.code,
+      message: photoError.message,
+    });
+  }
 
   const membersByProfileId = ((memberRows ?? []) as ProfileMemberRow[]).reduce<
     Record<string, ProfileMemberRow[]>
@@ -72,7 +82,7 @@ async function loadProfilesById(
     return acc;
   }, {});
   const photosByMemberId = await buildPhotosByMemberId(
-    (photoRows ?? []) as ProfilePhotoRow[]
+    (photoError ? [] : photoRows ?? []) as ProfilePhotoRow[]
   );
 
   return ((profileRows ?? []) as ProfileRow[]).reduce<

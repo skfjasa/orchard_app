@@ -36,7 +36,7 @@ Retest real non-fixture Supabase match badge and profile-detail entry points, th
 - Stale local-only matches/conversations from previous UAT are pruned after fresh Supabase sign-in/hydration when no hosted active match exists.
 - A one-sided like of a real non-fixture profile records the swipe but does not show a match modal, does not create local Matches/Inbox rows, and does not allow chat.
 - A reciprocal real-profile like creates a backend active match; Matches, Inbox, and Chat resolve the backend profile after sign-out/sign-in.
-- A new reciprocal match shows a badge on the Matches tab until that matched profile's detail screen is viewed; multiple new matches decrement one at a time.
+- A new reciprocal match shows a badge on the Matches tab and a highlighted card in Matches until that matched profile's detail screen is viewed; multiple new matches decrement one at a time.
 - Received backend messages show an Inbox tab badge equal to the total unread message count, plus per-row unread highlight/count until each conversation is opened/read.
 - Matched profile detail is reachable from Matches cards, Inbox avatar, and Chat header avatar/name.
 - `/onboarding` background sizing is restored to cover the full viewing space.
@@ -55,8 +55,8 @@ Retest real non-fixture Supabase match badge and profile-detail entry points, th
 For backend profile discovery/display smoke:
 
 1. Create a fresh reciprocal match between two hosted non-fixture profiles and verify the Matches tab badge appears.
-2. Open Matches and verify the badge remains until a new matched profile is opened.
-3. Tap a Matches card and verify it opens profile detail, not chat, and the badge decrements for that profile.
+2. Open Matches and verify each unopened new match card is highlighted while the tab badge remains.
+3. Tap a highlighted Matches card and verify it opens profile detail, not chat, and the badge/highlight decrements for that profile.
 4. Send messages from two matched profiles; sign in as the receiver and verify the Inbox tab badge counts total unread messages and each unread row is highlighted with its own count.
 5. Open one unread conversation and verify that row clears and the Inbox tab badge decrements by that row's unread count.
 6. Open Inbox and tap the avatar to profile detail; tap the message preview area to chat.

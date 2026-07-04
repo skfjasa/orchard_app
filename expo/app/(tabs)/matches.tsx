@@ -11,7 +11,7 @@ import { useProfile } from "@/providers/profile-provider";
 import { Profile } from "@/types";
 
 export default function MatchesScreen() {
-  const { knownProfiles, likedIds } = useProfile();
+  const { knownProfiles, likedIds, newMatchIds } = useProfile();
 
   const matches = useMemo(
     () =>
@@ -55,6 +55,7 @@ export default function MatchesScreen() {
             renderItem={({ item }) => (
               <MatchCard
                 profile={item}
+                isNew={newMatchIds.includes(item.id)}
                 onPress={() => router.push(`/match/${item.id}`)}
               />
             )}
@@ -66,9 +67,11 @@ export default function MatchesScreen() {
 }
 
 function MatchCard({
+  isNew,
   profile,
   onPress,
 }: {
+  isNew: boolean;
   profile: Profile;
   onPress: () => void;
 }) {
@@ -81,9 +84,15 @@ function MatchCard({
       onPress={onPress}
       style={({ pressed }) => [
         styles.card,
+        isNew && styles.cardNew,
         pressed && { opacity: 0.92, transform: [{ scale: 0.98 }] },
       ]}
     >
+      {isNew && (
+        <View style={styles.newTag}>
+          <Text style={styles.newTagText}>New</Text>
+        </View>
+      )}
       <View style={styles.cardImgs}>
         <Image source={{ uri: p.photo }} style={styles.cardImg} contentFit="cover" />
         {isCouple && s && (
@@ -124,6 +133,26 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     overflow: "hidden",
     backgroundColor: Colors.light.surface,
+  },
+  cardNew: {
+    borderWidth: 3,
+    borderColor: Colors.palette.coral,
+  },
+  newTag: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: Colors.palette.coral,
+    zIndex: 2,
+  },
+  newTagText: {
+    color: "#FFF",
+    fontSize: 10,
+    fontWeight: "900" as const,
+    letterSpacing: 0.4,
   },
   cardImgs: { ...StyleSheet.absoluteFillObject, flexDirection: "row" },
   cardImg: { flex: 1, height: "100%" },

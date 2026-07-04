@@ -142,6 +142,36 @@ type MatchActionResult = {
   matched?: boolean;
 };
 
+const FALLBACK_BACKEND_PROFILE_PHOTO =
+  "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=900&q=80";
+
+function createFallbackBackendProfile(profileId: string): Profile {
+  return {
+    id: profileId,
+    accountType: "single",
+    people: [
+      {
+        name: "Orchard user",
+        age: 18,
+        gender: "Other",
+        race: "Prefer not to say",
+        photo: FALLBACK_BACKEND_PROFILE_PHOTO,
+        photos: [FALLBACK_BACKEND_PROFILE_PHOTO],
+        interests: [],
+      },
+    ],
+    location: {
+      city: "",
+      lat: 0,
+      lng: 0,
+    },
+    preferences: [],
+    lookingFor: "Solo",
+    createdAt: Date.now(),
+    socials: {},
+  };
+}
+
 export const [ProfileProvider, useProfile] = createContextHook(() => {
   const { mode, session, signOut: signOutAuth, userId } = useAuth();
   const appServices = useMemo(() => createAppServices(), []);
@@ -403,20 +433,17 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         const otherBackendProfileId =
           match.userA === userId ? match.userB : match.userA;
         const otherLocalProfileId = fromBackendProfileId(otherBackendProfileId);
+        const mockProfile = MOCK_PROFILES.find(
+          (item) => item.id === otherLocalProfileId
+        );
         const otherProfile =
-          MOCK_PROFILES.find((item) => item.id === otherLocalProfileId) ??
-          match.otherProfile;
-
-        if (!otherProfile) {
-          console.log("[profile-provider] backend match skipped: no local profile", {
-            otherBackendProfileId,
-          });
-          continue;
-        }
+          mockProfile ??
+          match.otherProfile ??
+          createFallbackBackendProfile(otherLocalProfileId);
 
         matchedLocalProfileIds.add(otherProfile.id);
-        if (match.otherProfile) {
-          matchedProfilesToRemember.push(match.otherProfile);
+        if (!mockProfile) {
+          matchedProfilesToRemember.push(otherProfile);
         }
 
         const threadResult = await appServices.chat.getThread(match.id);
