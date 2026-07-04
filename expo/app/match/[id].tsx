@@ -45,6 +45,11 @@ import { scoreMatch } from "@/utils/match";
 
 const { width: W } = Dimensions.get("window");
 
+const MATCH_DETAIL_SCREEN_OPTIONS = {
+  headerTransparent: true,
+  title: "",
+};
+
 export default function MatchDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const {
@@ -209,7 +214,7 @@ export default function MatchDetail() {
 
   return (
     <>
-      <Stack.Screen options={{ headerTransparent: true, title: "" }} />
+      <Stack.Screen options={MATCH_DETAIL_SCREEN_OPTIONS} />
       <MarkMatchSeen
         isMatched={isMatched}
         profileId={other.id}

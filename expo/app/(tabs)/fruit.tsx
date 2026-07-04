@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { Citrus, Flame, Heart, MapPin, MessageCircle, Sparkles, Zap } from "lucide-react-native";
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  GestureResponderEvent,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -91,7 +92,17 @@ export default function FruitScreen() {
         return { profile: p, combined, distanceKm: s.distanceKm };
       })
       .sort((a, b) => b.combined - a.combined)
-      .slice(0, 10);
+      .sort((a, b) => {
+        const aBackend = backendProfiles.some(
+          (item) => item.profile.id === a.profile.id
+        );
+        const bBackend = backendProfiles.some(
+          (item) => item.profile.id === b.profile.id
+        );
+        if (aBackend === bBackend) return 0;
+        return aBackend ? -1 : 1;
+      })
+      .slice(0, 12);
   }, [backendProfiles, profile, likedIds, passedIds]);
 
   const handleLike = (candidate: Profile) => {
@@ -246,7 +257,10 @@ export default function FruitScreen() {
                       </View>
                     </View>
                     <Pressable
-                      onPress={() => handleLike(p)}
+                      onPress={(event: GestureResponderEvent) => {
+                        event.stopPropagation();
+                        handleLike(p);
+                      }}
                       style={({ pressed }) => [
                         styles.likeBtn,
                         pressed && { opacity: 0.9, transform: [{ scale: 0.94 }] },
