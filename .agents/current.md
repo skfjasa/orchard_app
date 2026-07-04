@@ -30,6 +30,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - Current working UI fix: Matches badge uses explicit new-match state and decrements when each matched profile detail is viewed; Inbox badge counts total unread messages; unread Inbox rows are highlighted with per-row count badges and clear when opened/read; Matches cards open profile detail; Inbox avatar opens profile detail; Chat header avatar/name opens profile detail.
 - Latest UAT follow-up found hosted rows were present for dev profiles `t`, `tt`, and `test2` (3 active matches, 2 messages), so the empty Matches/Inbox symptom was app hydration/display-side. The current fix keeps backend matches visible even if auxiliary profile member/photo loading fails and highlights unopened new match cards in Matches.
 - Account-switching follow-up found hosted rows still persisted for `t`, `tt`, and `test2` (3 active matches, 4 messages). Current fix awaits Supabase sign-out before routing, clears in-flight match hydration on session reset, and rejects match hydration if the Supabase client auth user does not match the profile being hydrated.
+- Latest live-update follow-up found matches/messages could appear only after a swipe triggered provider movement. Backend match/thread hydration now refreshes immediately after sign-in, every 10 seconds while signed in, and whenever the app returns to active, so Matches/Inbox no longer depend on user actions to pull hosted state.
 - Follow-up visual issue: `/onboarding` background image no longer appears maximized across the whole viewing space compared with the pre-decoupling Rork rendering.
 
 ## Validation State
@@ -39,6 +40,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - `git diff --check`: passed.
 - Hosted SQL check after three-way dev UAT showed 3 active matches and 2 messages persisted for `t`, `tt`, and `test2`.
 - Hosted SQL check after account-switching UAT showed the same 3 active matches plus 4 messages persisted for `t`, `tt`, and `test2`.
+- Backend match/thread refresh loop added after live-update UAT: immediate + 10-second interval + app-active refresh.
 - Hosted browser UAT passed for fixture discovery, fixture like/match, hosted text persistence, sign-out/sign-in thread hydration, and hosted unmatch.
 - Hosted browser UAT passed for onboarding/profile-photo confirmation and hydration.
 - Real-profile UAT found and the current working slice addresses: false auto-match on one-sided real likes, stale local-only A-side conversations from earlier UAT, misleading chat availability before reciprocal match, and visible profiles showing default/fallback photos instead of uploaded photos.
@@ -85,4 +87,4 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 
 ## Next Recommended Task
 
-Retest UI navigation, match hydration, new-match highlights, and Inbox badge behavior around the existing `t`/`tt`/`test2` hosted rows, then address the `/onboarding` background sizing regression.
+Retest match/message reception by signing in as `tt` or `test2` after messages are sent by `t`; Matches/Inbox should hydrate without requiring a swipe, then address the `/onboarding` background sizing regression.

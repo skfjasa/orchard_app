@@ -1,6 +1,7 @@
 import createContextHook from "@nkzw/create-context-hook";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AppState } from "react-native";
 
 import { MOCK_PROFILES } from "@/mocks/profiles";
 import {
@@ -141,6 +142,8 @@ type MatchActionResult = {
   reason?: "limit" | "superlikes";
   matched?: boolean;
 };
+
+const BACKEND_MATCH_REFRESH_INTERVAL_MS = 10_000;
 
 const FALLBACK_BACKEND_PROFILE_PHOTO =
   "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=900&q=80";
@@ -401,7 +404,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     });
   }, []);
 
-  useEffect(() => {
+  const refreshBackendMatches = useCallback(async () => {
     if (mode !== "supabase") return;
     if (appServices.capabilities.matches !== "supabase") return;
     if (appServices.capabilities.chat !== "supabase") return;
@@ -410,13 +413,11 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
     const sessionKey = session?.access_token ?? "";
     const hydrationKey = `${userId}:${sessionKey}`;
-    if (lastBackendMatchHydrationKey.current === hydrationKey) return;
     if (inFlightBackendMatchHydrationKey.current === hydrationKey) return;
     inFlightBackendMatchHydrationKey.current = hydrationKey;
 
-    let cancelled = false;
-    void appServices.matches.listMatches(userId).then(async (matchResult) => {
-      if (cancelled) return;
+    try {
+      const matchResult = await appServices.matches.listMatches(userId);
 
       if (!matchResult.ok) {
         console.log("[profile-provider] backend match hydration failed", {
@@ -467,8 +468,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         });
       }
 
-      if (cancelled) return;
-
       rememberProfiles(matchedProfilesToRemember);
 
       setLikedIds((prev) => {
@@ -495,15 +494,11 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         return next;
       });
       lastBackendMatchHydrationKey.current = hydrationKey;
-    }).finally(() => {
+    } finally {
       if (inFlightBackendMatchHydrationKey.current === hydrationKey) {
         inFlightBackendMatchHydrationKey.current = null;
       }
-    });
-
-    return () => {
-      cancelled = true;
-    };
+    }
   }, [
     appServices,
     backendProfileHydrated,
@@ -514,6 +509,38 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     saveConvosMutation,
     saveLikesMutation,
     session?.access_token,
+    userId,
+  ]);
+
+  useEffect(() => {
+    void refreshBackendMatches();
+  }, [refreshBackendMatches]);
+
+  useEffect(() => {
+    if (mode !== "supabase") return;
+    if (!hydrated || !backendProfileHydrated) return;
+    if (!profile || !userId || profile.id !== userId) return;
+
+    const intervalId = setInterval(() => {
+      void refreshBackendMatches();
+    }, BACKEND_MATCH_REFRESH_INTERVAL_MS);
+
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active") {
+        void refreshBackendMatches();
+      }
+    });
+
+    return () => {
+      clearInterval(intervalId);
+      subscription.remove();
+    };
+  }, [
+    backendProfileHydrated,
+    hydrated,
+    mode,
+    profile,
+    refreshBackendMatches,
     userId,
   ]);
 

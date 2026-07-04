@@ -1,6 +1,6 @@
 # Next Task
 
-Retest real non-fixture Supabase match hydration, badge/highlight behavior, and profile-detail entry points, then address the `/onboarding` background sizing regression.
+Retest real non-fixture Supabase match/message live refresh, badge/highlight behavior, and profile-detail entry points, then address the `/onboarding` background sizing regression.
 
 ## Likely Areas
 
@@ -26,7 +26,7 @@ Retest real non-fixture Supabase match hydration, badge/highlight behavior, and 
 ## Pre-Edit Checks
 
 - Inspect git status and latest commit.
-- Confirm `main` is clean/synced at or after the account-switching sign-out/session guard fix.
+- Confirm `main` is clean/synced at or after the backend match/thread refresh-loop fix.
 - Start `bun run start-web` from `expo/` if the preview is not already running.
 - Use the existing hosted `t`, `tt`, and `test2` rows, which currently have persisted three-way active matches and four messages from the latest UAT.
 
@@ -38,6 +38,7 @@ Retest real non-fixture Supabase match hydration, badge/highlight behavior, and 
 - A reciprocal real-profile like creates a backend active match; Matches, Inbox, and Chat resolve the backend profile after sign-out/sign-in.
 - A new reciprocal match shows a badge on the Matches tab and a highlighted card in Matches until that matched profile's detail screen is viewed; multiple new matches decrement one at a time.
 - Received backend messages show an Inbox tab badge equal to the total unread message count, plus per-row unread highlight/count until each conversation is opened/read.
+- New hosted matches/messages hydrate after sign-in or within the refresh interval without requiring a swipe or other user action.
 - Matched profile detail is reachable from Matches cards, Inbox avatar, and Chat header avatar/name.
 - `/onboarding` background sizing is restored to cover the full viewing space.
 - If code changes are needed, mock mode and existing prototype UI behavior remain intact.
@@ -55,7 +56,7 @@ Retest real non-fixture Supabase match hydration, badge/highlight behavior, and 
 
 For backend profile discovery/display smoke:
 
-1. Sign in as `t`, `tt`, and `test2` one at a time and verify Matches hydrates from the existing hosted active matches after refresh/sign-in.
+1. Sign in as `t`, send messages to `tt` and `test2`, sign out, then sign in as `tt` and `test2` and verify Matches/Inbox hydrate without making a swipe.
 2. Open Matches where a new-match badge appears and verify each unopened new match card is highlighted while the tab badge remains.
 3. Tap a highlighted Matches card and verify it opens profile detail, not chat, and the badge/highlight decrements for that profile.
 4. Verify Inbox hydrates the persisted hosted messages and the tab badge counts total unread messages while each unread row is highlighted with its own count.
