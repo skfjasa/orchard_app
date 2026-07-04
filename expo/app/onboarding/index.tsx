@@ -1,7 +1,15 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React from "react";
-import { Image, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Image,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -9,11 +17,14 @@ import { Button } from "@/components/ui";
 import Colors from "@/constants/colors";
 
 export default function WelcomeScreen() {
+  const { height } = useWindowDimensions();
+  const viewportStyle = Platform.OS === "web" ? { minHeight: height } : null;
+
   return (
-    <View style={styles.root} testID="welcome-screen">
+    <View style={[styles.root, viewportStyle]} testID="welcome-screen">
       <Image
         source={require("../../assets/images/welcome-background.png")}
-        style={StyleSheet.absoluteFillObject}
+        style={styles.backgroundImage}
         resizeMode="cover"
       />
       <LinearGradient
@@ -71,6 +82,11 @@ export default function WelcomeScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: Colors.light.accent },
+  backgroundImage: {
+    ...StyleSheet.absoluteFillObject,
+    width: "100%",
+    height: "100%",
+  },
   safe: { flex: 1, justifyContent: "space-between", padding: 28 },
   top: { marginTop: 24, alignItems: "center" },
   wordmarkWrap: { alignSelf: "center", alignItems: "center" },

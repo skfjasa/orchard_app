@@ -181,6 +181,7 @@ Last updated: 2026-07-04
 - A second Fruit follow-up showed hosted mock fixture rows were crowding real/dev profiles out of Fruit, local-only Fruit new-match state could still be overwritten by stale backend refresh closures, new matches were not consistently ordered at the bottom, and hosted fixture text sends could display duplicate local/backend echoes. Fruit now filters hosted mock fixture rows out of its backend slice, backend refresh preserves local-only match/new/conversation state from current state, Supabase matches hydrate oldest-to-newest, and fixture sends suppress duplicate backend echo appends.
 - Browser UAT confirmed the latest Fruit, match badge/highlight, fixture message, read-state persistence, match detail entry, and one-sided real/dev like behaviors pass. These items are now banked as completed unless a new regression appears.
 - Follow-up visual issue noted: the `/onboarding` background image no longer appears maximized across the whole viewing space compared with the pre-decoupling Rork rendering.
+- The welcome, sign-in, and pending-confirmation onboarding screens now size their root views to the web viewport and give the recovered local background image explicit full-size dimensions. Typecheck, lint, and diff check passed; browser visual UAT is still needed because browser automation was unavailable in-session.
 - Backend match/thread hydration now runs after a signed-in Supabase profile is hydrated. Active hosted fixture matches are mapped back into local `likedIds` and conversations, and hosted text messages are merged into existing local conversations by message id without wiping local simulated/photo messages.
 - Backend chat persistence has started behind the service boundary: Supabase mode now uses `createSupabaseChatService`, and `ProfileProvider.sendMessage` non-blockingly persists outbound text messages to the hosted `messages` table when a matching active backend match exists. Visible chat state, simulated replies, read receipts, deletes, and photo messages remain local/mock for now.
 - Chat persistence now repairs one likely hosted UAT drift case: if local chat is allowed from `likedIds` but no active Supabase match is found, `ProfileProvider` records the backend like once through the swipe service and uses the returned fixture auto-match id before sending the text message. This preserves mock/local UI behavior and lets stale local fixture matches become backend-backed before message insert.
@@ -201,11 +202,11 @@ Last updated: 2026-07-04
 
 ## Current Task
 
-Fix the `/onboarding` background sizing regression.
+Visually confirm the `/onboarding` background sizing regression fix.
 
 ## Next Planned Tasks
 
-1. Restore `/onboarding` background sizing so the image covers the full viewing space again.
+1. Browser-confirm `/onboarding`, `/onboarding/sign-in`, and `/onboarding/pending-confirmation` background sizing at desktop and mobile widths.
 2. Create Apple Developer Program account.
 3. Decide whether to ingest fixture profile images into Supabase Storage for backend-backed discovery; the current dev fixtures intentionally omit `profile_photos` because mock image URLs are remote assets, not storage object paths.
 4. Decide whether to make Supabase DB tests automatic for Supabase migration pull requests.

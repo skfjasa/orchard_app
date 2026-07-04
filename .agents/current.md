@@ -38,12 +38,14 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - Current follow-up fix separates hosted mock fixture rows from real/dev backend profiles in Fruit, keeps local-only Fruit fixture new-match state during backend refresh, loads backend matches oldest-to-newest so new matches land at the bottom of Matches, and prevents fixture text sends from showing a duplicate local/backend echo.
 - User UAT confirmed the Fruit real/dev visibility, Fruit fixture in-app match behavior, real/dev one-sided Fruit like behavior, highlighted match detail open, opened-match persistence, read Inbox persistence, fixture single-send/simulated-reply behavior, and match/inbox badge behavior now pass.
 - Follow-up visual issue: `/onboarding` background image no longer appears maximized across the whole viewing space compared with the pre-decoupling Rork rendering.
+- Current working fix gives the welcome, sign-in, and pending-confirmation onboarding roots explicit web viewport height and full-size background image dimensions while keeping the recovered local background asset and existing content intact.
 
 ## Validation State
 
 - `bun run typecheck`: passed.
 - `bun run lint`: passed.
 - `git diff --check`: passed.
+- Onboarding background sizing fix passed typecheck, lint, and diff check; browser visual confirmation is still needed because no browser backend was available in this session.
 - Hosted SQL check after three-way dev UAT showed 3 active matches and 2 messages persisted for `t`, `tt`, and `test2`.
 - Hosted SQL check after account-switching UAT showed the same 3 active matches plus 4 messages persisted for `t`, `tt`, and `test2`.
 - Backend match/thread refresh loop added after live-update UAT: immediate + 10-second interval + app-active refresh.
@@ -57,7 +59,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 
 ## Current Risks / Blockers
 
-- `/onboarding` background sizing still needs restoration so the image covers the full viewing space again.
+- `/onboarding` background sizing fix is implemented but still needs visual UAT at desktop and mobile widths.
 - Chat UI still preserves local simulated/photo behavior; only real text messages are persisted/hydrated from Supabase.
 - Supabase Auth email sender/template branding still requires custom SMTP setup if branded emails are needed.
 
@@ -93,4 +95,4 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 
 ## Next Recommended Task
 
-Restore the `/onboarding` background sizing regression.
+Reload `/onboarding` through the local/ngrok web preview and confirm the recovered background image fills the visible page area at desktop and mobile widths.

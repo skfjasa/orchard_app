@@ -12,6 +12,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -83,6 +84,7 @@ function SocialButton({ provider, onPress }: SocialButtonProps) {
 }
 
 export default function SignInScreen() {
+  const { height } = useWindowDimensions();
   const {
     initialized: authInitialized,
     loading: authLoading,
@@ -98,6 +100,7 @@ export default function SignInScreen() {
   const [loading, setLoading] = useState<boolean>(false);
   const [resetting, setResetting] = useState<boolean>(false);
   const showDevReset = process.env.NODE_ENV !== "production";
+  const viewportStyle = Platform.OS === "web" ? { minHeight: height } : null;
 
   useEffect(() => {
     if (mode !== "supabase") return;
@@ -208,11 +211,11 @@ export default function SignInScreen() {
   };
 
   return (
-    <View style={styles.root} testID="sign-in-screen">
+    <View style={[styles.root, viewportStyle]} testID="sign-in-screen">
       <Stack.Screen options={{ headerShown: true, headerTransparent: true, headerTintColor: "#FFE6A1", title: "" }} />
       <Image
         source={require("../../assets/images/welcome-background.png")}
-        style={StyleSheet.absoluteFillObject}
+        style={styles.backgroundImage}
         resizeMode="cover"
       />
       <LinearGradient
@@ -376,6 +379,11 @@ export default function SignInScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#1F1320" },
+  backgroundImage: {
+    ...StyleSheet.absoluteFillObject,
+    width: "100%",
+    height: "100%",
+  },
   safe: { flex: 1 },
   scroll: { padding: 24, paddingTop: 72, paddingBottom: 40 },
   header: { alignSelf: "flex-start", marginBottom: 24 },

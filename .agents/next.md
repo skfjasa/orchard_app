@@ -1,6 +1,6 @@
 # Next Task
 
-Restore `/onboarding` background sizing so the recovered background image covers the full viewing space again.
+Visually confirm `/onboarding` background sizing through the local/ngrok web preview.
 
 ## Likely Areas
 
@@ -14,11 +14,11 @@ Restore `/onboarding` background sizing so the recovered background image covers
 
 - Inspect git status and latest commit.
 - Start `bun run start-web` from `expo/` if the preview is not already running.
-- Compare welcome, sign-in, and pending-confirmation screens at desktop and mobile widths.
+- Reload the browser/phone preview so it picks up the latest local bundle.
 
 ## Definition Of Done
 
-- `/onboarding` background sizing is restored to cover the full viewing space.
+- `/onboarding` background image covers the full visible page area without blank margins.
 - Welcome, sign-in, and pending-confirmation still use the recovered local background asset.
 - The existing onboarding layout remains intact and usable at desktop and mobile widths.
 - Mock mode and hosted Supabase mode remain unaffected.

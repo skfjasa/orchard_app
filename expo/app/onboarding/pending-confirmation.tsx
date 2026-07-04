@@ -9,6 +9,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -16,19 +17,21 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "@/components/ui";
 
 export default function PendingConfirmationScreen() {
+  const { height } = useWindowDimensions();
   const params = useLocalSearchParams<{ email?: string }>();
   const email = typeof params.email === "string" ? params.email : undefined;
+  const viewportStyle = Platform.OS === "web" ? { minHeight: height } : null;
 
   const openMail = () => {
     void Linking.openURL("mailto:").catch(() => undefined);
   };
 
   return (
-    <View style={styles.root} testID="pending-confirmation-screen">
+    <View style={[styles.root, viewportStyle]} testID="pending-confirmation-screen">
       <Stack.Screen options={{ headerShown: false }} />
       <Image
         source={require("../../assets/images/welcome-background.png")}
-        style={StyleSheet.absoluteFillObject}
+        style={styles.backgroundImage}
         resizeMode="cover"
       />
       <LinearGradient
@@ -89,6 +92,11 @@ export default function PendingConfirmationScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#1F1320" },
+  backgroundImage: {
+    ...StyleSheet.absoluteFillObject,
+    width: "100%",
+    height: "100%",
+  },
   safe: {
     flex: 1,
     justifyContent: "space-between",
