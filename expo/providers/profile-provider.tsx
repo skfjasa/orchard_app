@@ -507,23 +507,30 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       }
 
       rememberProfiles(matchedProfilesToRemember);
+      const localOnlyLikedIds = likedIds.filter((id) => !isBackendProfileId(id));
+      const localOnlyLikedIdSet = new Set(localOnlyLikedIds);
 
       setLikedIds((prev) => {
-        const next = [...matchedLocalProfileIds];
+        const next = [...matchedLocalProfileIds, ...localOnlyLikedIds];
         if (sameStringSet(prev, next)) return prev;
         saveLikesMutation.mutate(next);
         return next;
       });
 
       setNewMatchIds((prev) => {
-        const next = [...nextNewMatchIds];
+        const localOnlyNewMatchIds = prev.filter((id) =>
+          localOnlyLikedIdSet.has(id)
+        );
+        const next = [...new Set([...nextNewMatchIds, ...localOnlyNewMatchIds])];
         if (sameStringSet(prev, next)) return prev;
         return next;
       });
 
       setConversations((prev) => {
-        const filtered = prev.filter((conversation) =>
-          matchedLocalProfileIds.has(conversation.profileId)
+        const filtered = prev.filter(
+          (conversation) =>
+            matchedLocalProfileIds.has(conversation.profileId) ||
+            localOnlyLikedIdSet.has(conversation.profileId)
         );
         let next = filtered.length === prev.length ? prev : filtered;
         for (const backendConversation of backendConversations) {
@@ -557,6 +564,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     appServices,
     backendProfileHydrated,
     hydrated,
+    likedIds,
     mode,
     profile,
     readWatermarks,

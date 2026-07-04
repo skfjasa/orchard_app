@@ -48,7 +48,8 @@ export default function FruitScreen() {
       .listProfiles({
         profileId: profile.id,
         viewerProfile: profile,
-        excludedProfileIds: [...likedIds, ...passedIds],
+        excludedProfileIds: [],
+        includePassed: true,
         limit: 20,
       })
       .then((result) => {
@@ -74,9 +75,13 @@ export default function FruitScreen() {
     const byId = new Map<string, Profile>();
     for (const item of FRUIT_PROFILES) byId.set(item.id, item);
     for (const item of backendProfiles) byId.set(item.profile.id, item.profile);
-    const pool = [...byId.values()].filter(
-      (p) => !likedIds.includes(p.id) && !passedIds.includes(p.id)
+    const backendProfileIds = new Set(
+      backendProfiles.map((item) => item.profile.id)
     );
+    const pool = [...byId.values()].filter((p) => {
+      if (backendProfileIds.has(p.id)) return p.id !== profile?.id;
+      return !likedIds.includes(p.id) && !passedIds.includes(p.id);
+    });
     return pool
       .map((p) => {
         const s = profile
@@ -93,12 +98,8 @@ export default function FruitScreen() {
       })
       .sort((a, b) => b.combined - a.combined)
       .sort((a, b) => {
-        const aBackend = backendProfiles.some(
-          (item) => item.profile.id === a.profile.id
-        );
-        const bBackend = backendProfiles.some(
-          (item) => item.profile.id === b.profile.id
-        );
+        const aBackend = backendProfileIds.has(a.profile.id);
+        const bBackend = backendProfileIds.has(b.profile.id);
         if (aBackend === bBackend) return 0;
         return aBackend ? -1 : 1;
       })

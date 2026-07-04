@@ -148,8 +148,8 @@ export default function ChatScreen() {
   );
 
   useEffect(() => {
-    if (id) markRead(id);
-  }, [id, markRead]);
+    if (id && (convo?.unread ?? 0) > 0) markRead(id);
+  }, [convo?.messages.length, convo?.unread, id, markRead]);
 
   useEffect(() => {
     if (!id) return;
