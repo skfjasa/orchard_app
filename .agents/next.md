@@ -1,6 +1,6 @@
 # Next Task
 
-Retest the latest Fruit/read-state fixes, then address `/onboarding` background sizing.
+Retest the latest Fruit visibility/badge/order/send fixes, then address `/onboarding` background sizing.
 
 ## Likely Areas
 
@@ -29,7 +29,7 @@ Retest the latest Fruit/read-state fixes, then address `/onboarding` background 
 ## Pre-Edit Checks
 
 - Inspect git status and latest commit.
-- Confirm `main` is clean/synced at or after the Fruit/read-state/new-match persistence fix.
+- Confirm `main` is clean/synced at or after the Fruit visibility/badge/order/send fix.
 - Start `bun run start-web` from `expo/` if the preview is not already running.
 - Use the existing hosted `t`, `tt`, `test2`, and `Stephon` rows when checking whether Fruit surfaces real/dev backend profiles.
 
@@ -42,12 +42,12 @@ Retest the latest Fruit/read-state fixes, then address `/onboarding` background 
 - A new reciprocal match shows a badge on the Matches tab and a highlighted card in Matches until that matched profile's detail screen is viewed; multiple new matches decrement one at a time.
 - Received backend messages show an Inbox tab badge equal to the total unread message count, plus per-row unread highlight/count until each conversation is opened/read.
 - New hosted matches/messages hydrate after sign-in or within the refresh interval without requiring a swipe or other user action.
-- Fruit tab includes real/dev backend profiles and static Fruit fixtures, including backend profiles already swiped in prior UAT.
-- Fruit fixture likes auto-match for testing and immediately add one Matches tab badge count plus a highlighted new-match card.
+- Fruit tab includes real/dev backend profiles and static Fruit fixtures; hosted mock fixture rows do not crowd real/dev profiles out of Fruit.
+- Fruit fixture likes auto-match for testing, add one Matches tab badge count, highlight the new-match card, and place the new match at the bottom of Matches chronological order.
 - One-sided Fruit/profile-detail likes use in-app UI, not browser alerts.
 - Read Inbox messages stay read after sign-out/sign-in until newer messages arrive, and fixture replies received while the conversation is open do not leave the Inbox badge stuck.
 - Opened new-match highlights stay cleared after sign-out/sign-in.
-- Fixture/mock profiles still send local simulated replies after user response.
+- Fixture/mock profiles send one visible outgoing message and one local simulated reply after user response.
 - Matched profile detail is reachable from Matches cards, Inbox avatar, and Chat header avatar/name.
 - `/onboarding` background sizing is restored to cover the full viewing space.
 - If code changes are needed, mock mode and existing prototype UI behavior remain intact.
@@ -66,9 +66,9 @@ Retest the latest Fruit/read-state fixes, then address `/onboarding` background 
 For backend profile discovery/display smoke:
 
 1. Open Fruit and verify static Fruit fixtures plus real/dev backend profiles can appear.
-2. Tap a Fruit fixture heart and verify an in-app match overlay appears, the Matches tab badge increases by one, and the new match card is highlighted.
+2. Tap a Fruit fixture heart and verify an in-app match overlay appears, the Matches tab badge increases by one, the new match card is highlighted, and that new card appears at the bottom of the Matches chronological order.
 3. Open that highlighted Fruit fixture match, then verify the Matches badge decreases by one and the highlight clears.
-4. Send a message in a fixture conversation and stay in that chat until the fake reply appears; verify the Inbox badge does not stay increased for that open conversation.
+4. Send a message in a fixture conversation and verify the outgoing message appears once, then stay in that chat until the fake reply appears; verify the Inbox badge does not stay increased for that open conversation.
 5. Tap a real/dev Fruit heart for a one-sided like and verify an in-app "Like sent" overlay appears.
 6. Read an unread real backend conversation, sign out, sign back in, and verify it stays read unless a newer message arrived.
 7. Open a highlighted new real match profile, sign out, sign back in, and verify that match stays unhighlighted.

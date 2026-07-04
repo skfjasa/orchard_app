@@ -7,8 +7,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 ## Branch And Commit
 
 - Branch: `main`
-- Latest pushed implementation checkpoint: `aa0f071` - Fix match detail loop and Fruit visibility
-- Previous implementation checkpoint: `c229a69` - Fix Fruit UAT and read state persistence
+- Latest pushed implementation checkpoint: `2ab7c26` - Fix Fruit badges and fixture read state
+- Previous implementation checkpoint: `aa0f071` - Fix match detail loop and Fruit visibility
 
 ## Recent Changes
 
@@ -35,6 +35,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - Current UAT fix also persists read watermarks and seen-match ids per signed-in profile in local storage, so read Inbox rows and opened match highlights stay cleared across sign-out/sign-in until new backend activity arrives.
 - Fixture/mock chat simulation now keeps local auto-replies for mock profiles even in Supabase mode, while real backend-only profiles stay backend-driven.
 - Latest follow-up fix makes Fruit request the full backend testable pool, keeps backend profiles visible in Fruit even after prior swipes, preserves local-only Fruit fixture matches/conversations across backend refresh, and clears fixture unread counts when new mock replies arrive while the chat is already open.
+- Current follow-up fix separates hosted mock fixture rows from real/dev backend profiles in Fruit, keeps local-only Fruit fixture new-match state during backend refresh, loads backend matches oldest-to-newest so new matches land at the bottom of Matches, and prevents fixture text sends from showing a duplicate local/backend echo.
 - Follow-up visual issue: `/onboarding` background image no longer appears maximized across the whole viewing space compared with the pre-decoupling Rork rendering.
 
 ## Validation State
@@ -45,7 +46,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - Hosted SQL check after three-way dev UAT showed 3 active matches and 2 messages persisted for `t`, `tt`, and `test2`.
 - Hosted SQL check after account-switching UAT showed the same 3 active matches plus 4 messages persisted for `t`, `tt`, and `test2`.
 - Backend match/thread refresh loop added after live-update UAT: immediate + 10-second interval + app-active refresh.
-- Fruit profile wiring, local fixture auto-match, mock auto-reply restoration, per-user read watermarks, per-user seen-match persistence, Fruit backend visibility, local-only Fruit fixture match preservation, and in-open-chat fixture read clearing are implemented pending browser UAT.
+- Fruit profile wiring, local fixture auto-match, mock auto-reply restoration, per-user read watermarks, per-user seen-match persistence, Fruit real/dev visibility, local-only Fruit fixture match preservation, match chronological ordering, fixture duplicate-send prevention, and in-open-chat fixture read clearing are implemented pending browser UAT.
 - Hosted browser UAT passed for fixture discovery, fixture like/match, hosted text persistence, sign-out/sign-in thread hydration, and hosted unmatch.
 - Hosted browser UAT passed for onboarding/profile-photo confirmation and hydration.
 - Real-profile UAT found and the current working slice addresses: false auto-match on one-sided real likes, stale local-only A-side conversations from earlier UAT, misleading chat availability before reciprocal match, and visible profiles showing default/fallback photos instead of uploaded photos.
@@ -55,7 +56,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 
 ## Current Risks / Blockers
 
-- Latest Fruit/read-state UAT fixes are implemented and ready for browser retest after the next pushed checkpoint.
+- Latest Fruit visibility/badge/order/send fixes are implemented and ready for browser retest after the next pushed checkpoint.
 - Chat UI still preserves local simulated/photo behavior; only real text messages are persisted/hydrated from Supabase.
 - Supabase Auth email sender/template branding still requires custom SMTP setup if branded emails are needed.
 
@@ -91,4 +92,4 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 
 ## Next Recommended Task
 
-Retest Fruit dev-profile visibility, Fruit fixture match badge/highlight behavior, fixture unread clearing, and then address the `/onboarding` background sizing regression.
+Retest Fruit real/dev visibility, Fruit fixture match badge/highlight/order behavior, fixture single-send behavior, and then address the `/onboarding` background sizing regression.

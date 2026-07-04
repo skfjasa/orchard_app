@@ -73,12 +73,27 @@ import type { SwipeDecision, SwipeResult } from "@/services/swipe-service";
 
 export type { SubscriptionState } from "@/services/local-profile-storage";
 
+function isLikelyLocalBackendEcho(localMessage: Message, backendMessage: Message) {
+  return (
+    localMessage.id.startsWith("m-") &&
+    localMessage.fromMe === true &&
+    backendMessage.fromMe === true &&
+    localMessage.kind === backendMessage.kind &&
+    localMessage.text === backendMessage.text &&
+    Math.abs(localMessage.at - backendMessage.at) < 15_000
+  );
+}
+
 function mergeMessages(localMessages: Message[], backendMessages: Message[]) {
   const byId = new Map<string, Message>();
   for (const message of localMessages) {
     byId.set(message.id, message);
   }
   for (const message of backendMessages) {
+    const duplicateLocalEcho = [...byId.values()].some((existing) =>
+      isLikelyLocalBackendEcho(existing, message)
+    );
+    if (duplicateLocalEcho) continue;
     byId.set(message.id, message);
   }
 
@@ -507,10 +522,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       }
 
       rememberProfiles(matchedProfilesToRemember);
-      const localOnlyLikedIds = likedIds.filter((id) => !isBackendProfileId(id));
-      const localOnlyLikedIdSet = new Set(localOnlyLikedIds);
-
       setLikedIds((prev) => {
+        const localOnlyLikedIds = prev.filter((id) => !isBackendProfileId(id));
         const next = [...matchedLocalProfileIds, ...localOnlyLikedIds];
         if (sameStringSet(prev, next)) return prev;
         saveLikesMutation.mutate(next);
@@ -518,8 +531,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       });
 
       setNewMatchIds((prev) => {
-        const localOnlyNewMatchIds = prev.filter((id) =>
-          localOnlyLikedIdSet.has(id)
+        const localOnlyNewMatchIds = prev.filter(
+          (id) => !isBackendProfileId(id)
         );
         const next = [...new Set([...nextNewMatchIds, ...localOnlyNewMatchIds])];
         if (sameStringSet(prev, next)) return prev;
@@ -530,7 +543,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         const filtered = prev.filter(
           (conversation) =>
             matchedLocalProfileIds.has(conversation.profileId) ||
-            localOnlyLikedIdSet.has(conversation.profileId)
+            !isBackendProfileId(conversation.profileId)
         );
         let next = filtered.length === prev.length ? prev : filtered;
         for (const backendConversation of backendConversations) {
@@ -564,7 +577,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     appServices,
     backendProfileHydrated,
     hydrated,
-    likedIds,
     mode,
     profile,
     readWatermarks,
@@ -777,7 +789,11 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   }, [profile?.id, saveSeenMatchIdsMutation]);
 
   const persistBackendChatMessage = useCallback(
-    (targetId: string, text: string) => {
+    (
+      targetId: string,
+      text: string,
+      options: { appendLocalEcho?: boolean } = {}
+    ) => {
       if (mode !== "supabase") return;
       if (appServices.capabilities.chat !== "supabase") return;
       if (appServices.capabilities.matches !== "supabase") return;
@@ -854,6 +870,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
             });
             return;
           }
+
+          if (options.appendLocalEcho === false) return;
 
           setConversations((prev) => {
             const next = mergeBackendConversation(prev, targetId, [result.value]);
@@ -1149,7 +1167,9 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         return next;
       });
 
-      persistBackendChatMessage(profileId, text);
+      persistBackendChatMessage(profileId, text, {
+        appendLocalEcho: !localMockProfile,
+      });
 
       if (!localMockProfile) return;
       const reply = makeSimulatedReply(localMockProfile);

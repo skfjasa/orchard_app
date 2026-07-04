@@ -118,7 +118,7 @@ export function createSupabaseMatchService(): MatchService {
         .select("*")
         .eq("status", "active")
         .or(`user_a.eq.${profileId},user_b.eq.${profileId}`)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: true });
 
       if (error) {
         return fail("matches_failed", "Could not load matches.", error);

@@ -16,6 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "@/constants/colors";
 import { MVP_MONETIZATION_ENABLED } from "@/constants/features";
 import { getPolyFruit } from "@/constants/poly-fruits";
+import { MOCK_PROFILE_BACKEND_IDS } from "@/constants/mock-profile-ids";
 import { FRUIT_PROFILES } from "@/mocks/fruit-profiles";
 import { useProfile } from "@/providers/profile-provider";
 import { createAppServices } from "@/services/app-services";
@@ -72,11 +73,16 @@ export default function FruitScreen() {
   }, [appServices, profile, likedIds, passedIds, rememberProfiles]);
 
   const trending = useMemo(() => {
+    const backendNonFixtureProfiles = backendProfiles.filter(
+      (item) => !(item.profile.id in MOCK_PROFILE_BACKEND_IDS)
+    );
     const byId = new Map<string, Profile>();
     for (const item of FRUIT_PROFILES) byId.set(item.id, item);
-    for (const item of backendProfiles) byId.set(item.profile.id, item.profile);
+    for (const item of backendNonFixtureProfiles) {
+      byId.set(item.profile.id, item.profile);
+    }
     const backendProfileIds = new Set(
-      backendProfiles.map((item) => item.profile.id)
+      backendNonFixtureProfiles.map((item) => item.profile.id)
     );
     const pool = [...byId.values()].filter((p) => {
       if (backendProfileIds.has(p.id)) return p.id !== profile?.id;
