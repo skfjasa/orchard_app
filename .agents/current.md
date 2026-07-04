@@ -39,6 +39,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - User UAT confirmed the Fruit real/dev visibility, Fruit fixture in-app match behavior, real/dev one-sided Fruit like behavior, highlighted match detail open, opened-match persistence, read Inbox persistence, fixture single-send/simulated-reply behavior, and match/inbox badge behavior now pass.
 - Follow-up visual issue: `/onboarding` background image no longer appears maximized across the whole viewing space compared with the pre-decoupling Rork rendering.
 - Current working fix gives the welcome, sign-in, and pending-confirmation onboarding roots explicit web viewport height and full-size background image dimensions while keeping the recovered local background asset and existing content intact.
+- Current working cleanup removes the original Rork-era sign-in screen header override so the onboarding layout's headerless `sign-in` route applies and the blank white header strip above "Welcome back" disappears.
 
 ## Validation State
 
@@ -46,6 +47,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - `bun run lint`: passed.
 - `git diff --check`: passed.
 - Onboarding background sizing fix passed typecheck, lint, and diff check; browser visual confirmation is still needed because no browser backend was available in this session.
+- Sign-in header cleanup passed typecheck, lint, and diff check; visual confirmation is still needed in the browser.
 - Hosted SQL check after three-way dev UAT showed 3 active matches and 2 messages persisted for `t`, `tt`, and `test2`.
 - Hosted SQL check after account-switching UAT showed the same 3 active matches plus 4 messages persisted for `t`, `tt`, and `test2`.
 - Backend match/thread refresh loop added after live-update UAT: immediate + 10-second interval + app-active refresh.
@@ -95,4 +97,4 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 
 ## Next Recommended Task
 
-Reload `/onboarding` through the local/ngrok web preview and confirm the recovered background image fills the visible page area at desktop and mobile widths.
+Reload `/onboarding` and `/onboarding/sign-in` through the local/ngrok web preview and confirm the recovered background image fills the visible page area and the sign-in screen has no blank white header strip.

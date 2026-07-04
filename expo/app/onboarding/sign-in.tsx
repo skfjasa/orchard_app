@@ -1,5 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { router, Stack } from "expo-router";
+import { router } from "expo-router";
 import { Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
@@ -212,7 +212,6 @@ export default function SignInScreen() {
 
   return (
     <View style={[styles.root, viewportStyle]} testID="sign-in-screen">
-      <Stack.Screen options={{ headerShown: true, headerTransparent: true, headerTintColor: "#FFE6A1", title: "" }} />
       <Image
         source={require("../../assets/images/welcome-background.png")}
         style={styles.backgroundImage}

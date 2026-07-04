@@ -1,6 +1,6 @@
 # Next Task
 
-Visually confirm `/onboarding` background sizing through the local/ngrok web preview.
+Visually confirm onboarding welcome/sign-in polish through the local/ngrok web preview.
 
 ## Likely Areas
 
@@ -19,6 +19,7 @@ Visually confirm `/onboarding` background sizing through the local/ngrok web pre
 ## Definition Of Done
 
 - `/onboarding` background image covers the full visible page area without blank margins.
+- `/onboarding/sign-in` has no blank white header strip above "Welcome back".
 - Welcome, sign-in, and pending-confirmation still use the recovered local background asset.
 - The existing onboarding layout remains intact and usable at desktop and mobile widths.
 - Mock mode and hosted Supabase mode remain unaffected.
@@ -33,6 +34,6 @@ Visually confirm `/onboarding` background sizing through the local/ngrok web pre
 ## Manual QA
 
 1. Open `/onboarding` and verify the background image fills the visible page area without blank margins.
-2. Open `/onboarding/sign-in` and verify the same background behavior.
+2. Open `/onboarding/sign-in` and verify the same background behavior, with no blank white header strip above "Welcome back".
 3. Open `/onboarding/pending-confirmation` if reachable and verify the same background behavior.
 4. Recheck at one desktop width and one mobile width.
