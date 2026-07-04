@@ -55,7 +55,7 @@ export default function MatchesScreen() {
             renderItem={({ item }) => (
               <MatchCard
                 profile={item}
-                onPress={() => router.push(`/chat/${item.id}`)}
+                onPress={() => router.push(`/match/${item.id}`)}
               />
             )}
           />

@@ -159,6 +159,18 @@ Last updated: 2026-07-03
 - Supabase discovery can now return arbitrary real backend profiles as app `Profile` objects by loading `profiles`, `profile_members`, and `profile_photos` through RLS and signing discovered photo URLs. Seeded fixture profiles still map back to the richer local mock cards.
 - Discovery remembers service-returned profiles in `ProfileProvider`, and match detail, chat, matches, and inbox screens now look up remembered backend profiles before falling back to `MOCK_PROFILES`.
 - Supabase match listing now attaches the other profile where RLS allows it, so hosted real-user matches can hydrate profile data into local match/thread state after sign-in.
+- Real-profile UAT confirmed non-fixture hosted profiles can appear in Discover and open detail screens, but exposed three backend-source-of-truth gaps: one-sided likes were still creating local match/chat UI, sign-out/sign-in did not restore those false local matches/messages because no backend reciprocal match existed, and other users' uploaded photos fell back to the default image.
+- Supabase-mode likes and super-likes now wait for the `create_swipe` RPC result before creating local active match/chat state. One-sided real-profile likes are recorded as swipes only; only `matched: true` activates local match UI. Fixture auto-match behavior remains supported through the RPC.
+- Supabase match hydration now prunes stale local `likedIds` and conversations that are not backed by hosted active matches, so old local-only one-sided UAT conversations disappear after fresh sign-in/hydration. Supabase chat sends append locally only after an active backend match/message insert succeeds.
+- Match detail now shows "Like sent" / "Super Like sent" for non-reciprocal real-profile likes and only offers chat when a real match exists.
+- Migration `202607040001_profile_photo_visible_storage_reads.sql` adds a storage object select policy so eligible viewers can sign visible profile photo objects. This aligns private Storage access with the existing `profile_photos_select_visible_or_own` row policy and fixes real profiles rendering fallback photos in discovery/matches/inbox.
+- Migration `202607040002_active_match_profile_reads.sql` lets active matched users read each other's profile/member/photo rows and sign matched profile photo objects after discovery/swipe state changes, so match hydration can resolve the other profile from backend state.
+- Hosted `orchard-dev` has been migrated through `202607040002`; migration list shows local/remote aligned. The Supabase CLI printed a non-fatal pg-delta catalog-cache warning after both hosted pushes, and one follow-up dry-run check timed out after `202607040002`.
+- After the active-match profile read migration, local `expo\node_modules\.bin\supabase db reset` passed and local `expo\node_modules\.bin\supabase test db` passed: 1 file, 42 tests.
+- Hosted UAT confirmed backend reciprocal matches and messages now hydrate after sign-out/sign-in.
+- Matches tab badge now uses explicit new-match state from newly created local/backend match activations instead of unread conversation count, and decrements when each matched profile detail is viewed. Inbox badge counts total unread hydrated incoming messages; unread conversation rows are highlighted with a per-row badge and clear that row's unread count when the chat is opened/read.
+- Matches grid cards now open profile detail first instead of jumping directly to chat. Inbox rows expose profile detail via the avatar area while preserving chat open from the message preview area. Chat headers now open the matched profile detail from the avatar/name area.
+- Follow-up visual issue noted: the `/onboarding` background image no longer appears maximized across the whole viewing space compared with the pre-decoupling Rork rendering.
 - Backend match/thread hydration now runs after a signed-in Supabase profile is hydrated. Active hosted fixture matches are mapped back into local `likedIds` and conversations, and hosted text messages are merged into existing local conversations by message id without wiping local simulated/photo messages.
 - Backend chat persistence has started behind the service boundary: Supabase mode now uses `createSupabaseChatService`, and `ProfileProvider.sendMessage` non-blockingly persists outbound text messages to the hosted `messages` table when a matching active backend match exists. Visible chat state, simulated replies, read receipts, deletes, and photo messages remain local/mock for now.
 - Chat persistence now repairs one likely hosted UAT drift case: if local chat is allowed from `likedIds` but no active Supabase match is found, `ProfileProvider` records the backend like once through the swipe service and uses the returned fixture auto-match id before sending the text message. This preserves mock/local UI behavior and lets stale local fixture matches become backend-backed before message insert.
@@ -179,11 +191,11 @@ Last updated: 2026-07-03
 
 ## Current Task
 
-Verify arbitrary real-user backend discovery/profile display, then continue backend source-of-truth work for chat reads/inbox and message attachments.
+Retest the real non-fixture profile UAT fix slice after fresh sign-in/hydration: stale local-only conversations should be pruned, one-sided real likes should stay pending, uploaded profile photos should render for eligible viewers, and reciprocal real likes should create backend-backed Matches/Inbox/Chat state.
 
 ## Next Planned Tasks
 
-1. Browser-test arbitrary real-user backend discovery/profile display with at least two hosted non-fixture profiles.
+1. Browser-retest arbitrary real-user backend discovery/profile display with at least two hosted non-fixture profiles.
 2. Create Apple Developer Program account.
 3. Decide whether to ingest fixture profile images into Supabase Storage for backend-backed discovery; the current dev fixtures intentionally omit `profile_photos` because mock image URLs are remote assets, not storage object paths.
 4. Decide whether to make Supabase DB tests automatic for Supabase migration pull requests.

@@ -18,7 +18,7 @@ import {
   X,
   Zap,
 } from "lucide-react-native";
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import {
   Alert,
@@ -51,6 +51,7 @@ export default function MatchDetail() {
     profile,
     knownProfiles,
     likeProfile,
+    markMatchSeen,
     passProfile,
     likedIds,
     superLikeProfile,
@@ -83,20 +84,29 @@ export default function MatchDetail() {
   const isCouple = other.accountType === "couple";
   const isBoosted = !!(other.boostedUntil && other.boostedUntil > Date.now());
 
-  const handleLike = () => {
-    const res = likeProfile(other.id);
-    if (!res.ok && res.reason === "limit") {
-      router.back();
-      router.push("/paywall?reason=limit");
-      return;
-    }
-    const label = isCouple && other.people[1]
+  const label =
+    isCouple && other.people[1]
       ? `${other.people[0].name} & ${other.people[1].name}`
       : other.people[0].name;
+
+  const showSentAndReturn = (title: string, message: string) => {
     if (Platform.OS === "web") {
-      const goMessage = typeof window !== "undefined" && window.confirm(
-        `It's a match! You can now message ${label}. Open the chat now?`
-      );
+      if (typeof window !== "undefined") {
+        window.alert(message);
+      }
+      router.back();
+      return;
+    }
+
+    Alert.alert(title, message, [{ text: "OK", onPress: () => router.back() }]);
+  };
+
+  const showMatchAndOfferChat = () => {
+    const message = `You and ${label} can start chatting now.`;
+    if (Platform.OS === "web") {
+      const goMessage =
+        typeof window !== "undefined" &&
+        window.confirm(`${message} Open the chat now?`);
       if (goMessage) {
         router.replace(`/chat/${other.id}`);
       } else {
@@ -104,23 +114,37 @@ export default function MatchDetail() {
       }
       return;
     }
-    Alert.alert(
-      "It's a match",
-      `You can now message ${label}.`,
-      [
-        {
-          text: "Keep browsing",
-          style: "cancel",
-          onPress: () => router.back(),
+
+    Alert.alert("It's a match", message, [
+      {
+        text: "Keep browsing",
+        style: "cancel",
+        onPress: () => router.back(),
+      },
+      {
+        text: "Message",
+        onPress: () => {
+          router.replace(`/chat/${other.id}`);
         },
-        {
-          text: "Message",
-          onPress: () => {
-            router.replace(`/chat/${other.id}`);
-          },
-        },
-      ]
-    );
+      },
+    ]);
+  };
+
+  const handleLike = () => {
+    void likeProfile(other.id).then((res) => {
+      if (!res.ok && res.reason === "limit") {
+        router.back();
+        router.push("/paywall?reason=limit");
+        return;
+      }
+
+      if (!res.matched) {
+        showSentAndReturn("Like sent", `${label} will see your like if you match.`);
+        return;
+      }
+
+      showMatchAndOfferChat();
+    });
   };
   const handlePass = () => {
     passProfile(other.id);
@@ -128,46 +152,28 @@ export default function MatchDetail() {
   };
 
   const finalizeSuperLike = () => {
-    const res = superLikeProfile(other.id);
-    if (!res.ok && res.reason === "limit") {
-      router.back();
-      router.push("/paywall?reason=limit");
-      return;
-    }
-    const label =
-      isCouple && other.people[1]
-        ? `${other.people[0].name} & ${other.people[1].name}`
-        : other.people[0].name;
-    if (Platform.OS === "web") {
-      const goMessage =
-        typeof window !== "undefined" &&
-        window.confirm(
-          `Super Like sent! ${label} will know you're extra interested. Open the chat now?`
-        );
-      if (goMessage) {
-        router.replace(`/chat/${other.id}`);
-      } else {
+    void superLikeProfile(other.id).then((res) => {
+      if (!res.ok && res.reason === "limit") {
         router.back();
+        router.push("/paywall?reason=limit");
+        return;
       }
-      return;
-    }
-    Alert.alert(
-      "Super Like sent",
-      `${label} will know you're extra interested.`,
-      [
-        {
-          text: "Keep browsing",
-          style: "cancel",
-          onPress: () => router.back(),
-        },
-        {
-          text: "Message",
-          onPress: () => {
-            router.replace(`/chat/${other.id}`);
-          },
-        },
-      ]
-    );
+      if (!res.ok && res.reason === "superlikes") {
+        router.back();
+        router.push("/paywall?reason=superlikes");
+        return;
+      }
+
+      if (!res.matched) {
+        showSentAndReturn(
+          "Super Like sent",
+          `${label} will know you're extra interested.`
+        );
+        return;
+      }
+
+      showMatchAndOfferChat();
+    });
   };
 
   const handleSuperLike = () => {
@@ -232,6 +238,11 @@ export default function MatchDetail() {
   return (
     <>
       <Stack.Screen options={{ headerTransparent: true, title: "" }} />
+      <MarkMatchSeen
+        isMatched={isMatched}
+        profileId={other.id}
+        onSeen={markMatchSeen}
+      />
       <View style={styles.root}>
         <ScrollView contentContainerStyle={{ paddingBottom: 140 }}>
           <HeroCarousel
@@ -493,6 +504,24 @@ export default function MatchDetail() {
       </View>
     </>
   );
+}
+
+function MarkMatchSeen({
+  isMatched,
+  profileId,
+  onSeen,
+}: {
+  isMatched: boolean;
+  profileId: string;
+  onSeen: (profileId: string) => void;
+}) {
+  useEffect(() => {
+    if (isMatched) {
+      onSeen(profileId);
+    }
+  }, [isMatched, onSeen, profileId]);
+
+  return null;
 }
 
 function HeroCarousel({

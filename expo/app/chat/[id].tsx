@@ -364,6 +364,7 @@ export default function ChatScreen() {
       <ChatHeader
         other={other}
         onBack={goBackToInbox}
+        onProfilePress={() => router.push(`/match/${other.id}`)}
         onSafetyPress={openSafetyActions}
       />
       {safetyMenuOpen && (
@@ -474,10 +475,12 @@ export default function ChatScreen() {
 function ChatHeader({
   other,
   onBack,
+  onProfilePress,
   onSafetyPress,
 }: {
   other: Profile;
   onBack: () => void;
+  onProfilePress: () => void;
   onSafetyPress: () => void;
 }) {
   const otherIsCouple = other.accountType === "couple";
@@ -498,7 +501,14 @@ function ChatHeader({
       >
         <ChevronLeft size={24} color={Colors.light.text} />
       </Pressable>
-      <View style={styles.headerTitle}>
+      <Pressable
+        onPress={onProfilePress}
+        style={({ pressed }) => [
+          styles.headerTitle,
+          pressed && { opacity: 0.76 },
+        ]}
+        testID="chat-profile-link"
+      >
         <View style={styles.headerAvatars}>
           <Image
             source={{ uri: other.people[0].photo }}
@@ -517,7 +527,7 @@ function ChatHeader({
           <Text style={styles.headerName}>{headerTitle}</Text>
           <Text style={styles.headerCity}>{other.location.city}</Text>
         </View>
-      </View>
+      </Pressable>
       <Pressable
         onPress={onSafetyPress}
         hitSlop={10}

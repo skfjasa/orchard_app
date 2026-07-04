@@ -175,18 +175,20 @@ export default function DiscoverScreen() {
     pendingSuperLikeRef.current = null;
     if (!pid) return;
     const matched = ranked.find((item) => item.profile.id === pid)?.profile;
-    const res = superLikeProfile(pid);
-    if (MVP_MONETIZATION_ENABLED && !res.ok && res.reason === "limit") {
-      router.push("/paywall?reason=limit");
-    } else if (
-      MVP_MONETIZATION_ENABLED &&
-      !res.ok &&
-      res.reason === "superlikes"
-    ) {
-      router.push("/paywall?reason=superlikes");
-    } else if (res.ok && matched) {
-      showMatchConfirmation(matched);
-    }
+    void superLikeProfile(pid).then((res) => {
+      setRanked((prev) => prev.filter((item) => item.profile.id !== pid));
+      if (MVP_MONETIZATION_ENABLED && !res.ok && res.reason === "limit") {
+        router.push("/paywall?reason=limit");
+      } else if (
+        MVP_MONETIZATION_ENABLED &&
+        !res.ok &&
+        res.reason === "superlikes"
+      ) {
+        router.push("/paywall?reason=superlikes");
+      } else if (res.ok && res.matched && matched) {
+        showMatchConfirmation(matched);
+      }
+    });
   };
 
   const swipe = (direction: "left" | "right") => {
@@ -217,12 +219,21 @@ export default function DiscoverScreen() {
       useNativeDriver: Platform.OS !== "web",
     }).start(() => {
       if (direction === "right") {
-        const res = likeProfile(profileId);
-        if (res.ok) {
-          showMatchConfirmation(swipedProfile);
-        }
+        void likeProfile(profileId).then((res) => {
+          setRanked((prev) =>
+            prev.filter((item) => item.profile.id !== profileId)
+          );
+          if (res.ok && res.matched) {
+            showMatchConfirmation(swipedProfile);
+          } else if (!res.ok && res.reason === "limit") {
+            router.push("/paywall?reason=limit");
+          }
+        });
       } else {
         passProfile(profileId);
+        setRanked((prev) =>
+          prev.filter((item) => item.profile.id !== profileId)
+        );
       }
     });
   };

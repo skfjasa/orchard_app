@@ -7,9 +7,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 ## Branch And Commit
 
 - Branch: `main`
-- Latest implementation checkpoint: `00df6be` - Support backend profile discovery display
-- Previous checkpoint: `438bafa` - Advance Supabase fixture chat flows
-- Session-close handoff records the backend profile display checkpoint; branch should be clean and synced with `origin/main`.
+- Latest local implementation checkpoint: `ea9c5c8` - Fix real profile match and photo UAT gaps
+- Previous pushed checkpoint before this slice: `7694349` - Stabilize session handoff wording
 
 ## Recent Changes
 
@@ -22,7 +21,14 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - Recovered the original generated onboarding background, vendored it as `expo/assets/images/welcome-background.png`, and used it on welcome, sign-in, and pending-confirmation screens.
 - Hosted onboarding/profile-photo confirmation smoke passed. Expected browser behavior: after the pending-confirmation page, opening the email link in a new tab creates a new authenticated app tab on Discover; the original pending-confirmation tab remains idle.
 - Added arbitrary backend profile discovery/display support in Supabase mode: discovery loads real `profiles`, `profile_members`, and `profile_photos`, signs stored photos, remembers service-returned profiles, and uses remembered/backend match profiles in match detail, chat, matches, and inbox before falling back to fixtures.
-- Updated `docs/project-status.md`.
+- User UAT confirmed real non-fixture backend profiles can appear in Discover and open detail screens.
+- Current working fix changes Supabase likes/super-likes so real non-fixture profiles do not become local matches unless the Supabase swipe RPC returns `matched: true`; detail screens now show "Like sent" / "Super Like sent" for non-reciprocal likes.
+- Current working fix also prunes stale local Supabase matches/conversations during backend match hydration, and Supabase chat sends append locally only after a backend active match/message insert succeeds.
+- Current working migration `202607040001_profile_photo_visible_storage_reads.sql` lets eligible viewers sign visible profile photo storage objects, matching the existing `profile_photos` row visibility policy.
+- Current working migration `202607040002_active_match_profile_reads.sql` lets active matched users read each other's profile/member/photo rows and sign matched profile photo objects after discovery/swipe state changes.
+- Hosted UAT confirmed backend reciprocal matches/messages hydrate after sign-out/sign-in.
+- Current working UI fix: Matches badge uses explicit new-match state and decrements when each matched profile detail is viewed; Inbox badge counts total unread messages; unread Inbox rows are highlighted with per-row count badges and clear when opened/read; Matches cards open profile detail; Inbox avatar opens profile detail; Chat header avatar/name opens profile detail.
+- Follow-up visual issue: `/onboarding` background image no longer appears maximized across the whole viewing space compared with the pre-decoupling Rork rendering.
 
 ## Validation State
 
@@ -31,11 +37,14 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - `git diff --check`: passed.
 - Hosted browser UAT passed for fixture discovery, fixture like/match, hosted text persistence, sign-out/sign-in thread hydration, and hosted unmatch.
 - Hosted browser UAT passed for onboarding/profile-photo confirmation and hydration.
-- Browser UAT is still pending for arbitrary real-user backend discovery/profile display with at least two hosted non-fixture profiles.
+- Real-profile UAT found and the current working slice addresses: false auto-match on one-sided real likes, stale local-only A-side conversations from earlier UAT, misleading chat availability before reciprocal match, and visible profiles showing default/fallback photos instead of uploaded photos.
+- `expo\node_modules\.bin\supabase db reset`: passed after storage policy migration.
+- `expo\node_modules\.bin\supabase test db`: passed, 1 file / 42 tests.
+- Hosted `orchard-dev` is aligned through `202607040002` after `supabase db push`; migration list confirms local/remote alignment. A follow-up dry-run check timed out once after the push, but migration list showed the migration applied.
 
 ## Current Risks / Blockers
 
-- Arbitrary real-user backend discovery/profile display is implemented locally but still needs hosted browser UAT.
+- Current real-profile UAT fixes are implemented and hosted storage policy is applied, but browser retest is pending.
 - Chat UI still preserves local simulated/photo behavior; only real text messages are persisted/hydrated from Supabase.
 - Supabase Auth email sender/template branding still requires custom SMTP setup if branded emails are needed.
 
@@ -57,6 +66,9 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - `expo/app/onboarding/index.tsx`
 - `expo/app/onboarding/sign-in.tsx`
 - `expo/app/onboarding/pending-confirmation.tsx`
+- `supabase/migrations/202607040001_profile_photo_visible_storage_reads.sql`
+- `supabase/migrations/202607040002_active_match_profile_reads.sql`
+- `supabase/tests/database/202606200001_mvp_security.sql`
 - `docs/project-status.md`
 
 ## Read Only If Needed
@@ -68,4 +80,4 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 
 ## Next Recommended Task
 
-Browser-test arbitrary real-user backend discovery/profile display with at least two hosted non-fixture profiles. If that cannot be tested yet, continue the next backend source-of-truth slice for chat reads/inbox and message attachments.
+Retest UI navigation and badge behavior around newly created matches/messages, then address the `/onboarding` background sizing regression.

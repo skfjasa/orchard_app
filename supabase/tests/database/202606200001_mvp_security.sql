@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(41);
+select plan(42);
 
 insert into auth.users (
   id,
@@ -260,8 +260,20 @@ select is(
       and tablename = 'objects'
       and policyname like 'profile_photos_storage_%'
   ),
-  4,
-  'profile photo storage has owner-scoped object policies'
+  5,
+  'profile photo storage has expected object policies'
+);
+
+select is(
+  (
+    select count(*)::int
+    from pg_policies
+    where schemaname = 'storage'
+      and tablename = 'objects'
+      and policyname = 'profile_photos_storage_select_visible_or_own'
+  ),
+  1,
+  'profile photo storage allows visible profile object reads'
 );
 
 select is(

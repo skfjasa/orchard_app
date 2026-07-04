@@ -7,10 +7,10 @@ import Colors from "@/constants/colors";
 import { useProfile } from "@/providers/profile-provider";
 
 export default function TabLayout() {
-  const { conversations } = useProfile();
+  const { conversations, newMatchIds } = useProfile();
   const newMatchCount = useMemo(
-    () => conversations.filter((conversation) => conversation.unread > 0).length,
-    [conversations]
+    () => newMatchIds.length,
+    [newMatchIds]
   );
   const unreadMessageCount = useMemo(
     () =>

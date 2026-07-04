@@ -93,61 +93,96 @@ export default function InboxScreen() {
             data={items}
             keyExtractor={(i) => i.convo.id}
             contentContainerStyle={{ paddingBottom: 20 }}
-            renderItem={({ item }) => (
-              <Pressable
-                onPress={() => router.push(`/chat/${item.other.id}`)}
-                style={({ pressed }) => [
-                  styles.row,
-                  pressed && { backgroundColor: Colors.light.surfaceAlt },
-                ]}
-              >
-                <View style={styles.avatarWrap}>
-                  <Image
-                    source={{ uri: item.other.people[0].photo }}
-                    style={styles.avatar}
-                    contentFit="cover"
-                  />
-                  {item.other.people[1] && (
+            renderItem={({ item }) => {
+              const unread = item.convo.unread > 0;
+              return (
+                <View style={[styles.row, unread && styles.rowUnread]}>
+                  <Pressable
+                    onPress={() => router.push(`/match/${item.other.id}`)}
+                    style={({ pressed }) => [
+                      styles.avatarWrap,
+                      pressed && { opacity: 0.76 },
+                    ]}
+                    testID={`inbox-profile-${item.other.id}`}
+                  >
                     <Image
-                      source={{ uri: item.other.people[1].photo }}
-                      style={[styles.avatar, styles.avatarSecond]}
+                      source={{ uri: item.other.people[0].photo }}
+                      style={[
+                        styles.avatar,
+                        unread && styles.avatarUnread,
+                      ]}
                       contentFit="cover"
                     />
-                  )}
-                </View>
-                <View style={{ flex: 1 }}>
-                  <View style={styles.rowTop}>
-                    <Text style={styles.rowName} numberOfLines={1}>
-                      {item.other.accountType === "couple"
-                        ? `${item.other.people[0].name} & ${item.other.people[1]?.name}`
-                        : item.other.people[0].name}
-                    </Text>
-                    <Text style={styles.rowTime}>
-                      {item.lastMessage ? formatTime(item.lastMessage.at) : ""}
-                    </Text>
-                  </View>
-                  <View style={styles.rowBottom}>
-                    {typingProfileIds.includes(item.other.id) ? (
+                    {item.other.people[1] && (
+                      <Image
+                        source={{ uri: item.other.people[1].photo }}
+                        style={[
+                          styles.avatar,
+                          styles.avatarSecond,
+                          unread && styles.avatarUnread,
+                        ]}
+                        contentFit="cover"
+                      />
+                    )}
+                  </Pressable>
+                  <Pressable
+                    onPress={() => router.push(`/chat/${item.other.id}`)}
+                    style={({ pressed }) => [
+                      styles.rowContent,
+                      pressed && { opacity: 0.72 },
+                    ]}
+                    testID={`inbox-chat-${item.other.id}`}
+                  >
+                    <View style={styles.rowTop}>
                       <Text
-                        style={[styles.rowPreview, styles.rowTyping]}
+                        style={[styles.rowName, unread && styles.rowNameUnread]}
                         numberOfLines={1}
                       >
-                        typing…
+                        {item.other.accountType === "couple"
+                          ? `${item.other.people[0].name} & ${item.other.people[1]?.name}`
+                          : item.other.people[0].name}
                       </Text>
-                    ) : (
-                      <Text style={styles.rowPreview} numberOfLines={1}>
-                        {item.lastMessage?.kind === "photo"
-                          ? item.lastMessage.fromMe
-                            ? "🔒 You sent a photo request"
-                            : "🔒 Sent you a photo request"
-                          : item.lastMessage?.text ?? "Matched. Say hi."}
+                      <Text
+                        style={[styles.rowTime, unread && styles.rowTimeUnread]}
+                      >
+                        {item.lastMessage ? formatTime(item.lastMessage.at) : ""}
                       </Text>
-                    )}
-                    {item.convo.unread > 0 && <View style={styles.unread} />}
-                  </View>
+                    </View>
+                    <View style={styles.rowBottom}>
+                      {typingProfileIds.includes(item.other.id) ? (
+                        <Text
+                          style={[styles.rowPreview, styles.rowTyping]}
+                          numberOfLines={1}
+                        >
+                          typing…
+                        </Text>
+                      ) : (
+                        <Text
+                          style={[
+                            styles.rowPreview,
+                            unread && styles.rowPreviewUnread,
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {item.lastMessage?.kind === "photo"
+                            ? item.lastMessage.fromMe
+                              ? "🔒 You sent a photo request"
+                              : "🔒 Sent you a photo request"
+                            : item.lastMessage?.text ?? "Matched. Say hi."}
+                        </Text>
+                      )}
+                      {unread && (
+                        <View style={styles.unreadBadge}>
+                          <Text style={styles.unreadBadgeText}>
+                            {Math.min(item.convo.unread, 9)}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  </Pressable>
                 </View>
-              </Pressable>
-            )}
+              );
+            }}
           />
         )}
       </SafeAreaView>
@@ -188,6 +223,14 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     gap: 14,
   },
+  rowUnread: {
+    backgroundColor: "rgba(255, 107, 107, 0.08)",
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.palette.coral,
+  },
+  rowContent: {
+    flex: 1,
+  },
   avatarWrap: {
     width: 56,
     height: 56,
@@ -199,6 +242,9 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     borderWidth: 2,
     borderColor: Colors.light.background,
+  },
+  avatarUnread: {
+    borderColor: Colors.palette.coral,
   },
   avatarSecond: {
     position: "absolute",
@@ -216,10 +262,17 @@ const styles = StyleSheet.create({
     color: Colors.light.text,
     flex: 1,
   },
+  rowNameUnread: {
+    fontWeight: "900" as const,
+  },
   rowTime: {
     fontSize: 12,
     color: Colors.light.textMuted,
     fontWeight: "600" as const,
+  },
+  rowTimeUnread: {
+    color: Colors.palette.coral,
+    fontWeight: "900" as const,
   },
   rowBottom: {
     flexDirection: "row",
@@ -232,16 +285,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.light.textMuted,
   },
+  rowPreviewUnread: {
+    color: Colors.light.text,
+    fontWeight: "700" as const,
+  },
   rowTyping: {
     color: Colors.light.accent,
     fontStyle: "italic",
     fontWeight: "600" as const,
   },
-  unread: {
-    width: 9,
-    height: 9,
-    borderRadius: 4.5,
-    backgroundColor: Colors.light.tint,
+  unreadBadge: {
+    minWidth: 20,
+    height: 20,
+    paddingHorizontal: 6,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.palette.coral,
+  },
+  unreadBadgeText: {
+    color: "#FFF",
+    fontSize: 11,
+    fontWeight: "900" as const,
   },
   empty: { flex: 1, alignItems: "center", justifyContent: "center", padding: 40 },
   emptyIcon: {

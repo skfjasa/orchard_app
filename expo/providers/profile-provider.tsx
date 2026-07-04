@@ -66,6 +66,7 @@ import {
   SubscriptionId,
 } from "@/types";
 import type { ReportReason } from "@/services/safety-service";
+import type { SwipeDecision, SwipeResult } from "@/services/swipe-service";
 
 export type { SubscriptionState } from "@/services/local-profile-storage";
 
@@ -86,6 +87,8 @@ function mergeBackendConversation(
   profileId: string,
   backendMessages: Message[]
 ) {
+  if (backendMessages.length === 0) return conversations;
+
   const existing = conversations.find(
     (conversation) => conversation.profileId === profileId
   );
@@ -96,14 +99,15 @@ function mergeBackendConversation(
         id: `c-${profileId}`,
         profileId,
         messages: backendMessages,
-        unread: 0,
+        unread: backendMessages.filter((message) => !message.fromMe).length,
       },
       ...conversations,
     ];
   }
 
-  if (backendMessages.length === 0) return conversations;
-
+  const existingMessageIds = new Set(
+    existing.messages.map((message) => message.id)
+  );
   const mergedMessages = mergeMessages(existing.messages, backendMessages);
   if (
     mergedMessages.length === existing.messages.length &&
@@ -111,13 +115,32 @@ function mergeBackendConversation(
   ) {
     return conversations;
   }
+  const newlyUnread = backendMessages.filter(
+    (message) => !message.fromMe && !existingMessageIds.has(message.id)
+  ).length;
 
   return conversations.map((conversation) =>
     conversation.profileId === profileId
-      ? { ...conversation, messages: mergedMessages }
+      ? {
+          ...conversation,
+          messages: mergedMessages,
+          unread: conversation.unread + newlyUnread,
+        }
       : conversation
   );
 }
+
+function sameStringSet(a: string[], b: string[]) {
+  if (a.length !== b.length) return false;
+  const values = new Set(a);
+  return b.every((item) => values.has(item));
+}
+
+type MatchActionResult = {
+  ok: boolean;
+  reason?: "limit" | "superlikes";
+  matched?: boolean;
+};
 
 export const [ProfileProvider, useProfile] = createContextHook(() => {
   const { mode, session, signOut: signOutAuth, userId } = useAuth();
@@ -129,6 +152,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const [knownProfiles, setKnownProfiles] = useState<Profile[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [likedIds, setLikedIds] = useState<string[]>([]);
+  const [newMatchIds, setNewMatchIds] = useState<string[]>([]);
   const [passedIds, setPassedIds] = useState<string[]>([]);
   const [superLikedIds, setSuperLikedIds] = useState<string[]>([]);
   const [extraSlots, setExtraSlots] = useState<number>(0);
@@ -417,17 +441,17 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       rememberProfiles(matchedProfilesToRemember);
 
       setLikedIds((prev) => {
-        let next = prev;
-        for (const profileId of matchedLocalProfileIds) {
-          next = addUniqueId(next, profileId);
-        }
-        if (next === prev) return prev;
+        const next = [...matchedLocalProfileIds];
+        if (sameStringSet(prev, next)) return prev;
         saveLikesMutation.mutate(next);
         return next;
       });
 
       setConversations((prev) => {
-        let next = prev;
+        const filtered = prev.filter((conversation) =>
+          matchedLocalProfileIds.has(conversation.profileId)
+        );
+        let next = filtered.length === prev.length ? prev : filtered;
         for (const backendConversation of backendConversations) {
           next = mergeBackendConversation(
             next,
@@ -517,6 +541,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     setKnownProfiles([]);
     setConversations([]);
     setLikedIds([]);
+    setNewMatchIds([]);
     setPassedIds([]);
     setSuperLikedIds([]);
     setExtraSlots(0);
@@ -558,29 +583,59 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const slotsRemaining = Math.max(0, totalSlots - slotsUsed);
   const isAtMatchLimit = slotsRemaining <= 0;
 
-  const persistBackendSwipe = useCallback(
-    (targetId: string, decision: "like" | "pass" | "super_like") => {
-      if (mode !== "supabase") return;
-      if (appServices.capabilities.swipes !== "supabase") return;
-      if (!profile || !userId || profile.id !== userId) return;
+  const recordBackendSwipe = useCallback(
+    async (
+      targetId: string,
+      decision: SwipeDecision
+    ): Promise<SwipeResult | null> => {
+      if (mode !== "supabase") return null;
+      if (appServices.capabilities.swipes !== "supabase") return null;
+      if (!profile || !userId || profile.id !== userId) return null;
 
-      void appServices.swipes
-        .recordSwipe({
-          swiperId: userId,
-          targetId,
-          decision,
-        })
-        .then((result) => {
-          if (!result.ok) {
-            console.log("[profile-provider] backend swipe failed", {
-              code: result.error.code,
-              message: result.error.message,
-            });
-          }
+      const result = await appServices.swipes.recordSwipe({
+        swiperId: userId,
+        targetId,
+        decision,
+      });
+
+      if (!result.ok) {
+        console.log("[profile-provider] backend swipe failed", {
+          code: result.error.code,
+          message: result.error.message,
         });
+        return null;
+      }
+
+      return result.value;
     },
     [appServices, mode, profile, userId]
   );
+
+  const activateLocalMatch = useCallback(
+    (id: string, kind: "like" | "super_like") => {
+      setNewMatchIds((prev) => addUniqueId(prev, id));
+
+      setLikedIds((prev) => {
+        const next = addUniqueId(prev, id);
+        if (next === prev) return prev;
+        saveLikesMutation.mutate(next);
+        return next;
+      });
+
+      setConversations((prev) => {
+        const other = MOCK_PROFILES.find((p) => p.id === id);
+        const next = ensureGreetingConversation(prev, other, kind);
+        if (next === prev) return prev;
+        saveConvosMutation.mutate(next);
+        return next;
+      });
+    },
+    [saveConvosMutation, saveLikesMutation]
+  );
+
+  const markMatchSeen = useCallback((profileId: string) => {
+    setNewMatchIds((prev) => removeId(prev, profileId));
+  }, []);
 
   const persistBackendChatMessage = useCallback(
     (targetId: string, text: string) => {
@@ -628,12 +683,24 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
             }
           }
 
-          if (!matchId) {
-            console.log("[profile-provider] backend chat match not found", {
-              targetProfileId,
-            });
-            return;
-          }
+      if (!matchId) {
+        console.log("[profile-provider] backend chat match not found", {
+          targetProfileId,
+        });
+        setLikedIds((prev) => {
+          const next = removeId(prev, targetId);
+          if (next === prev) return prev;
+          saveLikesMutation.mutate(next);
+          return next;
+        });
+        setConversations((prev) => {
+          const next = removeConversation(prev, targetId);
+          if (next === prev) return prev;
+          saveConvosMutation.mutate(next);
+          return next;
+        });
+        return;
+      }
 
           const result = await appServices.chat.sendMessage({
             matchId,
@@ -646,46 +713,46 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
               code: result.error.code,
               message: result.error.message,
             });
+            return;
           }
+
+          setConversations((prev) => {
+            const next = mergeBackendConversation(prev, targetId, [result.value]);
+            if (next === prev) return prev;
+            saveConvosMutation.mutate(next);
+            return next;
+          });
         });
     },
-    [appServices, mode, profile, userId]
+    [appServices, mode, profile, saveConvosMutation, userId]
   );
 
   const likeProfile = useCallback(
-    (id: string): { ok: boolean; reason?: "limit" } => {
-      if (likedIds.includes(id)) return { ok: true };
+    async (id: string): Promise<MatchActionResult> => {
+      if (likedIds.includes(id)) return { ok: true, matched: true };
       if (slotsUsed >= totalSlots) {
         console.log("[profile-provider] like blocked: match limit");
         return { ok: false, reason: "limit" };
       }
 
-      setLikedIds((prev) => {
-        const next = addUniqueId(prev, id);
-        if (next === prev) return prev;
-        saveLikesMutation.mutate(next);
-        return next;
-      });
+      if (mode === "supabase" && appServices.capabilities.swipes === "supabase") {
+        const swipe = await recordBackendSwipe(id, "like");
+        if (!swipe?.matched) return { ok: true, matched: false };
+        activateLocalMatch(id, "like");
+        return { ok: true, matched: true };
+      }
 
-      setConversations((prev) => {
-        const other = MOCK_PROFILES.find((p) => p.id === id);
-        const next = ensureGreetingConversation(prev, other, "like");
-        if (next === prev) return prev;
-        saveConvosMutation.mutate(next);
-        return next;
-      });
-
-      persistBackendSwipe(id, "like");
-
-      return { ok: true };
+      activateLocalMatch(id, "like");
+      return { ok: true, matched: true };
     },
     [
+      activateLocalMatch,
+      appServices.capabilities.swipes,
       likedIds,
+      mode,
+      recordBackendSwipe,
       slotsUsed,
       totalSlots,
-      saveLikesMutation,
-      saveConvosMutation,
-      persistBackendSwipe,
     ]
   );
 
@@ -836,8 +903,10 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   );
 
   const superLikeProfile = useCallback(
-    (id: string): { ok: boolean; reason?: "limit" | "superlikes" } => {
-      if (superLikedIds.includes(id) && likedIds.includes(id)) return { ok: true };
+    async (id: string): Promise<MatchActionResult> => {
+      if (superLikedIds.includes(id) && likedIds.includes(id)) {
+        return { ok: true, matched: true };
+      }
       if (
         MVP_MONETIZATION_ENABLED &&
         !likedIds.includes(id) &&
@@ -867,37 +936,29 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         return next;
       });
 
-      setLikedIds((prev) => {
-        const next = addUniqueId(prev, id);
-        if (next === prev) return prev;
-        saveLikesMutation.mutate(next);
-        return next;
-      });
+      if (mode === "supabase" && appServices.capabilities.swipes === "supabase") {
+        const swipe = await recordBackendSwipe(id, "super_like");
+        if (!swipe?.matched) return { ok: true, matched: false };
+        activateLocalMatch(id, "super_like");
+        return { ok: true, matched: true };
+      }
 
-      setConversations((prev) => {
-        const other = MOCK_PROFILES.find((p) => p.id === id);
-        const next = ensureGreetingConversation(prev, other, "super_like");
-        if (next === prev) return prev;
-        saveConvosMutation.mutate(next);
-        return next;
-      });
-
-      persistBackendSwipe(id, "super_like");
-
-      return { ok: true };
+      activateLocalMatch(id, "super_like");
+      return { ok: true, matched: true };
     },
     [
+      activateLocalMatch,
+      appServices.capabilities.swipes,
       superLikedIds,
       likedIds,
+      mode,
+      recordBackendSwipe,
       slotsUsed,
       totalSlots,
       superLikeBalance,
       saveSuperLikesMutation,
-      saveLikesMutation,
-      saveConvosMutation,
       saveSuperLikeBalanceMutation,
       saveSuperLikeLastUseMutation,
-      persistBackendSwipe,
     ]
   );
 
@@ -909,9 +970,9 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         savePassesMutation.mutate(next);
         return next;
       });
-      persistBackendSwipe(id, "pass");
+      void recordBackendSwipe(id, "pass");
     },
-    [savePassesMutation, persistBackendSwipe]
+    [savePassesMutation, recordBackendSwipe]
   );
 
   const sendMessage = useCallback(
@@ -920,6 +981,10 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         console.log("[profile-provider] sendMessage blocked: no active match", {
           profileId,
         });
+        return;
+      }
+      if (mode === "supabase" && isBackendProfileId(profileId)) {
+        persistBackendChatMessage(profileId, text);
         return;
       }
       console.log("[profile-provider] sendMessage", { profileId, length: text.length });
@@ -950,7 +1015,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         });
       }, delay);
     },
-    [likedIds, saveConvosMutation, persistBackendChatMessage]
+    [likedIds, mode, saveConvosMutation, persistBackendChatMessage]
   );
 
   const deleteMessage = useCallback(
@@ -1196,6 +1261,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       knownProfiles,
       conversations,
       likedIds,
+      newMatchIds,
       passedIds,
       hydrated,
       backendProfileHydrated,
@@ -1214,6 +1280,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       subscription,
       completeOnboarding,
       rememberProfiles,
+      markMatchSeen,
       updateProfile,
       signOut,
       likeProfile,
@@ -1244,6 +1311,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       knownProfiles,
       conversations,
       likedIds,
+      newMatchIds,
       passedIds,
       hydrated,
       backendProfileHydrated,
@@ -1262,6 +1330,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       subscription,
       completeOnboarding,
       rememberProfiles,
+      markMatchSeen,
       updateProfile,
       signOut,
       likeProfile,

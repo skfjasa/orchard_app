@@ -1,6 +1,6 @@
 # Next Task
 
-Browser-test arbitrary real-user backend discovery/profile display with at least two hosted non-fixture profiles. If that cannot be tested yet, continue the next backend source-of-truth slice for chat reads/inbox and message attachments.
+Retest real non-fixture Supabase match badge and profile-detail entry points, then address the `/onboarding` background sizing regression.
 
 ## Likely Areas
 
@@ -13,7 +13,11 @@ Browser-test arbitrary real-user backend discovery/profile display with at least
 - `expo/services/supabase-storage-service.ts`
 - `expo/services/supabase-discovery-service.ts`
 - `expo/services/supabase-match-service.ts`
+- `supabase/migrations/202607040001_profile_photo_visible_storage_reads.sql`
+- `supabase/tests/database/202606200001_mvp_security.sql`
 - `expo/app/match/[id].tsx`
+- `expo/app/chat/[id].tsx`
+- `expo/app/(tabs)/_layout.tsx`
 - `expo/app/(tabs)/matches.tsx`
 - `expo/app/(tabs)/inbox.tsx`
 - `expo/app/(tabs)/discover.tsx`
@@ -22,14 +26,20 @@ Browser-test arbitrary real-user backend discovery/profile display with at least
 ## Pre-Edit Checks
 
 - Inspect git status and latest commit.
-- Confirm the current working slice is committed after validation.
+- Confirm the current real-profile UAT fix slice is committed after validation.
 - Start `bun run start-web` from `expo/` if the preview is not already running.
-- Use two hosted non-fixture Supabase profiles, or create a second one through onboarding if needed.
+- Use two or three hosted non-fixture Supabase profiles with clean enough swipe state to create a fresh match/message.
 
 ## Definition Of Done
 
 - Hosted real-user discovery displays at least one non-fixture backend profile with expected name, relationship context, and signed stored photo.
-- Match detail, chat, matches, and inbox can resolve a remembered/backend profile instead of falling back only to `MOCK_PROFILES`.
+- Stale local-only matches/conversations from previous UAT are pruned after fresh Supabase sign-in/hydration when no hosted active match exists.
+- A one-sided like of a real non-fixture profile records the swipe but does not show a match modal, does not create local Matches/Inbox rows, and does not allow chat.
+- A reciprocal real-profile like creates a backend active match; Matches, Inbox, and Chat resolve the backend profile after sign-out/sign-in.
+- A new reciprocal match shows a badge on the Matches tab until that matched profile's detail screen is viewed; multiple new matches decrement one at a time.
+- Received backend messages show an Inbox tab badge equal to the total unread message count, plus per-row unread highlight/count until each conversation is opened/read.
+- Matched profile detail is reachable from Matches cards, Inbox avatar, and Chat header avatar/name.
+- `/onboarding` background sizing is restored to cover the full viewing space.
 - If code changes are needed, mock mode and existing prototype UI behavior remain intact.
 - Backend profile/photo rows and storage object behavior are verified where possible.
 
@@ -44,9 +54,11 @@ Browser-test arbitrary real-user backend discovery/profile display with at least
 
 For backend profile discovery/display smoke:
 
-1. Sign in as hosted profile A.
-2. Confirm Discover can show hosted profile B when B is visible and eligible.
-3. Open B's match detail and verify the real profile fields/photo render.
-4. Like B and verify the current prototype UI behavior remains stable.
-5. If A and B are reciprocal/active matched, verify Matches, Inbox, and Chat resolve B's backend profile after sign-out/sign-in.
-6. Query hosted `profiles`, `profile_members`, `profile_photos`, and `matches` as needed to confirm the expected backend rows.
+1. Create a fresh reciprocal match between two hosted non-fixture profiles and verify the Matches tab badge appears.
+2. Open Matches and verify the badge remains until a new matched profile is opened.
+3. Tap a Matches card and verify it opens profile detail, not chat, and the badge decrements for that profile.
+4. Send messages from two matched profiles; sign in as the receiver and verify the Inbox tab badge counts total unread messages and each unread row is highlighted with its own count.
+5. Open one unread conversation and verify that row clears and the Inbox tab badge decrements by that row's unread count.
+6. Open Inbox and tap the avatar to profile detail; tap the message preview area to chat.
+7. In Chat, tap the avatar/name header area and verify it opens profile detail.
+8. Recheck `/onboarding` at desktop and mobile widths after the background sizing fix.
