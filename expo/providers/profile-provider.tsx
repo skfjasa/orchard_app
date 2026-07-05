@@ -512,6 +512,48 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
       const matchedLocalProfileIds = new Set<string>();
       const activeBackendMatchIds = matchResult.value.map((match) => match.id);
+      const discoveryProfilesById = new Map<string, Profile>();
+      const missingRealProfileIds = matchResult.value
+        .map((match) =>
+          fromBackendProfileId(match.userA === userId ? match.userB : match.userA)
+        )
+        .filter((profileId, index, allIds) => {
+          if (allIds.indexOf(profileId) !== index) return false;
+          if (MOCK_PROFILES.some((item) => item.id === profileId)) return false;
+          const rememberedProfile =
+            knownProfilesRef.current.find((item) => item.id === profileId) ??
+            displayProfilesRef.current[profileId];
+          return !chooseDisplayProfile(undefined, rememberedProfile);
+        });
+
+      if (
+        missingRealProfileIds.length > 0 &&
+        appServices.capabilities.discovery === "supabase"
+      ) {
+        const discoveryResult = await appServices.discovery.listProfiles({
+          profileId: userId,
+          viewerProfile: profile,
+          excludedProfileIds: [],
+          includePassed: true,
+          limit: 100,
+        });
+
+        if (discoveryResult.ok) {
+          const completeProfiles = discoveryResult.value
+            .map((item) => item.profile)
+            .filter((item) => !isIncompleteBackendProfile(item));
+          rememberProfiles(completeProfiles);
+          for (const item of completeProfiles) {
+            discoveryProfilesById.set(item.id, item);
+          }
+        } else {
+          console.log("[profile-provider] backend match profile repair failed", {
+            code: discoveryResult.error.code,
+            message: discoveryResult.error.message,
+          });
+        }
+      }
+
       const backendConversations: {
         profileId: string;
         messages: Message[];
@@ -529,10 +571,19 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         );
         const rememberedProfile = knownProfilesRef.current.find(
           (item) => item.id === otherLocalProfileId
-        ) ?? displayProfilesRef.current[otherLocalProfileId];
+        ) ?? displayProfilesRef.current[otherLocalProfileId] ??
+          discoveryProfilesById.get(otherLocalProfileId);
         const otherProfile =
           mockProfile ??
           chooseDisplayProfile(match.otherProfile, rememberedProfile);
+
+        if (!mockProfile && !otherProfile) {
+          console.log("[profile-provider] skipping partial match hydration", {
+            profileId: otherLocalProfileId,
+            matchId: match.id,
+          });
+          return;
+        }
 
         matchedLocalProfileIds.add(otherProfile?.id ?? otherLocalProfileId);
         if (!mockProfile && otherProfile) {

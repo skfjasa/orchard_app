@@ -1,6 +1,6 @@
 # Next Task
 
-Smoke UAT device/browser back from match detail and chat.
+Smoke UAT Inbox conversation device/browser back after the backend match profile repair.
 
 ## Likely Areas
 
@@ -35,6 +35,8 @@ Smoke UAT device/browser back from match detail and chat.
 - Real/dev profiles that are already matched do not appear in Fruit.
 - Opening an unread Inbox row clears the badge before Chat navigation, so rapid device/browser back does not flash the old unread state.
 - Real/dev matches remain visible after using device/browser back from match detail.
+- Real/dev conversations remain visible after using device/browser back from a chat opened through Inbox.
+- Match tab still shows real/dev matches after using device/browser back from a chat opened through Inbox.
 - Generic "Orchard user" fallback profiles do not appear in Matches or Inbox after rapid back navigation.
 - Match detail opened from Matches, Inbox, Discover, Fruit, or Chat has a canonical Android hardware-back destination and does not snap back onto the same detail modal.
 - Match detail opens as a normal stack screen, not a root modal, so browser/device back should perform a normal pop.
@@ -56,11 +58,10 @@ Smoke UAT device/browser back from match detail and chat.
 ## Manual QA
 
 1. Sign in as one of `t`, `tt`, or `test2`.
-2. From Matches, open a real/dev profile detail and use device/browser back repeatedly.
-3. Confirm Matches still shows real/dev matches, not only fixture matches.
-4. Confirm Matches does not show a generic "Orchard user" card.
-5. Confirm the profile detail does not animate back then land on itself.
-6. From Inbox, open a conversation and use device/browser back repeatedly.
-7. Confirm Inbox still shows real/dev conversations, not a generic "Orchard user" row, and badges remain consistent.
-8. Confirm already matched real/dev profiles do not appear in Fruit.
-9. Wait at least 10 seconds without sending or receiving a new match/message and confirm cleared badges do not reappear.
+2. From Inbox, open a real/dev conversation and use device/browser back repeatedly.
+3. Confirm Inbox still shows real/dev conversations, not only fixture conversations.
+4. Confirm Inbox does not show a generic "Orchard user" row.
+5. Open Matches and confirm real/dev matches are still present, not only fixture matches.
+6. Confirm Fruit/Discover is not required to restore rows.
+7. Then repeat the earlier Matches -> real/dev profile detail -> device/browser back smoke test.
+8. Wait at least 10 seconds without sending or receiving a new match/message and confirm cleared badges do not reappear.

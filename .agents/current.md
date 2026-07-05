@@ -7,8 +7,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 ## Branch And Commit
 
 - Branch: `main`
-- Latest implementation checkpoint: `9afe644` - Stabilize profile back stack display
-- Previous pushed checkpoint: `06934ce` - Harden back navigation profile state
+- Latest implementation checkpoint: working tree fix after `fa8221d` for Inbox-back profile repair
+- Previous pushed checkpoint: `fa8221d` - Refresh handoff after back stack work
 
 ## Recent Changes
 
@@ -52,6 +52,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - Follow-up badge issue: a Realtime/10-second backend refresh could apply with stale `seenMatchIds` or `readWatermarks` captured before the user opened a match/conversation. Current working fix uses current refs when applying backend refresh results and recalculates conversation unread counts from the latest read watermark even when backend messages are unchanged.
 - Latest follow-up fix excludes already matched backend real/dev profiles from Fruit while keeping unmatched real/dev profiles testable there, and clears Inbox unread state before navigating into Chat so rapid device/browser back cannot beat the Chat screen read effect.
 - Current navigation/profile-retention fix rejects incomplete backend profile objects such as generic "Orchard user" rows, preserves the last complete remembered profile during refresh churn via an explicit display-profile snapshot, no longer clears remembered match profiles on same-user Supabase token refresh, queues a follow-up backend match/profile refresh if focus/realtime hits while refresh is already in flight, refreshes backend match/profile state whenever Matches or Inbox receives focus, and changes match detail from modal presentation to normal stack presentation while using stack-aware `dismissTo` for canonical Android hardware-back routing.
+- Latest UAT confirmed Matches -> profile -> device back is mostly stable, but Inbox -> conversation -> device back can still drop real/dev conversations and matches until Fruit runs discovery. Current working fix makes backend match refresh repair missing real/dev display profiles through the same Supabase discovery path Fruit uses, and skips applying a partial match refresh if a complete real/dev profile still cannot be resolved.
 - Current workflow cleanup updates both GitHub Actions workflows from `actions/checkout@v4` to `actions/checkout@v6`, resolving the tracked Node 20 checkout warning follow-up.
 
 ## Validation State
@@ -85,7 +86,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 
 - Chat UI still preserves local simulated/photo behavior; only real text messages are persisted/hydrated from Supabase.
 - Remaining backend source-of-truth cleanup should continue behind service boundaries and preserve mock mode.
-- No current git sync blocker: local `main` is clean and synced with `origin/main` at `9afe644`.
+- No current git sync blocker before this working fix: local `main` was clean and synced with `origin/main` at `fa8221d`.
 - Supabase Auth email sender/template branding still requires custom SMTP setup if branded emails are needed.
 
 ## Likely Relevant Files
@@ -124,4 +125,4 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 
 ## Next Recommended Task
 
-Smoke UAT device/browser back from match detail and chat after `9afe644`: real/dev matches should remain visible in Matches after returning from profile detail, no generic "Orchard user" profile should appear, match detail should not bounce back onto itself, and Fruit/Discover should no longer be required to restore backend profile cards.
+Smoke UAT Inbox -> conversation -> device/browser back after the current working fix: real/dev conversations should remain visible, Match tab should still show real/dev matches, no generic "Orchard user" row/card should appear, and Fruit/Discover should no longer be required to restore backend profile cards.
