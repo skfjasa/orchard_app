@@ -45,6 +45,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - Backend match/thread hydration still runs immediately after sign-in, on app-active, and every 10 seconds as a fallback; Realtime now triggers a debounced refresh when active matches change or a message is inserted into a currently known active match.
 - User UAT confirmed Realtime-triggered match/message refresh using `t` as profile A and both `tt` and `test2` as profile B accounts for matching and sending.
 - Current working backend read-state slice adds `public.match_read_states` with RLS, extends `ChatService.getThread` with `readThrough`, implements Supabase `markRead`, and lets backend match/thread hydration prefer the hosted read watermark while retaining local watermarks as fallback/mock behavior.
+- User UAT confirmed backend-backed read state: opening an incoming hosted message clears unread state, sign-out/sign-in keeps the conversation read, and a newer incoming message restores the unread badge/highlight.
 
 ## Validation State
 
@@ -70,7 +71,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 ## Current Risks / Blockers
 
 - Chat UI still preserves local simulated/photo behavior; only real text messages are persisted/hydrated from Supabase.
-- Backend read-state needs browser UAT across sign-out/sign-in or a second browser session.
+- Remaining backend source-of-truth cleanup should continue behind service boundaries and preserve mock mode.
 - Supabase Auth email sender/template branding still requires custom SMTP setup if branded emails are needed.
 
 ## Likely Relevant Files
@@ -109,4 +110,4 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 
 ## Next Recommended Task
 
-UAT backend-backed read state: read a hosted incoming message, sign out/in or use another browser session, and confirm the conversation stays read until a newer incoming message arrives.
+Continue backend source-of-truth cleanup by routing match/inbox/detail read paths through service boundaries where practical, while keeping mock mode and current UI behavior intact.
