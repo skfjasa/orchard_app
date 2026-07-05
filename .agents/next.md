@@ -1,6 +1,6 @@
 # Next Task
 
-Smoke UAT Inbox conversation device/browser back after the backend match profile repair and local display-cache persistence.
+Investigate intermittent Inbox conversation device/browser back disappearance under weak mobile network.
 
 ## Likely Areas
 
@@ -58,11 +58,10 @@ Smoke UAT Inbox conversation device/browser back after the backend match profile
 
 ## Manual QA
 
-1. Sign in as one of `t`, `tt`, or `test2`.
+1. Reproduce on mobile Chrome with weak reception using `t`, `tt`, or `test2`.
 2. From Inbox, open a real/dev conversation and use device/browser back repeatedly.
-3. Confirm Inbox still shows real/dev conversations, not only fixture conversations.
-4. Confirm Inbox does not show a generic "Orchard user" row.
-5. Open Matches and confirm real/dev matches are still present, not only fixture matches.
-6. Confirm Fruit/Discover is not required to restore rows.
-7. Then repeat the earlier Matches -> real/dev profile detail -> device/browser back smoke test.
-8. Wait at least 10 seconds without sending or receiving a new match/message and confirm cleared badges do not reappear.
+3. If real/dev conversations disappear, inspect whether a backend match refresh applied with incomplete profile/thread data.
+4. Check whether request ordering lets an older/slower refresh overwrite newer complete state.
+5. Confirm whether hosted profile/member/photo rows return consistently for the affected accounts.
+6. Confirm Fruit/Discover restores rows by re-running discovery and `rememberProfiles`.
+7. Fix with stricter non-destructive reconciliation: no partial refresh may remove real/dev rows unless the backend explicitly reports unmatch/block/delete.
