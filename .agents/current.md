@@ -7,8 +7,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 ## Branch And Commit
 
 - Branch: `main`
-- Latest implementation checkpoint: Persist backend chat read state
-- Previous pushed checkpoint: `58bf101` - Bank realtime UAT
+- Latest implementation checkpoint: `9afe644` - Stabilize profile back stack display
+- Previous pushed checkpoint: `06934ce` - Harden back navigation profile state
 
 ## Recent Changes
 
@@ -78,14 +78,14 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - Shared protected-route/canonical-back guard passed typecheck, lint, and diff check.
 - Stale badge refresh fix passed typecheck, lint, and diff check.
 - Fruit matched-profile exclusion and eager Inbox read clearing passed typecheck, lint, and diff check.
-- Match profile retention/focus refresh/origin back fix, incomplete profile rejection, same-user token-refresh cache preservation, and stack-aware canonical back passed typecheck, lint, and diff check.
+- Match profile retention/focus refresh/origin back fix, incomplete profile rejection, same-user token-refresh cache preservation, display-profile snapshot, normal stack match detail presentation, and stack-aware canonical back passed typecheck, lint, and diff check.
 - Checkout workflow cleanup is docs/config only; `git diff --check` passed.
 
 ## Current Risks / Blockers
 
 - Chat UI still preserves local simulated/photo behavior; only real text messages are persisted/hydrated from Supabase.
 - Remaining backend source-of-truth cleanup should continue behind service boundaries and preserve mock mode.
-- Local `main` is ahead of `origin/main` while GitHub push is blocked by network connectivity to `github.com:443`.
+- No current git sync blocker: local `main` is clean and synced with `origin/main` at `9afe644`.
 - Supabase Auth email sender/template branding still requires custom SMTP setup if branded emails are needed.
 
 ## Likely Relevant Files
@@ -124,4 +124,4 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 
 ## Next Recommended Task
 
-Smoke UAT device/browser back from match detail and chat: real/dev matches should remain visible in Matches after returning from profile detail, no generic "Orchard user" profile should appear, match detail should not bounce back onto itself, and Fruit/Discover should no longer be required to restore backend profile cards.
+Smoke UAT device/browser back from match detail and chat after `9afe644`: real/dev matches should remain visible in Matches after returning from profile detail, no generic "Orchard user" profile should appear, match detail should not bounce back onto itself, and Fruit/Discover should no longer be required to restore backend profile cards.
