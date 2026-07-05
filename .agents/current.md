@@ -51,7 +51,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - Follow-up issue: using the device/browser back button can inconsistently show missing conversations, reset badges, or make matches appear to disappear. Current working fix centralizes protected-route auth/profile hydration gating in `ProtectedRoute` and applies it to tabs, chat, match detail, edit profile, paywall, report, and safety/legal. Chat also uses `useCanonicalBack` so Android hardware back matches the in-app chat back action and returns to Inbox.
 - Follow-up badge issue: a Realtime/10-second backend refresh could apply with stale `seenMatchIds` or `readWatermarks` captured before the user opened a match/conversation. Current working fix uses current refs when applying backend refresh results and recalculates conversation unread counts from the latest read watermark even when backend messages are unchanged.
 - Latest follow-up fix excludes already matched backend real/dev profiles from Fruit while keeping unmatched real/dev profiles testable there, and clears Inbox unread state before navigating into Chat so rapid device/browser back cannot beat the Chat screen read effect.
-- Current navigation/profile-retention fix no longer creates generic backend fallback profiles for common lookup, queues a follow-up backend match/profile refresh if focus/realtime hits while refresh is already in flight, refreshes backend match/profile state whenever Matches or Inbox receives focus, and passes explicit `from` origins into match detail so Android hardware back returns to the expected tab or chat route.
+- Current navigation/profile-retention fix rejects incomplete backend profile objects such as generic "Orchard user" rows, preserves the last complete remembered profile during refresh churn, no longer clears remembered match profiles on same-user Supabase token refresh, queues a follow-up backend match/profile refresh if focus/realtime hits while refresh is already in flight, refreshes backend match/profile state whenever Matches or Inbox receives focus, and uses stack-aware `dismissTo` for canonical Android hardware-back routing from modal/detail surfaces.
 - Current workflow cleanup updates both GitHub Actions workflows from `actions/checkout@v4` to `actions/checkout@v6`, resolving the tracked Node 20 checkout warning follow-up.
 
 ## Validation State
@@ -78,7 +78,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - Shared protected-route/canonical-back guard passed typecheck, lint, and diff check.
 - Stale badge refresh fix passed typecheck, lint, and diff check.
 - Fruit matched-profile exclusion and eager Inbox read clearing passed typecheck, lint, and diff check.
-- Match profile retention/focus refresh/origin back fix and generic fallback removal passed typecheck, lint, and diff check.
+- Match profile retention/focus refresh/origin back fix, incomplete profile rejection, same-user token-refresh cache preservation, and stack-aware canonical back passed typecheck, lint, and diff check.
 - Checkout workflow cleanup is docs/config only; `git diff --check` passed.
 
 ## Current Risks / Blockers

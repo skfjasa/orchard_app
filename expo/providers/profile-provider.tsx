@@ -176,6 +176,33 @@ export interface InboxListItem {
 
 const BACKEND_MATCH_REFRESH_INTERVAL_MS = 10_000;
 const BACKEND_REALTIME_REFRESH_DELAY_MS = 250;
+const INCOMPLETE_BACKEND_PROFILE_NAME = "orchard user";
+
+function isIncompleteBackendProfile(profile: Profile | undefined): boolean {
+  if (!profile || !isBackendProfileId(profile.id)) return false;
+  if (MOCK_PROFILES.some((item) => item.id === profile.id)) return false;
+  if (profile.people.length === 0) return true;
+
+  return profile.people.every(
+    (person) =>
+      person.name.trim().toLowerCase() === INCOMPLETE_BACKEND_PROFILE_NAME
+  );
+}
+
+function chooseDisplayProfile(
+  backendProfile: Profile | undefined,
+  rememberedProfile: Profile | undefined
+): Profile | undefined {
+  if (backendProfile && !isIncompleteBackendProfile(backendProfile)) {
+    return backendProfile;
+  }
+
+  if (rememberedProfile && !isIncompleteBackendProfile(rememberedProfile)) {
+    return rememberedProfile;
+  }
+
+  return undefined;
+}
 
 export const [ProfileProvider, useProfile] = createContextHook(() => {
   const { mode, session, signOut: signOutAuth, userId } = useAuth();
@@ -331,6 +358,11 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       return;
     }
 
+    if (lastBackendProfileUserId.current === userId) {
+      lastBackendProfileSessionKey.current = sessionKey;
+      return;
+    }
+
     lastBackendProfileSessionKey.current = sessionKey;
     lastBackendProfileUserId.current = userId;
     pendingBackendMatchRefreshRef.current = false;
@@ -432,6 +464,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       let changed = false;
 
       for (const item of profilesToRemember) {
+        if (isIncompleteBackendProfile(item)) continue;
         if (byId.get(item.id) === item) continue;
         byId.set(item.id, item);
         changed = true;
@@ -491,8 +524,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         );
         const otherProfile =
           mockProfile ??
-          match.otherProfile ??
-          rememberedProfile;
+          chooseDisplayProfile(match.otherProfile, rememberedProfile);
 
         matchedLocalProfileIds.add(otherProfile?.id ?? otherLocalProfileId);
         if (!mockProfile && otherProfile) {
@@ -1532,9 +1564,13 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   }, [superLikeBalance, superLikeLastUseAt]);
 
   const getProfileById = useCallback(
-    (profileId: string) =>
-      knownProfiles.find((item) => item.id === profileId) ??
-      MOCK_PROFILES.find((item) => item.id === profileId),
+    (profileId: string) => {
+      const profile =
+        knownProfiles.find((item) => item.id === profileId) ??
+        knownProfilesRef.current.find((item) => item.id === profileId) ??
+        MOCK_PROFILES.find((item) => item.id === profileId);
+      return isIncompleteBackendProfile(profile) ? undefined : profile;
+    },
     [knownProfiles]
   );
 

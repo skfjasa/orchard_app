@@ -36,7 +36,7 @@ Smoke UAT device/browser back from match detail and chat.
 - Opening an unread Inbox row clears the badge before Chat navigation, so rapid device/browser back does not flash the old unread state.
 - Real/dev matches remain visible after using device/browser back from match detail.
 - Generic "Orchard user" fallback profiles do not appear in Matches or Inbox after rapid back navigation.
-- Match detail opened from Matches, Inbox, Discover, Fruit, or Chat has a canonical Android hardware-back destination.
+- Match detail opened from Matches, Inbox, Discover, Fruit, or Chat has a canonical Android hardware-back destination and does not snap back onto the same detail modal.
 - Matches and Inbox refresh backend match/profile data on focus, so Fruit/Discover should not be required to restore missing real/dev cards.
 - Matches list still shows active matches after using back.
 - Inbox list still shows conversations, unread row highlights, and unread tab badge counts after using back.

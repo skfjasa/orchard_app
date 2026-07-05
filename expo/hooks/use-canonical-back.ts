@@ -5,7 +5,7 @@ import { BackHandler, Platform } from "react-native";
 export function useCanonicalBack(href: Href | null, enabled = true) {
   const goBack = useCallback(() => {
     if (!href) return;
-    router.replace(href);
+    router.dismissTo(href);
   }, [href]);
 
   useFocusEffect(
