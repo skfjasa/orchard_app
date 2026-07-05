@@ -7,8 +7,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 ## Branch And Commit
 
 - Branch: `main`
-- Latest pushed implementation checkpoint: `42d39d9` - Bank onboarding visual UAT
-- Previous implementation checkpoint: `85d6ba8` - Remove sign-in header artifact
+- Latest pushed implementation checkpoint: `43b20df` - Add realtime match message refresh
+- Previous implementation checkpoint: `42d39d9` - Bank onboarding visual UAT
 
 ## Recent Changes
 
@@ -43,6 +43,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - User UAT confirmed the onboarding background sizing and sign-in header cleanup look correct.
 - Current working backend hardening slice adds a Realtime service boundary, a mock no-op realtime adapter, Supabase match/message Realtime subscriptions, and migration `202607040003_enable_match_message_realtime.sql` to publish `public.matches` and `public.messages`.
 - Backend match/thread hydration still runs immediately after sign-in, on app-active, and every 10 seconds as a fallback; Realtime now triggers a debounced refresh when active matches change or a message is inserted into a currently known active match.
+- User UAT confirmed Realtime-triggered match/message refresh using `t` as profile A and both `tt` and `test2` as profile B accounts for matching and sending.
 
 ## Validation State
 
@@ -62,11 +63,11 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - `expo\node_modules\.bin\supabase test db`: passed, 1 file / 42 tests.
 - Realtime migration `202607040003_enable_match_message_realtime.sql`: local `supabase db reset` passed and local `supabase test db` passed, 1 file / 42 tests.
 - Hosted `orchard-dev` is aligned through `202607040003` after `supabase db push`; migration list confirms local/remote alignment. The Supabase CLI again printed a non-fatal pg-delta catalog-cache warning after the push.
+- Hosted browser UAT passed for Realtime-triggered incoming match/message refresh with `t`/`tt` and `t`/`test2`.
 
 ## Current Risks / Blockers
 
 - Chat UI still preserves local simulated/photo behavior; only real text messages are persisted/hydrated from Supabase.
-- Realtime refresh still needs hosted browser UAT with two signed-in profiles.
 - Supabase Auth email sender/template branding still requires custom SMTP setup if branded emails are needed.
 
 ## Likely Relevant Files
@@ -104,4 +105,4 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 
 ## Next Recommended Task
 
-UAT that incoming hosted matches/messages appear without a swipe and before the 10-second polling fallback.
+Choose the next backend/source-of-truth hardening slice or move to human setup for TestFlight readiness.

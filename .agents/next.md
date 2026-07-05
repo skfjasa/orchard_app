@@ -1,28 +1,27 @@
 # Next Task
 
-UAT the Realtime-triggered match/message refresh slice.
+Choose the next backend/source-of-truth hardening slice or move to human setup.
 
 ## Likely Areas
 
 - `docs/project-status.md`
 - `expo/providers/profile-provider.tsx`
-- `expo/services/realtime-service.ts`
-- `expo/services/supabase-realtime-service.ts`
-- `expo/mocks/adapters/mock-realtime-service.ts`
-- `supabase/migrations/202607040003_enable_match_message_realtime.sql`
+- `expo/services/`
+- `expo/app/(tabs)/matches.tsx`
+- `expo/app/(tabs)/inbox.tsx`
+- `expo/app/chat/[id].tsx`
+- `.github/workflows/`
 
 ## Pre-Edit Checks
 
 - Inspect git status and latest commit.
-- Confirm local typecheck/lint/diff check still pass.
-- Confirm local `supabase db reset` and `supabase test db` pass after the migration.
-- Confirm hosted `orchard-dev` remains aligned through `202607040003` if needed.
+- Pick a single PR-sized slice.
+- Re-read the relevant plan doc only for the chosen slice.
 
 ## Definition Of Done
 
-- Incoming hosted matches/messages trigger Matches/Inbox refresh through Realtime without needing a swipe or waiting for the 10-second fallback.
-- Existing 10-second polling and app-active refresh remain as fallback behavior.
-- Mock mode remains intact through the no-op realtime adapter.
+- The next slice is scoped and validated.
+- Mock mode and hosted Supabase mode remain intact.
 - `docs/project-status.md` remains current after any material change.
 
 ## Validation
@@ -34,7 +33,7 @@ UAT the Realtime-triggered match/message refresh slice.
 
 ## Manual QA
 
-1. Sign in as `t`; keep Matches/Inbox visible.
-2. In another tab/session, sign in as `tt` or `test2` and create/send a reciprocal match/message involving `t`.
-3. Confirm `t` sees the new match/message update promptly without making a swipe and without waiting for the polling fallback.
-4. Repeat from the other profile direction if practical.
+1. Backend track: continue moving chat/read state, message attachments, or screen data reads behind services.
+2. Human setup track: create Apple Developer Program account, then prepare iOS/TestFlight prerequisites.
+3. Fixture/media track: decide whether to ingest fixture profile images into Supabase Storage.
+4. CI track: decide whether to make Supabase DB tests automatic for migration pull requests and address the GitHub Actions Node warning.
