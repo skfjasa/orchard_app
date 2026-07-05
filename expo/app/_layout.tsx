@@ -35,7 +35,7 @@ function RootLayoutNav() {
       <Stack.Screen
         name="match/[id]"
         options={{
-          presentation: "modal",
+          presentation: "card",
           title: "",
           headerShadowVisible: false,
         }}
