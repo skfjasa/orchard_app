@@ -177,36 +177,6 @@ export interface InboxListItem {
 const BACKEND_MATCH_REFRESH_INTERVAL_MS = 10_000;
 const BACKEND_REALTIME_REFRESH_DELAY_MS = 250;
 
-const FALLBACK_BACKEND_PROFILE_PHOTO =
-  "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=900&q=80";
-
-function createFallbackBackendProfile(profileId: string): Profile {
-  return {
-    id: profileId,
-    accountType: "single",
-    people: [
-      {
-        name: "Orchard user",
-        age: 18,
-        gender: "Other",
-        race: "Prefer not to say",
-        photo: FALLBACK_BACKEND_PROFILE_PHOTO,
-        photos: [FALLBACK_BACKEND_PROFILE_PHOTO],
-        interests: [],
-      },
-    ],
-    location: {
-      city: "",
-      lat: 0,
-      lng: 0,
-    },
-    preferences: [],
-    lookingFor: "Solo",
-    createdAt: Date.now(),
-    socials: {},
-  };
-}
-
 export const [ProfileProvider, useProfile] = createContextHook(() => {
   const { mode, session, signOut: signOutAuth, userId } = useAuth();
   const appServices = useMemo(() => createAppServices(), []);
@@ -214,6 +184,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const lastBackendProfileUserId = useRef<string | null>(null);
   const lastBackendMatchHydrationKey = useRef<string | null>(null);
   const inFlightBackendMatchHydrationKey = useRef<string | null>(null);
+  const pendingBackendMatchRefreshRef = useRef<boolean>(false);
+  const knownProfilesRef = useRef<Profile[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [knownProfiles, setKnownProfiles] = useState<Profile[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -330,7 +302,10 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       lastBackendProfileUserId.current = null;
       lastBackendMatchHydrationKey.current = null;
       inFlightBackendMatchHydrationKey.current = null;
+      pendingBackendMatchRefreshRef.current = false;
+      knownProfilesRef.current = [];
       setBackendActiveMatchIds([]);
+      setKnownProfiles([]);
       setBackendProfileHydrated(false);
       return;
     }
@@ -340,7 +315,10 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       lastBackendProfileUserId.current = null;
       lastBackendMatchHydrationKey.current = null;
       inFlightBackendMatchHydrationKey.current = null;
+      pendingBackendMatchRefreshRef.current = false;
+      knownProfilesRef.current = [];
       setBackendActiveMatchIds([]);
+      setKnownProfiles([]);
       setBackendProfileHydrated(false);
       return;
     }
@@ -355,7 +333,10 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
     lastBackendProfileSessionKey.current = sessionKey;
     lastBackendProfileUserId.current = userId;
+    pendingBackendMatchRefreshRef.current = false;
+    knownProfilesRef.current = [];
     setBackendActiveMatchIds([]);
+    setKnownProfiles([]);
     setBackendProfileHydrated(false);
   }, [mode, session?.access_token, userId]);
 
@@ -456,7 +437,9 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         changed = true;
       }
 
-      return changed ? [...byId.values()] : prev;
+      const next = changed ? [...byId.values()] : prev;
+      knownProfilesRef.current = next;
+      return next;
     });
   }, []);
 
@@ -469,7 +452,10 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
     const sessionKey = session?.access_token ?? "";
     const hydrationKey = `${userId}:${sessionKey}`;
-    if (inFlightBackendMatchHydrationKey.current === hydrationKey) return;
+    if (inFlightBackendMatchHydrationKey.current === hydrationKey) {
+      pendingBackendMatchRefreshRef.current = true;
+      return;
+    }
     inFlightBackendMatchHydrationKey.current = hydrationKey;
 
     try {
@@ -500,13 +486,16 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         const mockProfile = MOCK_PROFILES.find(
           (item) => item.id === otherLocalProfileId
         );
+        const rememberedProfile = knownProfilesRef.current.find(
+          (item) => item.id === otherLocalProfileId
+        );
         const otherProfile =
           mockProfile ??
           match.otherProfile ??
-          createFallbackBackendProfile(otherLocalProfileId);
+          rememberedProfile;
 
-        matchedLocalProfileIds.add(otherProfile.id);
-        if (!mockProfile) {
+        matchedLocalProfileIds.add(otherProfile?.id ?? otherLocalProfileId);
+        if (!mockProfile && otherProfile) {
           matchedProfilesToRemember.push(otherProfile);
         }
 
@@ -522,7 +511,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         }
 
         backendConversations.push({
-          profileId: otherProfile.id,
+          profileId: otherProfile?.id ?? otherLocalProfileId,
           messages: threadResult.value.messages,
           readThrough: threadResult.value.readThrough,
           isFixture: !!mockProfile,
@@ -592,6 +581,12 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     } finally {
       if (inFlightBackendMatchHydrationKey.current === hydrationKey) {
         inFlightBackendMatchHydrationKey.current = null;
+      }
+      if (pendingBackendMatchRefreshRef.current) {
+        pendingBackendMatchRefreshRef.current = false;
+        setTimeout(() => {
+          void refreshBackendMatches();
+        }, 0);
       }
     }
   }, [
@@ -743,6 +738,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     }
     setProfile(null);
     setKnownProfiles([]);
+    knownProfilesRef.current = [];
     setConversations([]);
     setLikedIds([]);
     setNewMatchIds([]);
@@ -756,6 +752,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     setBackendProfileHydrated(false);
     lastBackendMatchHydrationKey.current = null;
     inFlightBackendMatchHydrationKey.current = null;
+    pendingBackendMatchRefreshRef.current = false;
     saveProfileMutation.mutate(null);
     saveConvosMutation.mutate([]);
     saveLikesMutation.mutate([]);
@@ -1537,10 +1534,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const getProfileById = useCallback(
     (profileId: string) =>
       knownProfiles.find((item) => item.id === profileId) ??
-      MOCK_PROFILES.find((item) => item.id === profileId) ??
-      (isBackendProfileId(profileId)
-        ? createFallbackBackendProfile(profileId)
-        : undefined),
+      MOCK_PROFILES.find((item) => item.id === profileId),
     [knownProfiles]
   );
 
