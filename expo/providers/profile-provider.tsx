@@ -1537,7 +1537,10 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const getProfileById = useCallback(
     (profileId: string) =>
       knownProfiles.find((item) => item.id === profileId) ??
-      MOCK_PROFILES.find((item) => item.id === profileId),
+      MOCK_PROFILES.find((item) => item.id === profileId) ??
+      (isBackendProfileId(profileId)
+        ? createFallbackBackendProfile(profileId)
+        : undefined),
     [knownProfiles]
   );
 
@@ -1646,6 +1649,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       getProfileById,
       getConversation,
       hasActiveMatch,
+      refreshBackendMatches,
       completeOnboarding,
       rememberProfiles,
       markMatchSeen,
@@ -1703,6 +1707,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       getProfileById,
       getConversation,
       hasActiveMatch,
+      refreshBackendMatches,
       completeOnboarding,
       rememberProfiles,
       markMatchSeen,

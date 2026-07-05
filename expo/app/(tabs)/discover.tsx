@@ -354,7 +354,9 @@ export default function DiscoverScreen() {
                 data={current.profile}
                 score={current.score?.total ?? 0}
                 distanceKm={current.score?.distanceKm}
-                onPress={() => router.push(`/match/${current.profile.id}`)}
+                onPress={() =>
+                  router.push(`/match/${current.profile.id}?from=discover`)
+                }
               />
               <Animated.View
                 style={[

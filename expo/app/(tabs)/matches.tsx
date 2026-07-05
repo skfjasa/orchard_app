@@ -1,7 +1,7 @@
 import { Image } from "expo-image";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { Heart, Users } from "lucide-react-native";
-import React from "react";
+import React, { useCallback } from "react";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -10,7 +10,17 @@ import { useProfile } from "@/providers/profile-provider";
 import { Profile } from "@/types";
 
 export default function MatchesScreen() {
-  const { matchedProfiles: matches, newMatchIds } = useProfile();
+  const {
+    matchedProfiles: matches,
+    newMatchIds,
+    refreshBackendMatches,
+  } = useProfile();
+
+  useFocusEffect(
+    useCallback(() => {
+      void refreshBackendMatches();
+    }, [refreshBackendMatches])
+  );
 
   return (
     <View style={styles.root}>
@@ -43,7 +53,7 @@ export default function MatchesScreen() {
               <MatchCard
                 profile={item}
                 isNew={newMatchIds.includes(item.id)}
-                onPress={() => router.push(`/match/${item.id}`)}
+                onPress={() => router.push(`/match/${item.id}?from=matches`)}
               />
             )}
           />

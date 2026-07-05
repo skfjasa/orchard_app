@@ -1,7 +1,7 @@
 import { Image } from "expo-image";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { Heart, MessageCircle, Users } from "lucide-react-native";
-import React from "react";
+import React, { useCallback } from "react";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -24,9 +24,16 @@ export default function InboxScreen() {
     profile,
     inboxItems: items,
     markRead,
+    refreshBackendMatches,
     typingProfileIds,
   } = useProfile();
   const isCouple = profile?.accountType === "couple";
+
+  useFocusEffect(
+    useCallback(() => {
+      void refreshBackendMatches();
+    }, [refreshBackendMatches])
+  );
 
   return (
     <View style={styles.root}>
@@ -72,7 +79,9 @@ export default function InboxScreen() {
               return (
                 <View style={[styles.row, unread && styles.rowUnread]}>
                   <Pressable
-                    onPress={() => router.push(`/match/${item.other.id}`)}
+                    onPress={() =>
+                      router.push(`/match/${item.other.id}?from=inbox`)
+                    }
                     style={({ pressed }) => [
                       styles.avatarWrap,
                       pressed && { opacity: 0.76 },

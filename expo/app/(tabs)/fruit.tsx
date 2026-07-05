@@ -199,7 +199,7 @@ export default function FruitScreen() {
                 return (
                   <Pressable
                     key={p.id}
-                    onPress={() => router.push(`/match/${p.id}`)}
+                    onPress={() => router.push(`/match/${p.id}?from=fruit`)}
                     style={({ pressed }) => [
                       styles.card,
                       pressed && { transform: [{ scale: 0.97 }] },

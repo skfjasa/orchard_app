@@ -1,6 +1,6 @@
 # Next Task
 
-Smoke UAT badge stability and Fruit filtering.
+Smoke UAT device/browser back from match detail and chat.
 
 ## Likely Areas
 
@@ -9,6 +9,7 @@ Smoke UAT badge stability and Fruit filtering.
 - `expo/app/(tabs)/matches.tsx`
 - `expo/app/(tabs)/inbox.tsx`
 - `expo/app/(tabs)/fruit.tsx`
+- `expo/app/(tabs)/discover.tsx`
 - `expo/components/navigation/ProtectedRoute.tsx`
 - `expo/hooks/use-canonical-back.ts`
 - `expo/providers/profile-provider.tsx`
@@ -33,6 +34,9 @@ Smoke UAT badge stability and Fruit filtering.
 - Cleared Inbox badges/unread rows do not reappear after backend refresh unless there is a genuinely new unread incoming message.
 - Real/dev profiles that are already matched do not appear in Fruit.
 - Opening an unread Inbox row clears the badge before Chat navigation, so rapid device/browser back does not flash the old unread state.
+- Real/dev matches remain visible after using device/browser back from match detail.
+- Match detail opened from Matches, Inbox, Discover, Fruit, or Chat has a canonical Android hardware-back destination.
+- Matches and Inbox refresh backend match/profile data on focus, so Fruit/Discover should not be required to restore missing real/dev cards.
 - Matches list still shows active matches after using back.
 - Inbox list still shows conversations, unread row highlights, and unread tab badge counts after using back.
 - Match detail and chat still open only when a profile and active match are loaded.
@@ -50,10 +54,10 @@ Smoke UAT badge stability and Fruit filtering.
 ## Manual QA
 
 1. Sign in as one of `t`, `tt`, or `test2`.
-2. Confirm already matched real/dev profiles do not appear in Fruit.
-3. Clear any Match badge by opening each highlighted new match detail.
-4. Clear any Inbox badge by opening unread conversations.
-5. Navigate across tabs and use browser/device back several times, including rapid back after opening Chat.
-6. Wait at least 10 seconds without sending or receiving a new match/message.
-7. Confirm cleared Match and Inbox badges do not reappear.
-8. Send a genuinely new message from another dev profile and confirm the Inbox badge appears once for that new message.
+2. From Matches, open a real/dev profile detail and use device/browser back repeatedly.
+3. Confirm Matches still shows real/dev matches, not only fixture matches.
+4. Confirm the profile detail does not animate back then land on itself.
+5. From Inbox, open a conversation and use device/browser back repeatedly.
+6. Confirm Inbox still shows real/dev conversations and badges remain consistent.
+7. Confirm already matched real/dev profiles do not appear in Fruit.
+8. Wait at least 10 seconds without sending or receiving a new match/message and confirm cleared badges do not reappear.

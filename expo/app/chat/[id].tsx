@@ -365,7 +365,7 @@ function ChatScreenContent() {
       <ChatHeader
         other={other}
         onBack={goBackToInbox}
-        onProfilePress={() => router.push(`/match/${other.id}`)}
+        onProfilePress={() => router.push(`/match/${other.id}?from=chat`)}
         onSafetyPress={openSafetyActions}
       />
       {safetyMenuOpen && (

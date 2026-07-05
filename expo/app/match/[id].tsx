@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { router, Stack, useLocalSearchParams } from "expo-router";
+import { type Href, router, Stack, useLocalSearchParams } from "expo-router";
 import {
   Heart,
   Flag,
@@ -39,6 +39,7 @@ import SuperLikeIcon from "@/components/SuperLikeIcon";
 import SuperLikeBurst from "@/components/SuperLikeBurst";
 import Colors from "@/constants/colors";
 import { getPolyFruit } from "@/constants/poly-fruits";
+import { useCanonicalBack } from "@/hooks/use-canonical-back";
 import { useProfile } from "@/providers/profile-provider";
 import { PersonProfile, PromptAnswer, VoicePrompt } from "@/types";
 import { scoreMatch } from "@/utils/match";
@@ -59,7 +60,10 @@ export default function MatchDetail() {
 }
 
 function MatchDetailContent() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { from, id } = useLocalSearchParams<{
+    from?: "chat" | "discover" | "fruit" | "inbox" | "matches";
+    id: string;
+  }>();
   const {
     profile,
     getProfileById,
@@ -91,6 +95,17 @@ function MatchDetailContent() {
     message: string;
   } | null>(null);
   const [matchNoticeVisible, setMatchNoticeVisible] = useState<boolean>(false);
+  const canonicalBackHref = useMemo<Href | null>(() => {
+    if (from === "matches") return "/(tabs)/matches";
+    if (from === "inbox") return "/(tabs)/inbox";
+    if (from === "discover") return "/(tabs)/discover";
+    if (from === "fruit") return "/(tabs)/fruit";
+    if (from === "chat" && id) {
+      return { pathname: "/chat/[id]", params: { id } };
+    }
+    return null;
+  }, [from, id]);
+  useCanonicalBack(canonicalBackHref);
 
   if (!other || !profile) return null;
 
