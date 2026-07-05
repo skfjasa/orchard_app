@@ -19,6 +19,7 @@ import {
   View,
 } from "react-native";
 
+import ProtectedRoute from "@/components/navigation/ProtectedRoute";
 import SuperLikeIcon from "@/components/SuperLikeIcon";
 import { Button } from "@/components/ui";
 import Colors from "@/constants/colors";
@@ -40,6 +41,14 @@ type Selection =
   | { kind: "subscription"; id: SubscriptionId };
 
 export default function PaywallScreen() {
+  return (
+    <ProtectedRoute loadingTestID="paywall-loader">
+      <PaywallContent />
+    </ProtectedRoute>
+  );
+}
+
+function PaywallContent() {
   const { reason } = useLocalSearchParams<{ reason?: string }>();
   const {
     purchase,

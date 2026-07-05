@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 
+import ProtectedRoute from "@/components/navigation/ProtectedRoute";
 import { Button } from "@/components/ui";
 import Colors from "@/constants/colors";
 import { MOCK_PROFILES } from "@/mocks/profiles";
@@ -29,6 +30,14 @@ const REASONS: { value: ReportReason; label: string }[] = [
 ];
 
 export default function ReportScreen() {
+  return (
+    <ProtectedRoute loadingTestID="report-loader">
+      <ReportContent />
+    </ProtectedRoute>
+  );
+}
+
+function ReportContent() {
   const { profileId, messageId } = useLocalSearchParams<{
     profileId?: string;
     messageId?: string;

@@ -20,11 +20,20 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import ProtectedRoute from "@/components/navigation/ProtectedRoute";
 import Colors from "@/constants/colors";
 import { LEGAL_CONFIG } from "@/constants/legal";
 import { useProfile } from "@/providers/profile-provider";
 
 export default function SafetyLegalScreen() {
+  return (
+    <ProtectedRoute loadingTestID="safety-legal-loader">
+      <SafetyLegalContent />
+    </ProtectedRoute>
+  );
+}
+
+function SafetyLegalContent() {
   const { requestAccountDeletion } = useProfile();
   const [isDeleting, setIsDeleting] = React.useState(false);
 

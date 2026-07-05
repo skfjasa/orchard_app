@@ -48,7 +48,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - User UAT confirmed backend-backed read state: opening an incoming hosted message clears unread state, sign-out/sign-in keeps the conversation read, and a newer incoming message restores the unread badge/highlight.
 - Current working read-path cleanup adds provider-level derived selectors for matched profiles, inbox rows, profile lookup, conversation lookup, active-match checks, and tab badge counts. Matches, Inbox, chat, match detail, and tab layout now consume those selectors instead of rebuilding raw `likedIds`/`conversations`/`knownProfiles` reads in each screen.
 - User UAT confirmed the read-path selector cleanup with profile `t`.
-- Follow-up issue: using the device/browser back button can inconsistently show missing conversations, reset badges, or make matches appear to disappear. Current working fix adds auth/profile hydration guards to the tab layout, chat route, and match-detail route so stale history entries cannot render protected app screens while the signed-in profile is missing or still loading.
+- Follow-up issue: using the device/browser back button can inconsistently show missing conversations, reset badges, or make matches appear to disappear. Current working fix centralizes protected-route auth/profile hydration gating in `ProtectedRoute` and applies it to tabs, chat, match detail, edit profile, paywall, report, and safety/legal. Chat also uses `useCanonicalBack` so Android hardware back matches the in-app chat back action and returns to Inbox.
 - Current workflow cleanup updates both GitHub Actions workflows from `actions/checkout@v4` to `actions/checkout@v6`, resolving the tracked Node 20 checkout warning follow-up.
 
 ## Validation State
@@ -72,7 +72,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - Hosted `orchard-dev` is aligned through `202607040004` after `supabase db push`; migration list confirms local/remote alignment. The Supabase CLI again printed a non-fatal pg-delta catalog-cache warning after the push.
 - Hosted browser UAT passed for Realtime-triggered incoming match/message refresh with `t`/`tt` and `t`/`test2`.
 - Read-path selector cleanup passed typecheck, lint, and diff check.
-- Protected-route back-history guard passed typecheck, lint, and diff check.
+- Shared protected-route/canonical-back guard passed typecheck, lint, and diff check.
 - Checkout workflow cleanup is docs/config only; `git diff --check` passed.
 
 ## Current Risks / Blockers
@@ -118,4 +118,4 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 
 ## Next Recommended Task
 
-Smoke UAT the device/browser back-history guard: after navigating among Matches, Inbox, profile detail, and chat, use the device/browser back button and confirm protected app routes do not render missing matches, missing conversations, or reset badge state while profile hydration catches up.
+Smoke UAT the shared protected-route and Chat canonical-back behavior across tabs, chat, match detail, edit profile, paywall, report, and safety/legal.

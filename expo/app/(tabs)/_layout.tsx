@@ -1,42 +1,22 @@
-import { Redirect, Tabs } from "expo-router";
+import { Tabs } from "expo-router";
 import { Citrus, Compass, Heart, MessageCircle, User } from "lucide-react-native";
 import React from "react";
-import { ActivityIndicator, Platform, StyleSheet, View } from "react-native";
+import { Platform, StyleSheet } from "react-native";
 
+import ProtectedRoute from "@/components/navigation/ProtectedRoute";
 import Colors from "@/constants/colors";
-import { useAuth } from "@/providers/auth-provider";
 import { useProfile } from "@/providers/profile-provider";
 
 export default function TabLayout() {
-  const { initialized: authInitialized, mode, session } = useAuth();
-  const {
-    backendProfileHydrated,
-    hydrated,
-    newMatchCount,
-    profile,
-    unreadMessageCount,
-  } = useProfile();
-  const waitingForBackendProfile =
-    mode === "supabase" && !!session && !profile && !backendProfileHydrated;
+  return (
+    <ProtectedRoute loadingTestID="tabs-loader">
+      <TabNavigator />
+    </ProtectedRoute>
+  );
+}
 
-  if (!hydrated || !authInitialized || waitingForBackendProfile) {
-    return (
-      <View style={styles.center} testID="tabs-loader">
-        <ActivityIndicator color={Colors.light.accent} />
-      </View>
-    );
-  }
-
-  if (mode === "supabase" && !session) {
-    return <Redirect href="/onboarding" />;
-  }
-
-  if (mode === "supabase" && session && !profile) {
-    return <Redirect href="/onboarding/account-type" />;
-  }
-
-  if (!profile) return <Redirect href="/onboarding" />;
-
+function TabNavigator() {
+  const { newMatchCount, unreadMessageCount } = useProfile();
   return (
     <Tabs
       screenOptions={{
@@ -119,11 +99,5 @@ const styles = StyleSheet.create({
     fontWeight: "800" as const,
     minWidth: 18,
     height: 18,
-  },
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: Colors.light.background,
   },
 });

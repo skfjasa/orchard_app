@@ -180,7 +180,7 @@ Last updated: 2026-07-04
 - Browser UAT confirmed backend-backed read state: opening an incoming hosted message clears unread state, sign-out/sign-in keeps the conversation read, and a newer incoming message restores the unread badge/highlight.
 - Match, Inbox, chat, match detail, and tab layout read paths now consume provider-level selectors for matched profiles, inbox rows, profile lookup, conversation lookup, active-match checks, and tab badge counts instead of rebuilding raw `likedIds`/`conversations`/`knownProfiles` reads in each screen. Typecheck, lint, and diff check pass.
 - User UAT confirmed the read-path selector cleanup with profile `t`.
-- Follow-up back-history hardening adds auth/profile hydration guards to the tab layout, chat route, and match-detail route so stale device/browser back entries cannot render protected app screens while the signed-in profile is missing or still loading. This targets the inconsistent symptom where device/browser back could show missing matches/conversations or reset-looking badge state.
+- Follow-up back-history hardening now uses a shared `ProtectedRoute` wrapper for signed-in-only surfaces: tabs, chat, match detail, edit profile, paywall, report, and safety/legal. Stale device/browser back entries therefore cannot render protected app screens while the signed-in profile is missing or still loading. Chat also uses a canonical Android hardware-back hook so device back matches the in-app chat back action and returns to Inbox.
 - GitHub Actions workflow cleanup updates `Expo Checks` and `Supabase DB Tests` from `actions/checkout@v4` to `actions/checkout@v6`, resolving the tracked checkout Node 20 warning follow-up.
 - Fruit tab UAT exposed that static Fruit fixtures did not auto-match, real/dev backend profiles did not appear there, and one-sided Fruit/profile-detail likes used browser alerts. Fruit now mixes backend-discovered real/dev profiles with static Fruit fixtures, static Fruit fixtures auto-match locally for testing, and one-sided like feedback uses app overlays.
 - Read-state UAT exposed that already-read backend messages became unread again after sign-out/sign-in. The app now persists per-user read watermarks locally and counts unread backend messages only after the saved read point. New-match seen state is also persisted per user so opened match highlights stay cleared across sessions.
@@ -211,11 +211,11 @@ Last updated: 2026-07-04
 
 ## Current Task
 
-Smoke UAT the device/browser back-history guard.
+Smoke UAT the shared protected-route and Chat canonical-back behavior.
 
 ## Next Planned Tasks
 
-1. Smoke-UAT device/browser back navigation across Matches, Inbox, match detail, and chat after the protected-route guard.
+1. Smoke-UAT device/browser back navigation across protected routes after the shared guard, including Android hardware back from Chat returning to Inbox.
 2. Decide whether to ingest fixture profile images into Supabase Storage for backend-backed discovery; the current dev fixtures intentionally omit `profile_photos` because mock image URLs are remote assets, not storage object paths.
 3. Decide whether to make Supabase DB tests automatic for Supabase migration pull requests.
 4. Closer to TestFlight: create Apple Developer Program account and finish release-readiness setup.

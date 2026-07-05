@@ -37,6 +37,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import ProtectedRoute from "@/components/navigation/ProtectedRoute";
 import { searchCities } from "@/constants/cities";
 import Colors from "@/constants/colors";
 import { useProfile } from "@/providers/profile-provider";
@@ -58,6 +59,14 @@ import {
 } from "@/types";
 
 export default function EditProfileScreen() {
+  return (
+    <ProtectedRoute loadingTestID="edit-profile-loader">
+      <EditProfileContent />
+    </ProtectedRoute>
+  );
+}
+
+function EditProfileContent() {
   const { profile, updateProfile } = useProfile();
 
   const [people, setPeople] = useState<PersonProfile[]>(profile?.people ?? []);
