@@ -85,7 +85,9 @@ export default function FruitScreen() {
       backendNonFixtureProfiles.map((item) => item.profile.id)
     );
     const pool = [...byId.values()].filter((p) => {
-      if (backendProfileIds.has(p.id)) return p.id !== profile?.id;
+      if (backendProfileIds.has(p.id)) {
+        return p.id !== profile?.id && !likedIds.includes(p.id);
+      }
       return !likedIds.includes(p.id) && !passedIds.includes(p.id);
     });
     return pool

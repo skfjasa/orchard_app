@@ -20,7 +20,12 @@ function formatTime(t: number): string {
 }
 
 export default function InboxScreen() {
-  const { profile, inboxItems: items, typingProfileIds } = useProfile();
+  const {
+    profile,
+    inboxItems: items,
+    markRead,
+    typingProfileIds,
+  } = useProfile();
   const isCouple = profile?.accountType === "couple";
 
   return (
@@ -95,7 +100,10 @@ export default function InboxScreen() {
                     )}
                   </Pressable>
                   <Pressable
-                    onPress={() => router.push(`/chat/${item.other.id}`)}
+                    onPress={() => {
+                      markRead(item.other.id);
+                      router.push(`/chat/${item.other.id}`);
+                    }}
                     style={({ pressed }) => [
                       styles.rowContent,
                       pressed && { opacity: 0.72 },
