@@ -333,10 +333,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     mutationFn: saveStoredSeenMatchIds,
   });
 
-  const saveKnownProfilesMutation = useMutation({
-    mutationFn: saveStoredKnownProfiles,
-  });
-
   useEffect(() => {
     if (mode !== "supabase") {
       lastBackendProfileSessionKey.current = null;
@@ -346,7 +342,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       pendingBackendMatchRefreshRef.current = false;
       knownProfilesRef.current = [];
       displayProfilesRef.current = {};
-      saveKnownProfilesMutation.mutate([]);
+      void saveStoredKnownProfiles([]);
       setBackendActiveMatchIds([]);
       setKnownProfiles([]);
       setBackendProfileHydrated(false);
@@ -361,7 +357,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       pendingBackendMatchRefreshRef.current = false;
       knownProfilesRef.current = [];
       displayProfilesRef.current = {};
-      saveKnownProfilesMutation.mutate([]);
+      void saveStoredKnownProfiles([]);
       setBackendActiveMatchIds([]);
       setKnownProfiles([]);
       setBackendProfileHydrated(false);
@@ -386,11 +382,11 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     pendingBackendMatchRefreshRef.current = false;
     knownProfilesRef.current = [];
     displayProfilesRef.current = {};
-    saveKnownProfilesMutation.mutate([]);
+    void saveStoredKnownProfiles([]);
     setBackendActiveMatchIds([]);
     setKnownProfiles([]);
     setBackendProfileHydrated(false);
-  }, [mode, saveKnownProfilesMutation, session?.access_token, userId]);
+  }, [mode, session?.access_token, userId]);
 
   useEffect(() => {
     if (mode !== "supabase") return;
@@ -497,11 +493,11 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       const next = changed ? [...byId.values()] : prev;
       knownProfilesRef.current = next;
       if (changed) {
-        saveKnownProfilesMutation.mutate(next);
+        void saveStoredKnownProfiles(next);
       }
       return next;
     });
-  }, [saveKnownProfilesMutation]);
+  }, []);
 
   const refreshBackendMatches = useCallback(async () => {
     if (mode !== "supabase") return;
@@ -850,7 +846,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     setKnownProfiles([]);
     knownProfilesRef.current = [];
     displayProfilesRef.current = {};
-    saveKnownProfilesMutation.mutate([]);
+    void saveStoredKnownProfiles([]);
     setConversations([]);
     setLikedIds([]);
     setNewMatchIds([]);
@@ -879,7 +875,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   }, [
     mode,
     signOutAuth,
-    saveKnownProfilesMutation,
     saveProfileMutation,
     saveConvosMutation,
     saveLikesMutation,
