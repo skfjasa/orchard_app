@@ -175,6 +175,12 @@ type MatchActionResult = {
   matched?: boolean;
 };
 
+export interface InboxListItem {
+  conversation: Conversation;
+  other: Profile;
+  lastMessage: Message | null;
+}
+
 const BACKEND_MATCH_REFRESH_INTERVAL_MS = 10_000;
 const BACKEND_REALTIME_REFRESH_DELAY_MS = 250;
 
@@ -1528,6 +1534,68 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     return superLikeLastUseAt + SUPER_LIKE_RECHARGE_MS;
   }, [superLikeBalance, superLikeLastUseAt]);
 
+  const getProfileById = useCallback(
+    (profileId: string) =>
+      knownProfiles.find((item) => item.id === profileId) ??
+      MOCK_PROFILES.find((item) => item.id === profileId),
+    [knownProfiles]
+  );
+
+  const getConversation = useCallback(
+    (profileId: string) =>
+      conversations.find((conversation) => conversation.profileId === profileId),
+    [conversations]
+  );
+
+  const hasActiveMatch = useCallback(
+    (profileId: string) => likedIds.includes(profileId),
+    [likedIds]
+  );
+
+  const matchedProfiles = useMemo(
+    () =>
+      likedIds
+        .map((profileId) => getProfileById(profileId))
+        .filter((item): item is Profile => !!item),
+    [getProfileById, likedIds]
+  );
+
+  const inboxItems = useMemo(
+    () =>
+      conversations
+        .map<InboxListItem | null>((conversation) => {
+          const other = getProfileById(conversation.profileId);
+          if (!other) return null;
+          const messages = Array.isArray(conversation.messages)
+            ? conversation.messages
+            : [];
+          const lastMessage = messages[messages.length - 1] ?? null;
+          return {
+            conversation: { ...conversation, messages },
+            other,
+            lastMessage,
+          };
+        })
+        .filter((item): item is InboxListItem => !!item)
+        .sort((a, b) => {
+          const aTime = a.lastMessage?.at ?? 0;
+          const bTime = b.lastMessage?.at ?? 0;
+          return bTime - aTime;
+        }),
+    [conversations, getProfileById]
+  );
+
+  const newMatchCount = useMemo(() => newMatchIds.length, [newMatchIds]);
+
+  const unreadMessageCount = useMemo(
+    () =>
+      conversations.reduce(
+        (total, conversation) => total + Math.max(0, conversation.unread),
+        0
+      ),
+    [conversations]
+  );
+
   useEffect(() => {
     if (!hydrated) return;
     if (superLikeBalance >= DEFAULT_SUPER_LIKES) return;
@@ -1555,6 +1623,10 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       conversations,
       likedIds,
       newMatchIds,
+      matchedProfiles,
+      inboxItems,
+      newMatchCount,
+      unreadMessageCount,
       passedIds,
       hydrated,
       backendProfileHydrated,
@@ -1571,6 +1643,9 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       superLikeLastUseAt,
       superLikeRechargeAt,
       subscription,
+      getProfileById,
+      getConversation,
+      hasActiveMatch,
       completeOnboarding,
       rememberProfiles,
       markMatchSeen,
@@ -1605,6 +1680,10 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       conversations,
       likedIds,
       newMatchIds,
+      matchedProfiles,
+      inboxItems,
+      newMatchCount,
+      unreadMessageCount,
       passedIds,
       hydrated,
       backendProfileHydrated,
@@ -1621,6 +1700,9 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       superLikeLastUseAt,
       superLikeRechargeAt,
       subscription,
+      getProfileById,
+      getConversation,
+      hasActiveMatch,
       completeOnboarding,
       rememberProfiles,
       markMatchSeen,

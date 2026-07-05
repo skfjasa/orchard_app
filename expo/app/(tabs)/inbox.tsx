@@ -1,20 +1,12 @@
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { Heart, MessageCircle, Users } from "lucide-react-native";
-import React, { useMemo } from "react";
+import React from "react";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Colors from "@/constants/colors";
-import { MOCK_PROFILES } from "@/mocks/profiles";
 import { useProfile } from "@/providers/profile-provider";
-import { Conversation, Message, Profile } from "@/types";
-
-interface InboxItem {
-  convo: Conversation;
-  other: Profile;
-  lastMessage: Message | null;
-}
 
 function formatTime(t: number): string {
   const diff = Date.now() - t;
@@ -28,31 +20,8 @@ function formatTime(t: number): string {
 }
 
 export default function InboxScreen() {
-  const { profile, knownProfiles, conversations, typingProfileIds } = useProfile();
+  const { profile, inboxItems: items, typingProfileIds } = useProfile();
   const isCouple = profile?.accountType === "couple";
-
-  const items = useMemo(() => {
-    return conversations
-      .map<InboxItem | null>((c) => {
-        const other =
-          knownProfiles.find((p) => p.id === c.profileId) ??
-          MOCK_PROFILES.find((p) => p.id === c.profileId);
-        if (!other) return null;
-        const messages = Array.isArray(c.messages) ? c.messages : [];
-        const lastMessage = messages[messages.length - 1] ?? null;
-        return {
-          convo: { ...c, messages },
-          other,
-          lastMessage,
-        };
-      })
-      .filter((x): x is InboxItem => !!x)
-      .sort((a, b) => {
-        const ta = a.lastMessage?.at ?? 0;
-        const tb = b.lastMessage?.at ?? 0;
-        return tb - ta;
-      });
-  }, [conversations, knownProfiles]);
 
   return (
     <View style={styles.root}>
@@ -91,10 +60,10 @@ export default function InboxScreen() {
         ) : (
           <FlatList
             data={items}
-            keyExtractor={(i) => i.convo.id}
+            keyExtractor={(i) => i.conversation.id}
             contentContainerStyle={{ paddingBottom: 20 }}
             renderItem={({ item }) => {
-              const unread = item.convo.unread > 0;
+              const unread = item.conversation.unread > 0;
               return (
                 <View style={[styles.row, unread && styles.rowUnread]}>
                   <Pressable
@@ -174,7 +143,7 @@ export default function InboxScreen() {
                       {unread && (
                         <View style={styles.unreadBadge}>
                           <Text style={styles.unreadBadgeText}>
-                            {Math.min(item.convo.unread, 9)}
+                            {Math.min(item.conversation.unread, 9)}
                           </Text>
                         </View>
                       )}

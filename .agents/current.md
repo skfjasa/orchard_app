@@ -46,6 +46,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - User UAT confirmed Realtime-triggered match/message refresh using `t` as profile A and both `tt` and `test2` as profile B accounts for matching and sending.
 - Current working backend read-state slice adds `public.match_read_states` with RLS, extends `ChatService.getThread` with `readThrough`, implements Supabase `markRead`, and lets backend match/thread hydration prefer the hosted read watermark while retaining local watermarks as fallback/mock behavior.
 - User UAT confirmed backend-backed read state: opening an incoming hosted message clears unread state, sign-out/sign-in keeps the conversation read, and a newer incoming message restores the unread badge/highlight.
+- Current working read-path cleanup adds provider-level derived selectors for matched profiles, inbox rows, profile lookup, conversation lookup, active-match checks, and tab badge counts. Matches, Inbox, chat, match detail, and tab layout now consume those selectors instead of rebuilding raw `likedIds`/`conversations`/`knownProfiles` reads in each screen.
 
 ## Validation State
 
@@ -67,6 +68,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - Read-state migration `202607040004_match_read_states.sql`: local `supabase db reset` passed and local `supabase test db` passed, 1 file / 45 tests.
 - Hosted `orchard-dev` is aligned through `202607040004` after `supabase db push`; migration list confirms local/remote alignment. The Supabase CLI again printed a non-fatal pg-delta catalog-cache warning after the push.
 - Hosted browser UAT passed for Realtime-triggered incoming match/message refresh with `t`/`tt` and `t`/`test2`.
+- Read-path selector cleanup passed typecheck, lint, and diff check.
 
 ## Current Risks / Blockers
 
@@ -110,4 +112,4 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 
 ## Next Recommended Task
 
-Continue backend source-of-truth cleanup by routing match/inbox/detail read paths through service boundaries where practical, while keeping mock mode and current UI behavior intact.
+Smoke UAT the read-path selector cleanup: Matches list, Inbox list, tab badges, match detail, and chat should behave the same as before in hosted Supabase mode.

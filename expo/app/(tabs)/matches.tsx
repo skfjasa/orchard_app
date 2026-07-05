@@ -1,29 +1,16 @@
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { Heart, Users } from "lucide-react-native";
-import React, { useMemo } from "react";
+import React from "react";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Colors from "@/constants/colors";
-import { MOCK_PROFILES } from "@/mocks/profiles";
 import { useProfile } from "@/providers/profile-provider";
 import { Profile } from "@/types";
 
 export default function MatchesScreen() {
-  const { knownProfiles, likedIds, newMatchIds } = useProfile();
-
-  const matches = useMemo(
-    () =>
-      likedIds
-        .map(
-          (id) =>
-            knownProfiles.find((p) => p.id === id) ??
-            MOCK_PROFILES.find((p) => p.id === id)
-        )
-        .filter((p): p is Profile => !!p),
-    [knownProfiles, likedIds]
-  );
+  const { matchedProfiles: matches, newMatchIds } = useProfile();
 
   return (
     <View style={styles.root}>

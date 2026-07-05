@@ -1,25 +1,13 @@
 import { Tabs } from "expo-router";
 import { Citrus, Compass, Heart, MessageCircle, User } from "lucide-react-native";
-import React, { useMemo } from "react";
+import React from "react";
 import { Platform, StyleSheet } from "react-native";
 
 import Colors from "@/constants/colors";
 import { useProfile } from "@/providers/profile-provider";
 
 export default function TabLayout() {
-  const { conversations, newMatchIds } = useProfile();
-  const newMatchCount = useMemo(
-    () => newMatchIds.length,
-    [newMatchIds]
-  );
-  const unreadMessageCount = useMemo(
-    () =>
-      conversations.reduce(
-        (total, conversation) => total + Math.max(0, conversation.unread),
-        0
-      ),
-    [conversations]
-  );
+  const { newMatchCount, unreadMessageCount } = useProfile();
 
   return (
     <Tabs

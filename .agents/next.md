@@ -1,6 +1,6 @@
 # Next Task
 
-Continue backend source-of-truth cleanup for match, inbox, and profile-detail read paths.
+Smoke UAT the read-path selector cleanup.
 
 ## Likely Areas
 
@@ -15,13 +15,15 @@ Continue backend source-of-truth cleanup for match, inbox, and profile-detail re
 ## Pre-Edit Checks
 
 - Inspect git status and latest commit.
-- Read the relevant service interfaces before changing screen/provider behavior.
-- Keep mock mode behavior unchanged.
+- Use hosted Supabase mode with `t`, `tt`, and/or `test2`.
 
 ## Definition Of Done
 
-- The selected read path uses an existing or narrowly extended service boundary.
-- Supabase mode keeps hosted match/profile/message state as the source of truth where supported.
+- Matches list still shows active matches.
+- Match tab badge and highlighted new match behavior still work.
+- Inbox list still shows conversations, unread row highlights, and unread tab badge counts.
+- Match detail still opens from Matches and Inbox avatar/profile area.
+- Chat still opens only for active matches and can send/read messages.
 - Mock mode and local fixture behavior still work.
 - `docs/project-status.md` remains current after any material change.
 
@@ -34,4 +36,9 @@ Continue backend source-of-truth cleanup for match, inbox, and profile-detail re
 
 ## Manual QA
 
-Use `t`, `tt`, and/or `test2` against hosted Supabase mode after the next implementation slice is selected.
+1. Sign in as one of `t`, `tt`, or `test2`.
+2. Check Match and Inbox tab badge counts.
+3. Open Matches, tap a matched profile, and confirm profile detail opens.
+4. From profile detail, open chat and send a message.
+5. Return to Inbox, open the matched profile from the avatar area, then open chat from the row body.
+6. Confirm unread state still clears after opening the conversation.

@@ -30,7 +30,6 @@ import {
 } from "react-native";
 
 import Colors from "@/constants/colors";
-import { MOCK_PROFILES } from "@/mocks/profiles";
 import { useProfile } from "@/providers/profile-provider";
 import { Message, MessageStatus, Profile } from "@/types";
 
@@ -109,9 +108,9 @@ export default function ChatScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const {
     profile,
-    knownProfiles,
-    conversations,
-    likedIds,
+    getProfileById,
+    getConversation,
+    hasActiveMatch,
     sendMessage,
     deleteMessage,
     sendPhoto,
@@ -124,14 +123,12 @@ export default function ChatScreen() {
     typingProfileIds,
   } = useProfile();
   const other = useMemo(
-    () =>
-      knownProfiles.find((p) => p.id === id) ??
-      MOCK_PROFILES.find((p) => p.id === id),
-    [id, knownProfiles]
+    () => (id ? getProfileById(id) : undefined),
+    [getProfileById, id]
   );
   const convo = useMemo(
-    () => conversations.find((c) => c.profileId === id),
-    [conversations, id]
+    () => (id ? getConversation(id) : undefined),
+    [getConversation, id]
   );
 
   const [text, setText] = useState<string>("");
@@ -141,7 +138,7 @@ export default function ChatScreen() {
   const isCouple = profile?.accountType === "couple";
   const activeName = profile?.people[activePersonIdx]?.name;
   const isTyping = !!id && typingProfileIds.includes(id);
-  const hasActiveLocalMatch = !!id && likedIds.includes(id);
+  const hasActiveLocalMatch = !!id && hasActiveMatch(id);
   const messages = useMemo(
     () => normalizeMessages(convo?.messages),
     [convo?.messages]

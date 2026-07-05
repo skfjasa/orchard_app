@@ -38,7 +38,6 @@ import SuperLikeIcon from "@/components/SuperLikeIcon";
 import SuperLikeBurst from "@/components/SuperLikeBurst";
 import Colors from "@/constants/colors";
 import { getPolyFruit } from "@/constants/poly-fruits";
-import { MOCK_PROFILES } from "@/mocks/profiles";
 import { useProfile } from "@/providers/profile-provider";
 import { PersonProfile, PromptAnswer, VoicePrompt } from "@/types";
 import { scoreMatch } from "@/utils/match";
@@ -54,20 +53,18 @@ export default function MatchDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const {
     profile,
-    knownProfiles,
+    getProfileById,
+    hasActiveMatch,
     likeProfile,
     markMatchSeen,
     passProfile,
-    likedIds,
     superLikeProfile,
     superLikedIds,
     blockProfile,
   } = useProfile();
   const other = useMemo(
-    () =>
-      knownProfiles.find((p) => p.id === id) ??
-      MOCK_PROFILES.find((p) => p.id === id),
-    [id, knownProfiles]
+    () => (id ? getProfileById(id) : undefined),
+    [getProfileById, id]
   );
 
   const allPhotos: string[] = useMemo(() => {
@@ -90,7 +87,7 @@ export default function MatchDetail() {
 
   const score = scoreMatch(profile, other);
   const pct = Math.round(score.total * 100);
-  const isMatched = likedIds.includes(other.id);
+  const isMatched = hasActiveMatch(other.id);
   const isCouple = other.accountType === "couple";
   const isBoosted = !!(other.boostedUntil && other.boostedUntil > Date.now());
 
