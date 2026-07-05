@@ -79,7 +79,7 @@ Continue converting the Orchard Expo prototype into an iOS-first Supabase-backed
 - Apple Developer Program account still needs to be created.
 - Real public legal/support URLs remain placeholders.
 - Decide whether Supabase DB tests should run automatically on `supabase/**` pull-request changes.
-- Track/resolve GitHub Actions Node 20 deprecation warning when a Node-24-native checkout action is available.
+- GitHub Actions checkout warning resolved locally by updating workflows to `actions/checkout@v6`; push is pending on network connectivity.
 
 ## Next Recommended Action
 

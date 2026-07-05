@@ -49,6 +49,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - Current working read-path cleanup adds provider-level derived selectors for matched profiles, inbox rows, profile lookup, conversation lookup, active-match checks, and tab badge counts. Matches, Inbox, chat, match detail, and tab layout now consume those selectors instead of rebuilding raw `likedIds`/`conversations`/`knownProfiles` reads in each screen.
 - User UAT confirmed the read-path selector cleanup with profile `t`.
 - Follow-up issue: using the device/browser back button can inconsistently show missing conversations, reset badges, or make matches appear to disappear. Current working fix adds auth/profile hydration guards to the tab layout, chat route, and match-detail route so stale history entries cannot render protected app screens while the signed-in profile is missing or still loading.
+- Current workflow cleanup updates both GitHub Actions workflows from `actions/checkout@v4` to `actions/checkout@v6`, resolving the tracked Node 20 checkout warning follow-up.
 
 ## Validation State
 
@@ -72,11 +73,13 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - Hosted browser UAT passed for Realtime-triggered incoming match/message refresh with `t`/`tt` and `t`/`test2`.
 - Read-path selector cleanup passed typecheck, lint, and diff check.
 - Protected-route back-history guard passed typecheck, lint, and diff check.
+- Checkout workflow cleanup is docs/config only; `git diff --check` passed.
 
 ## Current Risks / Blockers
 
 - Chat UI still preserves local simulated/photo behavior; only real text messages are persisted/hydrated from Supabase.
 - Remaining backend source-of-truth cleanup should continue behind service boundaries and preserve mock mode.
+- Local `main` is ahead of `origin/main` while GitHub push is blocked by network connectivity to `github.com:443`.
 - Supabase Auth email sender/template branding still requires custom SMTP setup if branded emails are needed.
 
 ## Likely Relevant Files

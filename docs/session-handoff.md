@@ -125,7 +125,7 @@ RPCs:
 - Apple Developer Program account still needs to be created.
 - Real public legal/support URLs are still placeholders.
 - Decide whether manual Supabase DB tests should run automatically for `supabase/**` pull-request changes.
-- Resolve GitHub Actions Node 20 deprecation warning from `actions/checkout@v4` when a Node-24-native action version is available.
+- GitHub Actions checkout warning resolved locally by updating workflows from `actions/checkout@v4` to `actions/checkout@v6`; push is pending on network connectivity.
 
 ## Next Best Tasks
 
