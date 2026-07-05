@@ -246,6 +246,25 @@ export interface Database {
         Update: never;
         Relationships: [];
       };
+      match_read_states: {
+        Row: {
+          match_id: string;
+          profile_id: string;
+          read_through_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          match_id: string;
+          profile_id: string;
+          read_through_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          read_through_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       reports: {
         Row: {
           id: string;

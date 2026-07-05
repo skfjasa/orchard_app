@@ -7,6 +7,8 @@ import type { ChatService } from "./chat-service";
 import { fail, ok, requireSupabase } from "./supabase-service-response";
 
 type MessageRow = Database["public"]["Tables"]["messages"]["Row"];
+type MatchReadStateRow =
+  Database["public"]["Tables"]["match_read_states"]["Row"];
 
 function toTimestamp(value: string): number {
   const timestamp = Date.parse(value);
@@ -22,6 +24,17 @@ function toMessage(row: MessageRow, currentProfileId?: string): Message {
     kind: "text",
     status: "sent",
   };
+}
+
+function toISOString(value: number): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return new Date().toISOString();
+  return date.toISOString();
+}
+
+function toReadThrough(row?: MatchReadStateRow | null): number | undefined {
+  if (!row) return undefined;
+  return toTimestamp(row.read_through_at);
 }
 
 async function getCurrentProfileId(): Promise<string | undefined> {
@@ -48,9 +61,30 @@ export function createSupabaseChatService(): ChatService {
       }
 
       const currentProfileId = await getCurrentProfileId();
+      let readThrough: number | undefined;
+      if (currentProfileId) {
+        const { data: readState, error: readStateError } = await client.value
+          .from("match_read_states")
+          .select("*")
+          .eq("match_id", matchId)
+          .eq("profile_id", currentProfileId)
+          .maybeSingle();
+
+        if (readStateError) {
+          console.log("[supabase-chat-service] read state unavailable", {
+            code: readStateError.code,
+            message: readStateError.message,
+            matchId,
+          });
+        } else {
+          readThrough = toReadThrough(readState);
+        }
+      }
+
       return ok({
         matchId,
         messages: (data ?? []).map((row) => toMessage(row, currentProfileId)),
+        readThrough,
       });
     },
 
@@ -80,7 +114,25 @@ export function createSupabaseChatService(): ChatService {
       return ok(toMessage(data, input.senderId));
     },
 
-    async markRead() {
+    async markRead(matchId, profileId, readThrough = Date.now()) {
+      const client = requireSupabase(supabase);
+      if (!client.ok) return client;
+
+      const { error } = await client.value
+        .from("match_read_states")
+        .upsert(
+          {
+            match_id: matchId,
+            profile_id: profileId,
+            read_through_at: toISOString(readThrough),
+          },
+          { onConflict: "match_id,profile_id" }
+        );
+
+      if (error) {
+        return fail("mark_read_failed", "Could not mark thread read.", error);
+      }
+
       return ok(undefined);
     },
   };

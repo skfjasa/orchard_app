@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(42);
+select plan(45);
 
 insert into auth.users (
   id,
@@ -579,6 +579,61 @@ select is(
   1,
   'report message RPC stores the reported message id'
 );
+
+select lives_ok(
+  $$
+    insert into public.match_read_states (
+      match_id,
+      profile_id,
+      read_through_at
+    )
+    values (
+      '00000000-0000-0000-0000-000000000100',
+      '00000000-0000-0000-0000-000000000001',
+      now()
+    )
+    on conflict (match_id, profile_id)
+    do update set read_through_at = excluded.read_through_at
+  $$,
+  'active match member can upsert own read state'
+);
+
+select is(
+  (
+    select count(*)::int
+    from public.match_read_states
+    where match_id = '00000000-0000-0000-0000-000000000100'
+      and profile_id = '00000000-0000-0000-0000-000000000001'
+  ),
+  1,
+  'own read state is visible to the match member'
+);
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000003', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+
+select throws_ok(
+  $$
+    insert into public.match_read_states (
+      match_id,
+      profile_id,
+      read_through_at
+    )
+    values (
+      '00000000-0000-0000-0000-000000000100',
+      '00000000-0000-0000-0000-000000000003',
+      now()
+    )
+  $$,
+  '42501',
+  'new row violates row-level security policy for table "match_read_states"',
+  'non-member cannot insert read state'
+);
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
 
 select lives_ok(
   $$ select public.unmatch_match('00000000-0000-0000-0000-000000000100') $$,

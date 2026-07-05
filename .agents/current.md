@@ -7,8 +7,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 ## Branch And Commit
 
 - Branch: `main`
-- Latest pushed implementation checkpoint: `43b20df` - Add realtime match message refresh
-- Previous implementation checkpoint: `42d39d9` - Bank onboarding visual UAT
+- Latest implementation checkpoint: Persist backend chat read state
+- Previous pushed checkpoint: `58bf101` - Bank realtime UAT
 
 ## Recent Changes
 
@@ -44,6 +44,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - Current working backend hardening slice adds a Realtime service boundary, a mock no-op realtime adapter, Supabase match/message Realtime subscriptions, and migration `202607040003_enable_match_message_realtime.sql` to publish `public.matches` and `public.messages`.
 - Backend match/thread hydration still runs immediately after sign-in, on app-active, and every 10 seconds as a fallback; Realtime now triggers a debounced refresh when active matches change or a message is inserted into a currently known active match.
 - User UAT confirmed Realtime-triggered match/message refresh using `t` as profile A and both `tt` and `test2` as profile B accounts for matching and sending.
+- Current working backend read-state slice adds `public.match_read_states` with RLS, extends `ChatService.getThread` with `readThrough`, implements Supabase `markRead`, and lets backend match/thread hydration prefer the hosted read watermark while retaining local watermarks as fallback/mock behavior.
 
 ## Validation State
 
@@ -62,12 +63,14 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - `expo\node_modules\.bin\supabase db reset`: passed after storage policy migration.
 - `expo\node_modules\.bin\supabase test db`: passed, 1 file / 42 tests.
 - Realtime migration `202607040003_enable_match_message_realtime.sql`: local `supabase db reset` passed and local `supabase test db` passed, 1 file / 42 tests.
-- Hosted `orchard-dev` is aligned through `202607040003` after `supabase db push`; migration list confirms local/remote alignment. The Supabase CLI again printed a non-fatal pg-delta catalog-cache warning after the push.
+- Read-state migration `202607040004_match_read_states.sql`: local `supabase db reset` passed and local `supabase test db` passed, 1 file / 45 tests.
+- Hosted `orchard-dev` is aligned through `202607040004` after `supabase db push`; migration list confirms local/remote alignment. The Supabase CLI again printed a non-fatal pg-delta catalog-cache warning after the push.
 - Hosted browser UAT passed for Realtime-triggered incoming match/message refresh with `t`/`tt` and `t`/`test2`.
 
 ## Current Risks / Blockers
 
 - Chat UI still preserves local simulated/photo behavior; only real text messages are persisted/hydrated from Supabase.
+- Backend read-state needs browser UAT across sign-out/sign-in or a second browser session.
 - Supabase Auth email sender/template branding still requires custom SMTP setup if branded emails are needed.
 
 ## Likely Relevant Files
@@ -93,6 +96,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - `supabase/migrations/202607040001_profile_photo_visible_storage_reads.sql`
 - `supabase/migrations/202607040002_active_match_profile_reads.sql`
 - `supabase/migrations/202607040003_enable_match_message_realtime.sql`
+- `supabase/migrations/202607040004_match_read_states.sql`
 - `supabase/tests/database/202606200001_mvp_security.sql`
 - `docs/project-status.md`
 
@@ -105,4 +109,4 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 
 ## Next Recommended Task
 
-Choose the next backend/source-of-truth hardening slice or move to human setup for TestFlight readiness.
+UAT backend-backed read state: read a hosted incoming message, sign out/in or use another browser session, and confirm the conversation stays read until a newer incoming message arrives.

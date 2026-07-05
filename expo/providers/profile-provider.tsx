@@ -485,6 +485,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       const backendConversations: {
         profileId: string;
         messages: Message[];
+        readThrough?: number;
         isFixture: boolean;
       }[] = [];
       const matchedProfilesToRemember: Profile[] = [];
@@ -525,6 +526,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         backendConversations.push({
           profileId: otherProfile.id,
           messages: threadResult.value.messages,
+          readThrough: threadResult.value.readThrough,
           isFixture: !!mockProfile,
         });
       }
@@ -559,7 +561,9 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         let next = filtered.length === prev.length ? prev : filtered;
         for (const backendConversation of backendConversations) {
           const readThrough =
-            readWatermarks[userId]?.[backendConversation.profileId] ?? 0;
+            backendConversation.readThrough ??
+            readWatermarks[userId]?.[backendConversation.profileId] ??
+            0;
           next = mergeBackendConversation(
             next,
             backendConversation.profileId,
@@ -1310,8 +1314,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
   const markRead = useCallback(
     (profileId: string) => {
+      const readThrough = newestMessageAt(conversations, profileId);
       if (profile?.id) {
-        const readThrough = newestMessageAt(conversations, profileId);
         if (readThrough > 0) {
           setReadWatermarks((prev) => {
             const ownerWatermarks = prev[profile.id] ?? {};
@@ -1328,6 +1332,46 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
           });
         }
       }
+      if (
+        readThrough > 0 &&
+        mode === "supabase" &&
+        appServices.capabilities.matches === "supabase" &&
+        appServices.capabilities.chat === "supabase" &&
+        profile?.id &&
+        userId &&
+        profile.id === userId
+      ) {
+        const targetProfileId = toBackendProfileId(profileId);
+        if (isBackendProfileId(targetProfileId)) {
+          void appServices.matches.listMatches(userId).then((matchResult) => {
+            if (!matchResult.ok) {
+              console.log("[profile-provider] backend mark read match lookup failed", {
+                code: matchResult.error.code,
+                message: matchResult.error.message,
+              });
+              return;
+            }
+
+            const match = matchResult.value.find(
+              (item) =>
+                (item.userA === userId && item.userB === targetProfileId) ||
+                (item.userA === targetProfileId && item.userB === userId)
+            );
+            if (!match) return;
+
+            void appServices.chat.markRead(match.id, userId, readThrough).then(
+              (result) => {
+                if (!result.ok) {
+                  console.log("[profile-provider] backend mark read failed", {
+                    code: result.error.code,
+                    message: result.error.message,
+                  });
+                }
+              }
+            );
+          });
+        }
+      }
       setConversations((prev) => {
         const next = markConversationRead(prev, profileId);
         if (next === prev) return prev;
@@ -1335,7 +1379,15 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         return next;
       });
     },
-    [conversations, profile?.id, saveConvosMutation, saveReadWatermarksMutation]
+    [
+      appServices,
+      conversations,
+      mode,
+      profile?.id,
+      saveConvosMutation,
+      saveReadWatermarksMutation,
+      userId,
+    ]
   );
 
   const purchase = useCallback(

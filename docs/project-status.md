@@ -176,6 +176,7 @@ Last updated: 2026-07-04
 - Live-update UAT showed backend state could appear after making a swipe, meaning the UI was still too dependent on action-triggered provider movement. Backend match/thread hydration now refreshes immediately after sign-in, every 10 seconds while signed in, and whenever the app returns to active; true Supabase Realtime subscriptions remain a later hardening step.
 - Realtime hardening now adds a service boundary and Supabase adapter for match/message changes. The app subscribes to `public.matches` for the signed-in profile and `public.messages` for currently active backend match ids, then debounces `refreshBackendMatches`; the existing immediate/app-active/10-second refresh loop remains as a fallback. Migration `202607040003_enable_match_message_realtime.sql` publishes `public.matches` and `public.messages` to `supabase_realtime`; hosted `orchard-dev` is aligned through `202607040003`.
 - Hosted browser UAT confirmed Realtime-triggered match/message refresh using `t` as the waiting profile and both `tt` and `test2` as the matching/sending profiles.
+- Backend read state now persists per-user per-match watermarks in `public.match_read_states`, protected by active-match RLS. Supabase chat threads return hosted `readThrough`, `ChatService.markRead` upserts hosted read state, and provider hydration prefers hosted read state while keeping local watermarks as fallback/mock behavior. Migration `202607040004_match_read_states.sql` is applied to hosted `orchard-dev`; local DB reset and pgTAP pass with 45 tests.
 - Fruit tab UAT exposed that static Fruit fixtures did not auto-match, real/dev backend profiles did not appear there, and one-sided Fruit/profile-detail likes used browser alerts. Fruit now mixes backend-discovered real/dev profiles with static Fruit fixtures, static Fruit fixtures auto-match locally for testing, and one-sided like feedback uses app overlays.
 - Read-state UAT exposed that already-read backend messages became unread again after sign-out/sign-in. The app now persists per-user read watermarks locally and counts unread backend messages only after the saved read point. New-match seen state is also persisted per user so opened match highlights stay cleared across sessions.
 - Fixture chat UAT exposed that Supabase-mode fixture messages skipped local simulated replies. Mock/fixture profiles now keep local simulated replies while real backend-only profiles stay backend-driven.
@@ -205,15 +206,16 @@ Last updated: 2026-07-04
 
 ## Current Task
 
-Choose the next backend/source-of-truth hardening slice or move to human setup.
+UAT backend-backed read state.
 
 ## Next Planned Tasks
 
-1. Create Apple Developer Program account.
-2. Decide whether to ingest fixture profile images into Supabase Storage for backend-backed discovery; the current dev fixtures intentionally omit `profile_photos` because mock image URLs are remote assets, not storage object paths.
-3. Decide whether to make Supabase DB tests automatic for Supabase migration pull requests.
-4. Continue reducing local/mock screen reads by routing match detail, inbox, and matches screens through service boundaries where practical.
-5. Track and resolve the GitHub Actions Node 20 deprecation warning from `actions/checkout@v4`.
+1. Browser-UAT hosted read state: read an incoming message, sign out/in or use a second browser session, and confirm the conversation stays read until a newer incoming message arrives.
+2. Create Apple Developer Program account.
+3. Decide whether to ingest fixture profile images into Supabase Storage for backend-backed discovery; the current dev fixtures intentionally omit `profile_photos` because mock image URLs are remote assets, not storage object paths.
+4. Decide whether to make Supabase DB tests automatic for Supabase migration pull requests.
+5. Continue reducing local/mock screen reads by routing match detail, inbox, and matches screens through service boundaries where practical.
+6. Track and resolve the GitHub Actions Node 20 deprecation warning from `actions/checkout@v4`.
 
 ## Human Decisions Needed
 

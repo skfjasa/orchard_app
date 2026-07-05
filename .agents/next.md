@@ -1,26 +1,28 @@
 # Next Task
 
-Choose the next backend/source-of-truth hardening slice or move to human setup.
+UAT backend-backed read state.
 
 ## Likely Areas
 
 - `docs/project-status.md`
 - `expo/providers/profile-provider.tsx`
 - `expo/services/`
-- `expo/app/(tabs)/matches.tsx`
 - `expo/app/(tabs)/inbox.tsx`
 - `expo/app/chat/[id].tsx`
-- `.github/workflows/`
+- `expo/services/supabase-chat-service.ts`
+- `supabase/migrations/202607040004_match_read_states.sql`
 
 ## Pre-Edit Checks
 
 - Inspect git status and latest commit.
-- Pick a single PR-sized slice.
-- Re-read the relevant plan doc only for the chosen slice.
+- Confirm hosted `orchard-dev` remains aligned through `202607040004` if needed.
+- Use the existing dev profiles `t`, `tt`, and/or `test2`.
 
 ## Definition Of Done
 
-- The next slice is scoped and validated.
+- Reading a hosted incoming message writes hosted read state.
+- After sign-out/sign-in, the read conversation stays read until a newer incoming message arrives.
+- Another incoming message increments Inbox unread again.
 - Mock mode and hosted Supabase mode remain intact.
 - `docs/project-status.md` remains current after any material change.
 
@@ -33,7 +35,8 @@ Choose the next backend/source-of-truth hardening slice or move to human setup.
 
 ## Manual QA
 
-1. Backend track: continue moving chat/read state, message attachments, or screen data reads behind services.
-2. Human setup track: create Apple Developer Program account, then prepare iOS/TestFlight prerequisites.
-3. Fixture/media track: decide whether to ingest fixture profile images into Supabase Storage.
-4. CI track: decide whether to make Supabase DB tests automatic for migration pull requests and address the GitHub Actions Node warning.
+1. Sign in as `t`.
+2. From `tt` or `test2`, send `t` a hosted message.
+3. As `t`, open the Inbox conversation and confirm the unread badge clears.
+4. Sign out as `t`, then sign back in as `t`; confirm the conversation is still read.
+5. Send a newer message from `tt` or `test2`; confirm `t` gets a new unread badge/highlight.
