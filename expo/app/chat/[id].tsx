@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
-import { router, useLocalSearchParams } from "expo-router";
+import { Redirect, router, useLocalSearchParams } from "expo-router";
 import * as Clipboard from "expo-clipboard";
 import {
   Check,
@@ -18,6 +18,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   Alert,
   Animated,
+  ActivityIndicator,
   Easing,
   FlatList,
   KeyboardAvoidingView,
@@ -30,6 +31,7 @@ import {
 } from "react-native";
 
 import Colors from "@/constants/colors";
+import { useAuth } from "@/providers/auth-provider";
 import { useProfile } from "@/providers/profile-provider";
 import { Message, MessageStatus, Profile } from "@/types";
 
@@ -106,8 +108,11 @@ function normalizeMessages(messages: unknown): Message[] {
 
 export default function ChatScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { initialized: authInitialized, mode, session } = useAuth();
   const {
+    backendProfileHydrated,
     profile,
+    hydrated,
     getProfileById,
     getConversation,
     hasActiveMatch,
@@ -139,6 +144,8 @@ export default function ChatScreen() {
   const activeName = profile?.people[activePersonIdx]?.name;
   const isTyping = !!id && typingProfileIds.includes(id);
   const hasActiveLocalMatch = !!id && hasActiveMatch(id);
+  const waitingForBackendProfile =
+    mode === "supabase" && !!session && !profile && !backendProfileHydrated;
   const messages = useMemo(
     () => normalizeMessages(convo?.messages),
     [convo?.messages]
@@ -324,6 +331,24 @@ export default function ChatScreen() {
     },
     [id, respondToPhoto]
   );
+
+  if (!hydrated || !authInitialized || waitingForBackendProfile) {
+    return (
+      <View style={styles.loadingRoot} testID="chat-loader">
+        <ActivityIndicator color={Colors.light.accent} />
+      </View>
+    );
+  }
+
+  if (mode === "supabase" && !session) {
+    return <Redirect href="/onboarding" />;
+  }
+
+  if (mode === "supabase" && session && !profile) {
+    return <Redirect href="/onboarding/account-type" />;
+  }
+
+  if (!profile) return <Redirect href="/onboarding" />;
 
   if (!other || !hasActiveLocalMatch) {
     return (
@@ -838,6 +863,12 @@ function PhotoBubble({
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: Colors.light.background },
+  loadingRoot: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.light.background,
+  },
   inlineHeader: {
     flexDirection: "row",
     alignItems: "center",

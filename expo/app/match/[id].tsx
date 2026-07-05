@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { router, Stack, useLocalSearchParams } from "expo-router";
+import { Redirect, router, Stack, useLocalSearchParams } from "expo-router";
 import {
   Heart,
   Flag,
@@ -22,6 +22,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import {
   Alert,
+  ActivityIndicator,
   Dimensions,
   Linking,
   NativeScrollEvent,
@@ -38,6 +39,7 @@ import SuperLikeIcon from "@/components/SuperLikeIcon";
 import SuperLikeBurst from "@/components/SuperLikeBurst";
 import Colors from "@/constants/colors";
 import { getPolyFruit } from "@/constants/poly-fruits";
+import { useAuth } from "@/providers/auth-provider";
 import { useProfile } from "@/providers/profile-provider";
 import { PersonProfile, PromptAnswer, VoicePrompt } from "@/types";
 import { scoreMatch } from "@/utils/match";
@@ -51,8 +53,11 @@ const MATCH_DETAIL_SCREEN_OPTIONS = {
 
 export default function MatchDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { initialized: authInitialized, mode, session } = useAuth();
   const {
+    backendProfileHydrated,
     profile,
+    hydrated,
     getProfileById,
     hasActiveMatch,
     likeProfile,
@@ -82,8 +87,28 @@ export default function MatchDetail() {
     message: string;
   } | null>(null);
   const [matchNoticeVisible, setMatchNoticeVisible] = useState<boolean>(false);
+  const waitingForBackendProfile =
+    mode === "supabase" && !!session && !profile && !backendProfileHydrated;
 
-  if (!other || !profile) return null;
+  if (!hydrated || !authInitialized || waitingForBackendProfile) {
+    return (
+      <View style={styles.loadingRoot} testID="match-loader">
+        <ActivityIndicator color={Colors.light.accent} />
+      </View>
+    );
+  }
+
+  if (mode === "supabase" && !session) {
+    return <Redirect href="/onboarding" />;
+  }
+
+  if (mode === "supabase" && session && !profile) {
+    return <Redirect href="/onboarding/account-type" />;
+  }
+
+  if (!profile) return <Redirect href="/onboarding" />;
+
+  if (!other) return null;
 
   const score = scoreMatch(profile, other);
   const pct = Math.round(score.total * 100);
@@ -881,6 +906,12 @@ function SocialBtn({
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: Colors.light.background },
+  loadingRoot: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.light.background,
+  },
   heroInfo: {
     ...StyleSheet.absoluteFillObject,
     padding: 24,

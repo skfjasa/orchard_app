@@ -47,6 +47,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - Current working backend read-state slice adds `public.match_read_states` with RLS, extends `ChatService.getThread` with `readThrough`, implements Supabase `markRead`, and lets backend match/thread hydration prefer the hosted read watermark while retaining local watermarks as fallback/mock behavior.
 - User UAT confirmed backend-backed read state: opening an incoming hosted message clears unread state, sign-out/sign-in keeps the conversation read, and a newer incoming message restores the unread badge/highlight.
 - Current working read-path cleanup adds provider-level derived selectors for matched profiles, inbox rows, profile lookup, conversation lookup, active-match checks, and tab badge counts. Matches, Inbox, chat, match detail, and tab layout now consume those selectors instead of rebuilding raw `likedIds`/`conversations`/`knownProfiles` reads in each screen.
+- User UAT confirmed the read-path selector cleanup with profile `t`.
+- Follow-up issue: using the device/browser back button can inconsistently show missing conversations, reset badges, or make matches appear to disappear. Current working fix adds auth/profile hydration guards to the tab layout, chat route, and match-detail route so stale history entries cannot render protected app screens while the signed-in profile is missing or still loading.
 
 ## Validation State
 
@@ -69,6 +71,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - Hosted `orchard-dev` is aligned through `202607040004` after `supabase db push`; migration list confirms local/remote alignment. The Supabase CLI again printed a non-fatal pg-delta catalog-cache warning after the push.
 - Hosted browser UAT passed for Realtime-triggered incoming match/message refresh with `t`/`tt` and `t`/`test2`.
 - Read-path selector cleanup passed typecheck, lint, and diff check.
+- Protected-route back-history guard passed typecheck, lint, and diff check.
 
 ## Current Risks / Blockers
 
@@ -112,4 +115,4 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 
 ## Next Recommended Task
 
-Smoke UAT the read-path selector cleanup: Matches list, Inbox list, tab badges, match detail, and chat should behave the same as before in hosted Supabase mode.
+Smoke UAT the device/browser back-history guard: after navigating among Matches, Inbox, profile detail, and chat, use the device/browser back button and confirm protected app routes do not render missing matches, missing conversations, or reset badge state while profile hydration catches up.
