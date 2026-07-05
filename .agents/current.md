@@ -7,8 +7,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 ## Branch And Commit
 
 - Branch: `main`
-- Latest implementation checkpoint: working tree fix after `fa8221d` for Inbox-back profile repair
-- Previous pushed checkpoint: `fa8221d` - Refresh handoff after back stack work
+- Latest implementation checkpoint: working tree resilience fix after `4c3a5dd` for weak-network profile display cache
+- Previous pushed checkpoint: `4c3a5dd` - Repair inbox back match profile hydration
 
 ## Recent Changes
 
@@ -53,6 +53,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - Latest follow-up fix excludes already matched backend real/dev profiles from Fruit while keeping unmatched real/dev profiles testable there, and clears Inbox unread state before navigating into Chat so rapid device/browser back cannot beat the Chat screen read effect.
 - Current navigation/profile-retention fix rejects incomplete backend profile objects such as generic "Orchard user" rows, preserves the last complete remembered profile during refresh churn via an explicit display-profile snapshot, no longer clears remembered match profiles on same-user Supabase token refresh, queues a follow-up backend match/profile refresh if focus/realtime hits while refresh is already in flight, refreshes backend match/profile state whenever Matches or Inbox receives focus, and changes match detail from modal presentation to normal stack presentation while using stack-aware `dismissTo` for canonical Android hardware-back routing.
 - Latest UAT confirmed Matches -> profile -> device back is mostly stable, but Inbox -> conversation -> device back can still drop real/dev conversations and matches until Fruit runs discovery. Current working fix makes backend match refresh repair missing real/dev display profiles through the same Supabase discovery path Fruit uses, and skips applying a partial match refresh if a complete real/dev profile still cannot be resolved.
+- Current weak-network resilience fix persists the complete known-profile display cache in AsyncStorage and hydrates it before backend refresh, so poor mobile reception or slow Supabase profile/member/photo reads should not force Matches/Inbox to wait for Fruit/Discover to rebuild display rows.
 - Current workflow cleanup updates both GitHub Actions workflows from `actions/checkout@v4` to `actions/checkout@v6`, resolving the tracked Node 20 checkout warning follow-up.
 
 ## Validation State
@@ -125,4 +126,4 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 
 ## Next Recommended Task
 
-Smoke UAT Inbox -> conversation -> device/browser back after the current working fix: real/dev conversations should remain visible, Match tab should still show real/dev matches, no generic "Orchard user" row/card should appear, and Fruit/Discover should no longer be required to restore backend profile cards.
+Smoke UAT Inbox -> conversation -> device/browser back after the current resilience fix: real/dev conversations should remain visible under weak network, Match tab should still show real/dev matches, no generic "Orchard user" row/card should appear, and Fruit/Discover should no longer be required to restore backend profile cards.

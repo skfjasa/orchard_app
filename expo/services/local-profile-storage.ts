@@ -19,6 +19,7 @@ const SUPERLIKE_LAST_USE_KEY = "duet.superLikeLastUse.v1";
 const SUBSCRIPTION_KEY = "duet.subscription.v1";
 const READ_WATERMARKS_KEY = "duet.readWatermarks.v1";
 const SEEN_MATCHES_KEY = "duet.seenMatches.v1";
+const KNOWN_PROFILES_KEY = "duet.knownProfiles.v1";
 const STORED_PROFILE_STATE_KEYS = [
   PROFILE_KEY,
   CONVOS_KEY,
@@ -32,6 +33,7 @@ const STORED_PROFILE_STATE_KEYS = [
   SUBSCRIPTION_KEY,
   READ_WATERMARKS_KEY,
   SEEN_MATCHES_KEY,
+  KNOWN_PROFILES_KEY,
 ];
 
 export interface SubscriptionState {
@@ -54,6 +56,7 @@ export interface StoredProfileState {
   subscription: SubscriptionState | null;
   readWatermarks: Record<string, Record<string, number>>;
   seenMatchIds: Record<string, string[]>;
+  knownProfiles: Profile[];
 }
 
 export function emptyStoredProfileState(): StoredProfileState {
@@ -70,12 +73,13 @@ export function emptyStoredProfileState(): StoredProfileState {
     subscription: null,
     readWatermarks: {},
     seenMatchIds: {},
+    knownProfiles: [],
   };
 }
 
 export async function loadStoredProfileState(): Promise<StoredProfileState> {
   try {
-    const [p, c, l, s, sl, es, b, slb, slu, sub, rw, sm] = await Promise.all([
+    const [p, c, l, s, sl, es, b, slb, slu, sub, rw, sm, kp] = await Promise.all([
       AsyncStorage.getItem(PROFILE_KEY),
       AsyncStorage.getItem(CONVOS_KEY),
       AsyncStorage.getItem(LIKES_KEY),
@@ -88,6 +92,7 @@ export async function loadStoredProfileState(): Promise<StoredProfileState> {
       AsyncStorage.getItem(SUBSCRIPTION_KEY),
       AsyncStorage.getItem(READ_WATERMARKS_KEY),
       AsyncStorage.getItem(SEEN_MATCHES_KEY),
+      AsyncStorage.getItem(KNOWN_PROFILES_KEY),
     ]);
 
     return {
@@ -106,6 +111,7 @@ export async function loadStoredProfileState(): Promise<StoredProfileState> {
         ? (JSON.parse(rw) as Record<string, Record<string, number>>)
         : {},
       seenMatchIds: sm ? (JSON.parse(sm) as Record<string, string[]>) : {},
+      knownProfiles: kp ? (JSON.parse(kp) as Profile[]) : [],
     };
   } catch (e) {
     console.log("[local-profile-storage] load error", e);
@@ -191,4 +197,9 @@ export async function saveStoredSeenMatchIds(
 ) {
   await AsyncStorage.setItem(SEEN_MATCHES_KEY, JSON.stringify(seenMatchIds));
   return seenMatchIds;
+}
+
+export async function saveStoredKnownProfiles(knownProfiles: Profile[]) {
+  await AsyncStorage.setItem(KNOWN_PROFILES_KEY, JSON.stringify(knownProfiles));
+  return knownProfiles;
 }

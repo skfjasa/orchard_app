@@ -34,6 +34,7 @@ import {
   saveStoredLikes,
   saveStoredPasses,
   saveStoredProfile,
+  saveStoredKnownProfiles,
   saveStoredReadWatermarks,
   saveStoredSeenMatchIds,
   saveStoredSubscription,
@@ -264,6 +265,14 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       setSubscription(loadQuery.data.subscription);
       setReadWatermarks(loadQuery.data.readWatermarks);
       setSeenMatchIds(loadQuery.data.seenMatchIds);
+      const completeKnownProfiles = loadQuery.data.knownProfiles.filter(
+        (item) => !isIncompleteBackendProfile(item)
+      );
+      setKnownProfiles(completeKnownProfiles);
+      knownProfilesRef.current = completeKnownProfiles;
+      displayProfilesRef.current = Object.fromEntries(
+        completeKnownProfiles.map((item) => [item.id, item])
+      );
       readWatermarksRef.current = loadQuery.data.readWatermarks;
       seenMatchIdsRef.current = loadQuery.data.seenMatchIds;
       setHydrated(true);
@@ -324,6 +333,10 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     mutationFn: saveStoredSeenMatchIds,
   });
 
+  const saveKnownProfilesMutation = useMutation({
+    mutationFn: saveStoredKnownProfiles,
+  });
+
   useEffect(() => {
     if (mode !== "supabase") {
       lastBackendProfileSessionKey.current = null;
@@ -333,6 +346,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       pendingBackendMatchRefreshRef.current = false;
       knownProfilesRef.current = [];
       displayProfilesRef.current = {};
+      saveKnownProfilesMutation.mutate([]);
       setBackendActiveMatchIds([]);
       setKnownProfiles([]);
       setBackendProfileHydrated(false);
@@ -347,6 +361,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       pendingBackendMatchRefreshRef.current = false;
       knownProfilesRef.current = [];
       displayProfilesRef.current = {};
+      saveKnownProfilesMutation.mutate([]);
       setBackendActiveMatchIds([]);
       setKnownProfiles([]);
       setBackendProfileHydrated(false);
@@ -371,10 +386,11 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     pendingBackendMatchRefreshRef.current = false;
     knownProfilesRef.current = [];
     displayProfilesRef.current = {};
+    saveKnownProfilesMutation.mutate([]);
     setBackendActiveMatchIds([]);
     setKnownProfiles([]);
     setBackendProfileHydrated(false);
-  }, [mode, session?.access_token, userId]);
+  }, [mode, saveKnownProfilesMutation, session?.access_token, userId]);
 
   useEffect(() => {
     if (mode !== "supabase") return;
@@ -480,9 +496,12 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
       const next = changed ? [...byId.values()] : prev;
       knownProfilesRef.current = next;
+      if (changed) {
+        saveKnownProfilesMutation.mutate(next);
+      }
       return next;
     });
-  }, []);
+  }, [saveKnownProfilesMutation]);
 
   const refreshBackendMatches = useCallback(async () => {
     if (mode !== "supabase") return;
@@ -831,6 +850,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     setKnownProfiles([]);
     knownProfilesRef.current = [];
     displayProfilesRef.current = {};
+    saveKnownProfilesMutation.mutate([]);
     setConversations([]);
     setLikedIds([]);
     setNewMatchIds([]);
@@ -859,6 +879,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   }, [
     mode,
     signOutAuth,
+    saveKnownProfilesMutation,
     saveProfileMutation,
     saveConvosMutation,
     saveLikesMutation,

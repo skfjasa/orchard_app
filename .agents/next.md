@@ -1,6 +1,6 @@
 # Next Task
 
-Smoke UAT Inbox conversation device/browser back after the backend match profile repair.
+Smoke UAT Inbox conversation device/browser back after the backend match profile repair and local display-cache persistence.
 
 ## Likely Areas
 
@@ -37,6 +37,7 @@ Smoke UAT Inbox conversation device/browser back after the backend match profile
 - Real/dev matches remain visible after using device/browser back from match detail.
 - Real/dev conversations remain visible after using device/browser back from a chat opened through Inbox.
 - Match tab still shows real/dev matches after using device/browser back from a chat opened through Inbox.
+- Slow or weak mobile network should show last-known-good Matches/Inbox rows instead of dropping real/dev rows.
 - Generic "Orchard user" fallback profiles do not appear in Matches or Inbox after rapid back navigation.
 - Match detail opened from Matches, Inbox, Discover, Fruit, or Chat has a canonical Android hardware-back destination and does not snap back onto the same detail modal.
 - Match detail opens as a normal stack screen, not a root modal, so browser/device back should perform a normal pop.
