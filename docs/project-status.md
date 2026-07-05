@@ -181,6 +181,7 @@ Last updated: 2026-07-04
 - Match, Inbox, chat, match detail, and tab layout read paths now consume provider-level selectors for matched profiles, inbox rows, profile lookup, conversation lookup, active-match checks, and tab badge counts instead of rebuilding raw `likedIds`/`conversations`/`knownProfiles` reads in each screen. Typecheck, lint, and diff check pass.
 - User UAT confirmed the read-path selector cleanup with profile `t`.
 - Follow-up back-history hardening now uses a shared `ProtectedRoute` wrapper for signed-in-only surfaces: tabs, chat, match detail, edit profile, paywall, report, and safety/legal. Stale device/browser back entries therefore cannot render protected app screens while the signed-in profile is missing or still loading. Chat also uses a canonical Android hardware-back hook so device back matches the in-app chat back action and returns to Inbox.
+- Follow-up badge stability fix prevents Realtime/10-second backend refreshes from reintroducing stale Match or Inbox badge state after the user has opened a match/conversation. Backend refresh application now consults current `seenMatchIds` and `readWatermarks`, and conversation unread counts are recalculated from the latest read watermark even when backend messages are unchanged.
 - GitHub Actions workflow cleanup updates `Expo Checks` and `Supabase DB Tests` from `actions/checkout@v4` to `actions/checkout@v6`, resolving the tracked checkout Node 20 warning follow-up.
 - Fruit tab UAT exposed that static Fruit fixtures did not auto-match, real/dev backend profiles did not appear there, and one-sided Fruit/profile-detail likes used browser alerts. Fruit now mixes backend-discovered real/dev profiles with static Fruit fixtures, static Fruit fixtures auto-match locally for testing, and one-sided like feedback uses app overlays.
 - Read-state UAT exposed that already-read backend messages became unread again after sign-out/sign-in. The app now persists per-user read watermarks locally and counts unread backend messages only after the saved read point. New-match seen state is also persisted per user so opened match highlights stay cleared across sessions.
@@ -211,11 +212,11 @@ Last updated: 2026-07-04
 
 ## Current Task
 
-Smoke UAT the shared protected-route and Chat canonical-back behavior.
+Smoke UAT badge stability while Realtime/10-second refreshes are active.
 
 ## Next Planned Tasks
 
-1. Smoke-UAT device/browser back navigation across protected routes after the shared guard, including Android hardware back from Chat returning to Inbox.
+1. Smoke-UAT badge stability while Realtime/10-second refreshes are active: clear Match/Inbox badges, navigate/back across tabs, wait at least 10 seconds, and confirm cleared badges do not reappear unless a genuinely new match/message arrives.
 2. Decide whether to ingest fixture profile images into Supabase Storage for backend-backed discovery; the current dev fixtures intentionally omit `profile_photos` because mock image URLs are remote assets, not storage object paths.
 3. Decide whether to make Supabase DB tests automatic for Supabase migration pull requests.
 4. Closer to TestFlight: create Apple Developer Program account and finish release-readiness setup.

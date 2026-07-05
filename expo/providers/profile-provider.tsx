@@ -126,29 +126,22 @@ function mergeBackendConversation(
     ];
   }
 
-  const existingMessageIds = new Set(
-    existing.messages.map((message) => message.id)
-  );
   const mergedMessages = mergeMessages(existing.messages, backendMessages);
-  if (
-    mergedMessages.length === existing.messages.length &&
-    mergedMessages.every((message, index) => message === existing.messages[index])
-  ) {
-    return conversations;
-  }
-  const newlyUnread = backendMessages.filter(
-    (message) =>
-      !message.fromMe &&
-      message.at > readThrough &&
-      !existingMessageIds.has(message.id)
+  const unread = mergedMessages.filter(
+    (message) => !message.fromMe && message.at > readThrough
   ).length;
+  const messagesUnchanged =
+    mergedMessages.length === existing.messages.length &&
+    mergedMessages.every((message, index) => message === existing.messages[index]);
+
+  if (messagesUnchanged && existing.unread === unread) return conversations;
 
   return conversations.map((conversation) =>
     conversation.profileId === profileId
       ? {
           ...conversation,
           messages: mergedMessages,
-          unread: conversation.unread + newlyUnread,
+          unread,
         }
       : conversation
   );
@@ -233,6 +226,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     Record<string, Record<string, number>>
   >({});
   const [seenMatchIds, setSeenMatchIds] = useState<Record<string, string[]>>({});
+  const readWatermarksRef = useRef<Record<string, Record<string, number>>>({});
+  const seenMatchIdsRef = useRef<Record<string, string[]>>({});
   const [passedIds, setPassedIds] = useState<string[]>([]);
   const [superLikedIds, setSuperLikedIds] = useState<string[]>([]);
   const [extraSlots, setExtraSlots] = useState<number>(0);
@@ -269,6 +264,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       setSubscription(loadQuery.data.subscription);
       setReadWatermarks(loadQuery.data.readWatermarks);
       setSeenMatchIds(loadQuery.data.seenMatchIds);
+      readWatermarksRef.current = loadQuery.data.readWatermarks;
+      seenMatchIdsRef.current = loadQuery.data.seenMatchIds;
       setHydrated(true);
       console.log("[profile-provider] hydrated", {
         hasProfile: !!loadQuery.data.profile,
@@ -495,8 +492,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         isFixture: boolean;
       }[] = [];
       const matchedProfilesToRemember: Profile[] = [];
-      const currentSeenMatchIds = new Set(seenMatchIds[userId] ?? []);
-      const nextNewMatchIds = new Set<string>();
 
       for (const match of matchResult.value) {
         const otherBackendProfileId =
@@ -511,9 +506,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
           createFallbackBackendProfile(otherLocalProfileId);
 
         matchedLocalProfileIds.add(otherProfile.id);
-        if (!currentSeenMatchIds.has(otherProfile.id)) {
-          nextNewMatchIds.add(otherProfile.id);
-        }
         if (!mockProfile) {
           matchedProfilesToRemember.push(otherProfile);
         }
@@ -550,6 +542,12 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       });
 
       setNewMatchIds((prev) => {
+        const currentSeenMatchIds = new Set(
+          seenMatchIdsRef.current[userId] ?? []
+        );
+        const nextNewMatchIds = [...matchedLocalProfileIds].filter(
+          (id) => !currentSeenMatchIds.has(id)
+        );
         const localOnlyNewMatchIds = prev.filter(
           (id) => !isBackendProfileId(id)
         );
@@ -566,10 +564,12 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         );
         let next = filtered.length === prev.length ? prev : filtered;
         for (const backendConversation of backendConversations) {
-          const readThrough =
-            backendConversation.readThrough ??
-            readWatermarks[userId]?.[backendConversation.profileId] ??
-            0;
+          const hostedReadThrough = backendConversation.readThrough ?? 0;
+          const localReadThrough =
+            readWatermarksRef.current[userId]?.[
+              backendConversation.profileId
+            ] ?? 0;
+          const readThrough = Math.max(hostedReadThrough, localReadThrough);
           next = mergeBackendConversation(
             next,
             backendConversation.profileId,
@@ -600,11 +600,9 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     hydrated,
     mode,
     profile,
-    readWatermarks,
     rememberProfiles,
     saveConvosMutation,
     saveLikesMutation,
-    seenMatchIds,
     session?.access_token,
     userId,
   ]);
@@ -849,6 +847,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       const nextOwnerSeen = addUniqueId(ownerSeen, profileId);
       if (nextOwnerSeen === ownerSeen) return prev;
       const next = { ...prev, [profile.id]: nextOwnerSeen };
+      seenMatchIdsRef.current = next;
       saveSeenMatchIdsMutation.mutate(next);
       return next;
     });
@@ -1333,6 +1332,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
                 [profileId]: readThrough,
               },
             };
+            readWatermarksRef.current = next;
             saveReadWatermarksMutation.mutate(next);
             return next;
           });
