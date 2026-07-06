@@ -45,7 +45,7 @@ Backend foundation currently exists for:
 .
 ├── android/              # Root-level generated Android asset folder
 ├── assets/               # Root-level generated assets
-├── docs/                 # Project audit, MVP plan, setup notes
+├── docs/                 # Canonical milestone tracker, architecture plan, setup/status notes
 └── expo/                 # Main Expo React Native app
 ```
 
@@ -138,13 +138,12 @@ The app should continue to run in mock mode when Supabase environment variables 
 
 ## Documentation
 
-- [Repo audit](docs/repo-audit.md)
-- [MVP plan](docs/mvp-plan.md)
+- [Docs index](docs/README.md)
+- [Closed-beta milestone tracker](docs/milestone-tracker.md)
+- [Repo audit and foundation refactor plan](docs/repo-audit-and-foundation-plan.md)
+- [Architecture audit history](docs/architecture-history.md)
 - [Development setup](docs/setup.md)
 - [Current project status](docs/project-status.md)
-- [Milestone tracker](docs/milestone-tracker.md)
-- [Session handoff](docs/session-handoff.md)
-- [MVP prototype gap assessment](docs/mvp-prototype-gap-assessment.md)
 - [Backend migration plan](docs/backend-migration-plan.md)
 
 ## Development Principles

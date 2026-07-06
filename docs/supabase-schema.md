@@ -8,6 +8,10 @@ Migration files:
 - `supabase/migrations/202606200002_profile_photo_storage.sql`
 - `supabase/migrations/202606210001_fixture_profiles_and_settings.sql`
 - `supabase/migrations/202607030001_rematch_active_match_history.sql`
+- `supabase/migrations/202607040001_profile_photo_visible_storage_reads.sql`
+- `supabase/migrations/202607040002_active_match_profile_reads.sql`
+- `supabase/migrations/202607040003_enable_match_message_realtime.sql`
+- `supabase/migrations/202607040004_match_read_states.sql`
 
 ## Scope
 
@@ -42,6 +46,24 @@ Rematch migration `202607030001_rematch_active_match_history.sql` adds:
 - A partial unique index that allows only one active match per user pair.
 - Rematch behavior that creates a fresh active match row after a prior unmatch.
 
+Profile photo visible-read migration `202607040001_profile_photo_visible_storage_reads.sql` adds:
+
+- Storage read/signing support for visible profile photo objects when the viewer is eligible.
+
+Active-match profile read migration `202607040002_active_match_profile_reads.sql` adds:
+
+- Active matched users can read each other's profile/member/photo rows.
+- Active matched users can sign matched profile photo storage objects after discovery/swipe state changes.
+
+Realtime migration `202607040003_enable_match_message_realtime.sql` adds:
+
+- `public.matches` and `public.messages` to the Supabase Realtime publication.
+
+Read-state migration `202607040004_match_read_states.sql` adds:
+
+- `public.match_read_states`.
+- Per-user per-match read-through persistence with active-match RLS.
+
 ## Key Product Rules Represented
 
 - Users own one account-level profile row keyed by `auth.users.id`.
@@ -63,16 +85,16 @@ Rematch migration `202607030001_rematch_active_match_history.sql` adds:
 - `submit_report(reported_profile_id, report_reason, report_details, reported_message_id)` derives reporter identity from `auth.uid()` and creates a moderation report.
 - `request_account_deletion(deletion_reason)` derives profile identity from `auth.uid()` and creates an account deletion request.
 
-These functions are granted to authenticated users only. Database/RLS tests exist at `supabase/tests/database/202606200001_mvp_security.sql` and pass against the local Supabase database: 1 file, 41 tests.
+These functions are granted to authenticated users only. Database/RLS tests exist at `supabase/tests/database/202606200001_mvp_security.sql` and pass against the local Supabase database: 1 file, 45 tests.
 
-## Known Gaps Before Applying
+## Known Gaps Before Staging Or Production
 
-- Storage bucket policies for profile photos are drafted, pass local tests, and have been pushed to hosted `orchard-dev`; app smoke testing with a selected photo is still pending.
 - Admin/moderation read policies are not included; use Supabase Studio/service role initially.
 - Exact relationship-structure enum values are not locked yet.
 - Birthdate/age handling needs product/legal review.
 - Approximate location approach needs product/privacy review.
 - Message body moderation strategy is not defined.
+- Hosted UAT still needs broader safety and block/unmatch/report verification with real accounts.
 
 ## RLS Review Required
 

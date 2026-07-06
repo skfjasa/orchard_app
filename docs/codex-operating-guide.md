@@ -7,10 +7,12 @@
 - Runtime: Expo React Native
 - Routing: Expo Router
 - Package manager: Bun
-- Current persistence: local AsyncStorage
-- Current backend: Supabase foundation exists, but production backend behavior is not wired as source of truth
-- Current mode: Expo prototype with mock/local behavior
+- Current persistence: local AsyncStorage plus Supabase-backed auth/profile/photo/match/message/read-state paths in Supabase mode
+- Current backend: Supabase foundation exists and hosted `orchard-dev` is aligned through migration `202607040004`; full production source-of-truth behavior is still being completed
+- Current mode: mock/demo mode remains available; Supabase mode is being hardened for inner-circle testing
 - Local Docker/Supabase status: Docker Desktop is operational after enabling firmware virtualization, and `expo\node_modules\.bin\supabase test db` passes locally
+- Canonical milestone/checklist doc: `docs/milestone-tracker.md`
+- Active foundation execution plan: `docs/repo-audit-and-foundation-plan.md`
 
 ## Commands
 
@@ -55,6 +57,7 @@ Use the Expo CLI scripts in `expo/package.json`.
 - `status report` starts a read-only session orientation.
 - `handoff sync` or `session handoff` updates all relevant continuity markdown files and central mirrors so a new session can resume cleanly.
 - Compact handoff/status docs when they become repetitive; keep current-state files focused on active blockers, decisions, verification, and next actions.
+- Keep milestone/task/checklist updates in `docs/milestone-tracker.md`; avoid creating competing backlog or release-plan docs.
 
 ## Backend Migration Rule
 

@@ -1,5 +1,7 @@
 # Profile Provider Responsibility Map
 
+> Current-use note: this map is historical/contextual and should be read with `docs/repo-audit-and-foundation-plan.md`. It remains useful for understanding extraction risks, but several backend and Realtime details below are stale. Do not use this file as an instruction to rewrite or delete `ProfileProvider` in one pass.
+
 Source file: `expo/providers/profile-provider.tsx`
 
 Purpose: document the current provider before extracting services/adapters. This is a map of existing behavior, not a request to rewrite the provider.
@@ -157,14 +159,14 @@ Partner invite/link behavior is local profile metadata through helpers in `expo/
 5. Extract local profile mutation helpers. Done.
 6. Reassess remaining provider responsibilities. Current step.
 7. Add Supabase client skeleton behind environment-gated mock mode. Done.
-8. Add auth/session provider foundation. Done; onboarding/sign-in flow is not wired yet.
+8. Add auth/session provider foundation. Done; onboarding/sign-in flow is wired for Supabase email/password auth.
 9. Add backend/mock service factory and gated swipe persistence hook. Done.
 10. Replace swipe/match/chat behavior with service-backed mock/Supabase adapters incrementally.
 11. Extract safety actions once block/report/unmatch UI flows are ready to wire.
 
 ## Future Service Boundaries
 
-Initial interface skeletons exist under `expo/services/`, with in-memory mock adapters under `expo/mocks/adapters/`. The backend/mock service factory is lightly wired for swipe persistence only; profile storage, discovery, matches, chat, and safety UI flows remain local/mock.
+Initial interface skeletons exist under `expo/services/`, with in-memory mock adapters under `expo/mocks/adapters/`. The backend/mock service factory now supports Supabase-backed profile storage, discovery, swipes, matches, chat text, Realtime refresh, storage, and safety paths in varying degrees. Local/mock behavior remains intentionally available and several source-of-truth cleanup steps are still tracked in `docs/milestone-tracker.md`.
 
 Runtime local helper modules now exist:
 

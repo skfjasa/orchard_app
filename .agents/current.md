@@ -1,150 +1,69 @@
 # Current Agent State
 
+Last updated: 2026-07-06
+
 ## Objective
 
-Continue converting Orchard into an iOS-first Supabase-backed MVP while preserving mock mode and the existing prototype UI.
+Continue converting Orchard into an iOS-first Supabase-backed MVP for close-friends / inner-circle closed beta while preserving mock mode and the existing prototype UI.
 
 ## Branch And Commit
 
 - Branch: `main`
-- Latest implementation checkpoint: `00f3075` - Fix known profile cache sign-in loop
-- Latest handoff checkpoint: `2c73aa7` - Refresh handoff after sign-in loop fix
-- Previous pushed checkpoint: `bc7ce9d` - Persist match display profile cache
+- Latest commit: `6dda28a` - Stabilize Supabase session bootstrap
+- Git state at compaction: docs-only working tree changes are present and uncommitted.
 
-## Recent Changes
+## Canonical Docs
 
-- Added Supabase fixture-backed discovery via `createSupabaseDiscoveryService`.
-- Added fixture UUID reverse mapping for hosted fixture rows.
-- Hydrated active hosted fixture matches and text threads back into local `likedIds` and conversations.
-- Added a chat persistence repair path: when local chat is active but no hosted match exists, record the backend like once and use the returned match id.
-- Wired profile-tab unmatch to the hosted `unmatch_match` RPC after local UI update.
-- Fixed profile-tab sign-out routing so it clears auth/profile state and returns to `/onboarding`.
-- Recovered the original generated onboarding background, vendored it as `expo/assets/images/welcome-background.png`, and used it on welcome, sign-in, and pending-confirmation screens.
-- Hosted onboarding/profile-photo confirmation smoke passed. Expected browser behavior: after the pending-confirmation page, opening the email link in a new tab creates a new authenticated app tab on Discover; the original pending-confirmation tab remains idle.
-- Added arbitrary backend profile discovery/display support in Supabase mode: discovery loads real `profiles`, `profile_members`, and `profile_photos`, signs stored photos, remembers service-returned profiles, and uses remembered/backend match profiles in match detail, chat, matches, and inbox before falling back to fixtures.
-- User UAT confirmed real non-fixture backend profiles can appear in Discover and open detail screens.
-- Current working fix changes Supabase likes/super-likes so real non-fixture profiles do not become local matches unless the Supabase swipe RPC returns `matched: true`; detail screens now show "Like sent" / "Super Like sent" for non-reciprocal likes.
-- Current working fix also prunes stale local Supabase matches/conversations during backend match hydration, and Supabase chat sends append locally only after a backend active match/message insert succeeds.
-- Current working migration `202607040001_profile_photo_visible_storage_reads.sql` lets eligible viewers sign visible profile photo storage objects, matching the existing `profile_photos` row visibility policy.
-- Current working migration `202607040002_active_match_profile_reads.sql` lets active matched users read each other's profile/member/photo rows and sign matched profile photo objects after discovery/swipe state changes.
-- Hosted UAT confirmed backend reciprocal matches/messages hydrate after sign-out/sign-in.
-- Current working UI fix: Matches badge uses explicit new-match state and decrements when each matched profile detail is viewed; Inbox badge counts total unread messages; unread Inbox rows are highlighted with per-row count badges and clear when opened/read; Matches cards open profile detail; Inbox avatar opens profile detail; Chat header avatar/name opens profile detail.
-- Latest UAT follow-up found hosted rows were present for dev profiles `t`, `tt`, and `test2` (3 active matches, 2 messages), so the empty Matches/Inbox symptom was app hydration/display-side. The current fix keeps backend matches visible even if auxiliary profile member/photo loading fails and highlights unopened new match cards in Matches.
-- Account-switching follow-up found hosted rows still persisted for `t`, `tt`, and `test2` (3 active matches, 4 messages). Current fix awaits Supabase sign-out before routing, clears in-flight match hydration on session reset, and rejects match hydration if the Supabase client auth user does not match the profile being hydrated.
-- Latest live-update follow-up found matches/messages could appear only after a swipe triggered provider movement. Backend match/thread hydration now refreshes immediately after sign-in, every 10 seconds while signed in, and whenever the app returns to active, so Matches/Inbox no longer depend on user actions to pull hosted state.
-- Current UAT fix restores Fruit/testing behavior: Fruit mixes backend-discovered real/dev profiles with static Fruit fixtures, Fruit likes run through in-tab app UI, static Fruit fixtures auto-match locally for testing, and profile-detail one-sided likes use app overlays instead of browser alerts.
-- Current UAT fix also persists read watermarks and seen-match ids per signed-in profile in local storage, so read Inbox rows and opened match highlights stay cleared across sign-out/sign-in until new backend activity arrives.
-- Fixture/mock chat simulation now keeps local auto-replies for mock profiles even in Supabase mode, while real backend-only profiles stay backend-driven.
-- Latest follow-up fix makes Fruit request the full backend testable pool, keeps backend profiles visible in Fruit even after prior swipes, preserves local-only Fruit fixture matches/conversations across backend refresh, and clears fixture unread counts when new mock replies arrive while the chat is already open.
-- Current follow-up fix separates hosted mock fixture rows from real/dev backend profiles in Fruit, keeps local-only Fruit fixture new-match state during backend refresh, loads backend matches oldest-to-newest so new matches land at the bottom of Matches, and prevents fixture text sends from showing a duplicate local/backend echo.
-- User UAT confirmed the Fruit real/dev visibility, Fruit fixture in-app match behavior, real/dev one-sided Fruit like behavior, highlighted match detail open, opened-match persistence, read Inbox persistence, fixture single-send/simulated-reply behavior, and match/inbox badge behavior now pass.
-- Follow-up visual issue: `/onboarding` background image no longer appears maximized across the whole viewing space compared with the pre-decoupling Rork rendering.
-- Current working fix gives the welcome, sign-in, and pending-confirmation onboarding roots explicit web viewport height and full-size background image dimensions while keeping the recovered local background asset and existing content intact.
-- Current working cleanup removes the original Rork-era sign-in screen header override so the onboarding layout's headerless `sign-in` route applies and the blank white header strip above "Welcome back" disappears.
-- User UAT confirmed the onboarding background sizing and sign-in header cleanup look correct.
-- Current working backend hardening slice adds a Realtime service boundary, a mock no-op realtime adapter, Supabase match/message Realtime subscriptions, and migration `202607040003_enable_match_message_realtime.sql` to publish `public.matches` and `public.messages`.
-- Backend match/thread hydration still runs immediately after sign-in, on app-active, and every 10 seconds as a fallback; Realtime now triggers a debounced refresh when active matches change or a message is inserted into a currently known active match.
-- User UAT confirmed Realtime-triggered match/message refresh using `t` as profile A and both `tt` and `test2` as profile B accounts for matching and sending.
-- Current working backend read-state slice adds `public.match_read_states` with RLS, extends `ChatService.getThread` with `readThrough`, implements Supabase `markRead`, and lets backend match/thread hydration prefer the hosted read watermark while retaining local watermarks as fallback/mock behavior.
-- User UAT confirmed backend-backed read state: opening an incoming hosted message clears unread state, sign-out/sign-in keeps the conversation read, and a newer incoming message restores the unread badge/highlight.
-- Current working read-path cleanup adds provider-level derived selectors for matched profiles, inbox rows, profile lookup, conversation lookup, active-match checks, and tab badge counts. Matches, Inbox, chat, match detail, and tab layout now consume those selectors instead of rebuilding raw `likedIds`/`conversations`/`knownProfiles` reads in each screen.
-- User UAT confirmed the read-path selector cleanup with profile `t`.
-- Follow-up issue: using the device/browser back button can inconsistently show missing conversations, reset badges, or make matches appear to disappear. Current working fix centralizes protected-route auth/profile hydration gating in `ProtectedRoute` and applies it to tabs, chat, match detail, edit profile, paywall, report, and safety/legal. Chat also uses `useCanonicalBack` so Android hardware back matches the in-app chat back action and returns to Inbox.
-- Follow-up badge issue: a Realtime/10-second backend refresh could apply with stale `seenMatchIds` or `readWatermarks` captured before the user opened a match/conversation. Current working fix uses current refs when applying backend refresh results and recalculates conversation unread counts from the latest read watermark even when backend messages are unchanged.
-- Latest follow-up fix excludes already matched backend real/dev profiles from Fruit while keeping unmatched real/dev profiles testable there, and clears Inbox unread state before navigating into Chat so rapid device/browser back cannot beat the Chat screen read effect.
-- Current navigation/profile-retention fix rejects incomplete backend profile objects such as generic "Orchard user" rows, preserves the last complete remembered profile during refresh churn via an explicit display-profile snapshot, no longer clears remembered match profiles on same-user Supabase token refresh, queues a follow-up backend match/profile refresh if focus/realtime hits while refresh is already in flight, refreshes backend match/profile state whenever Matches or Inbox receives focus, and changes match detail from modal presentation to normal stack presentation while using stack-aware `dismissTo` for canonical Android hardware-back routing.
-- Latest UAT confirmed Matches -> profile -> device back is mostly stable, but Inbox -> conversation -> device back can still drop real/dev conversations and matches until Fruit runs discovery. Current working fix makes backend match refresh repair missing real/dev display profiles through the same Supabase discovery path Fruit uses, and skips applying a partial match refresh if a complete real/dev profile still cannot be resolved.
-- Current weak-network resilience fix persists the complete known-profile display cache in AsyncStorage and hydrates it before backend refresh, so poor mobile reception or slow Supabase profile/member/photo reads should not force Matches/Inbox to wait for Fruit/Discover to rebuild display rows.
-- Follow-up sign-in UAT found a maximum-update-depth loop on the sign-in screen before credentials could be entered. Root cause was saving the known-profile display cache through a TanStack mutation inside auth/session reset effects. `00f3075` replaced that cache mutation with direct async storage writes and fixed the sign-in loop.
-- Latest UAT after `00f3075`: sign-in loop is fixed, Matches -> profile -> device back is mostly stable, but Inbox -> conversation -> device/browser back can still intermittently make real/dev conversations and matches disappear until Fruit/Discover restores display state. This appears more likely under weak mobile reception and should be treated as a remaining intermittent stale/partial refresh issue.
-- Current workflow cleanup updates both GitHub Actions workflows from `actions/checkout@v4` to `actions/checkout@v6`, resolving the tracked Node 20 checkout warning follow-up.
-- Current follow-up fix preserves the known-profile display cache across transient Supabase `userId` gaps and same-account sign-out/sign-in, while still clearing it on a real account switch. This targets the remaining weak-network/back-navigation path where Matches/Inbox could lose real/dev display rows before backend refresh repaired them.
-- Human UAT confirmed the cache-retention fix passes on desktop Chrome, but Android Chrome still fails because device back is delivered as browser history/back rather than native Android `BackHandler`. Current follow-up extends `useCanonicalBack` to web `popstate` by adding a focused history sentinel and routing browser back through the same canonical `dismissTo` target used by in-app back.
-- Human UAT confirmed the web canonical-back fix resolves repeated Android Chrome device-back flows across Matches and Inbox. One first-attempt Matches -> profile -> immediate Android back case briefly showed only the fixture match before real/dev matches returned after about 0.5-1 second. Current follow-up adds a provider-level last-resolved profile snapshot in shared `getProfileById`, so transient profile lookup misses cannot hide active `likedIds` rows in Matches or conversation rows in Inbox while focus refresh catches up.
-- Follow-up UAT found the first immediate Android swipe-back could briefly render the true empty state ("No matches"), so the gap is a transient empty list render rather than only a profile lookup miss. Initial screen-level `useTransientEmptyList` did not fix it because the tab can remount after the list is already empty. Current refinement applies the same guard at the provider selector level for `matchedProfiles` and `inboxItems`, and the hook now returns the last non-empty list synchronously on the first empty render instead of waiting for an effect tick. It keeps that list visible for up to 1.5 seconds during route/back refresh gaps while still allowing the real empty state if the list remains empty. The guard is disabled/cleared when no active profile exists.
-- User correctly identified the deeper cause: Supabase mode still entered app screens from local/mock state before backend profile/match/thread bootstrap had completed. Current production-direction fix adds `backendMatchesHydrated` as a first-session bootstrap state, has Supabase root/protected/sign-in flows wait for initial backend match/thread/profile-display hydration after profile hydration, and bridges cached same-user profiles into backend match bootstrap instead of bypassing it. This should move the issue from UI-level back patches toward the intended source-of-truth startup model for inner-circle testing.
-- Standardized release/milestone tracking now lives in `docs/milestone-tracker.md`. Use it as the concise checklist for milestone status, blockers, task ownership, UAT guidance, and next priority; `docs/project-status.md` remains the running narrative log.
-- Follow-up UAT still failed on first Android Chrome swipe-back: browser briefly went blank white and returned with all three matches highlighted; the opened match did not clear highlight/badge. Current diagnostic slice adds instrumentation for canonical browser back, protected-route gate state, backend match bootstrap start/load/apply/release, and backend bootstrap resets. Matches cards now call `markMatchSeen` before navigating to detail, so immediate back cannot outrun the detail-screen seen effect.
-- Current follow-up removes the web `popstate` canonical-back handler to avoid double navigation during Android Chrome browser/device back; in-app back and native Android hardware back still use canonical `dismissTo`. `markMatchSeen` now updates `seenMatchIdsRef` synchronously before React state scheduling so backend refresh cannot re-highlight a just-opened card from stale seen state.
-- Latest UAT found an order-dependent browser-history issue: fresh sign-in followed by Match tab first passes, and fresh sign-in followed by Inbox conversation back first passes, but then opening Match Detail in the same session repeatedly triggers a blank white ~0.5-1 second reload/state gap. The URL stayed on `/matches` while Match Detail was visible and rows returned by themselves, which points to stale browser history behind an in-memory detail screen rather than missing backend data. Current follow-up keeps web `popstate` normalization only for Match Detail, uses `router.replace` to the canonical tab destination, and adds a Match-tab-only web hash sentinel (`/matches#match-...`) before opening detail so Android Chrome back consumes the sentinel instead of an older app-history entry. A later UAT still showed the white flash and all three match highlights returning; `markMatchSeen` now persists directly to storage and Match-tab card navigation awaits that write before opening detail, so a hard transient reload should no longer lose the seen/badge update.
+- `docs/milestone-tracker.md`: single canonical milestone/checklist/UAT/blocker/human-decision source of truth for closed beta.
+- `docs/repo-audit-and-foundation-plan.md`: active engineering plan for Option 3 foundation cleanup.
+- `docs/architecture-history.md`: consolidated durable audit and historical planning lineage.
+- `docs/project-status.md`: running narrative status log.
+- `docs/README.md`: docs index and source-of-truth map.
+
+Old duplicate roadmap/checklist/audit docs were consolidated and deleted from active docs:
+
+- `docs/repo-audit.md`
+- `docs/20260620_project_review.md`
+- `docs/20260621_repo_audit_recommendations.md`
+- `docs/20260621_second_opinion_audit_v2.md`
+- `docs/mvp-plan.md`
+- `docs/mvp-backlog.md`
+- `docs/mvp-prototype-gap-assessment.md`
+- `docs/mobile-release-checklist.md`
+- `docs/safety-and-privacy-checklist.md`
+
+## Current Product / Technical State
+
+- Current milestone: M4 - Supabase source-of-truth app session.
+- Hosted `orchard-dev` is aligned through migration `202607040004`.
+- Supabase mode has auth/profile/photo/discovery/match/chat/read-state/Realtime paths in varying degrees.
+- Mock/Fruit/demo mode remains required.
+- `ProfileProvider` remains active and too broad; the accepted direction is staged extraction with a compatibility facade, not one-pass deletion.
+- Remaining immediate runtime issue is Android Chrome / web Match Detail back behavior after source-of-truth bootstrap work.
 
 ## Validation State
 
+Latest known code-validation state before docs consolidation:
+
 - `bun run typecheck`: passed.
 - `bun run lint`: passed.
+- Local Supabase DB reset/test passed for latest schema set: 1 file / 45 tests.
+
+Docs consolidation validation:
+
 - `git diff --check`: passed.
-- Onboarding background sizing fix passed typecheck, lint, diff check, and browser visual UAT.
-- Sign-in header cleanup passed typecheck, lint, diff check, and browser visual UAT.
-- Hosted SQL check after three-way dev UAT showed 3 active matches and 2 messages persisted for `t`, `tt`, and `test2`.
-- Hosted SQL check after account-switching UAT showed the same 3 active matches plus 4 messages persisted for `t`, `tt`, and `test2`.
-- Backend match/thread refresh loop added after live-update UAT: immediate + 10-second interval + app-active refresh.
-- Fruit profile wiring, local fixture auto-match, mock auto-reply restoration, per-user read watermarks, per-user seen-match persistence, Fruit real/dev visibility, local-only Fruit fixture match preservation, match chronological ordering, fixture duplicate-send prevention, and in-open-chat fixture read clearing passed browser UAT.
-- Hosted browser UAT passed for fixture discovery, fixture like/match, hosted text persistence, sign-out/sign-in thread hydration, and hosted unmatch.
-- Hosted browser UAT passed for onboarding/profile-photo confirmation and hydration.
-- Real-profile UAT found and the current working slice addresses: false auto-match on one-sided real likes, stale local-only A-side conversations from earlier UAT, misleading chat availability before reciprocal match, and visible profiles showing default/fallback photos instead of uploaded photos.
-- `expo\node_modules\.bin\supabase db reset`: passed after storage policy migration.
-- `expo\node_modules\.bin\supabase test db`: passed, 1 file / 42 tests.
-- Realtime migration `202607040003_enable_match_message_realtime.sql`: local `supabase db reset` passed and local `supabase test db` passed, 1 file / 42 tests.
-- Read-state migration `202607040004_match_read_states.sql`: local `supabase db reset` passed and local `supabase test db` passed, 1 file / 45 tests.
-- Hosted `orchard-dev` is aligned through `202607040004` after `supabase db push`; migration list confirms local/remote alignment. The Supabase CLI again printed a non-fatal pg-delta catalog-cache warning after the push.
-- Hosted browser UAT passed for Realtime-triggered incoming match/message refresh with `t`/`tt` and `t`/`test2`.
-- Read-path selector cleanup passed typecheck, lint, and diff check.
-- Shared protected-route/canonical-back guard passed typecheck, lint, and diff check.
-- Stale badge refresh fix passed typecheck, lint, and diff check.
-- Fruit matched-profile exclusion and eager Inbox read clearing passed typecheck, lint, and diff check.
-- Match profile retention/focus refresh/origin back fix, incomplete profile rejection, same-user token-refresh cache preservation, display-profile snapshot, normal stack match detail presentation, and stack-aware canonical back passed typecheck, lint, and diff check.
-- Checkout workflow cleanup is docs/config only; `git diff --check` passed.
-- Transient auth-gap known-profile cache retention passed typecheck, lint, and diff check.
-- Web/browser canonical-back interception for Android Chrome passed typecheck, lint, and diff check.
-- Last-resolved profile selector fallback for first-return flicker passed typecheck, lint, and diff check.
-- Provider-level transient-empty list guard for Matches and Inbox passed typecheck, lint, and diff check.
-- Supabase backend match/thread bootstrap gate passed typecheck, lint, and diff check.
-- Bootstrap/back instrumentation and card-press match-seen clearing passed typecheck, lint, and diff check.
-- Web popstate double-navigation removal and synchronous match-seen ref update passed typecheck, lint, and diff check.
-- Match-detail-only web browser-back normalization with deterministic web `replace`, a Match-tab hash sentinel, and awaited seen-match persistence before navigation passed typecheck, lint, and diff check.
+- Deleted-doc reference scan found only intentional entries in consolidated/deleted-doc lists and architecture history.
+- Runtime code was not changed; changed files are docs, README, and `.agents` only.
 
-## Current Risks / Blockers
+## Current Docs-Only Changes
 
-- Chat UI still preserves local simulated/photo behavior; only real text messages are persisted/hydrated from Supabase.
-- Remaining backend source-of-truth cleanup should continue behind service boundaries and preserve mock mode.
-- No current git sync blocker: local `main` is clean and synced with `origin/main` at `2c73aa7`.
-- Supabase Auth email sender/template branding still requires custom SMTP setup if branded emails are needed.
-
-## Likely Relevant Files
-
-- `expo/providers/profile-provider.tsx`
-- `expo/services/supabase-discovery-service.ts`
-- `expo/services/supabase-chat-service.ts`
-- `expo/services/supabase-match-service.ts`
-- `expo/services/realtime-service.ts`
-- `expo/services/supabase-realtime-service.ts`
-- `expo/services/supabase-swipe-service.ts`
-- `expo/services/supabase-profile-service.ts`
-- `expo/constants/mock-profile-ids.ts`
-- `expo/app/(tabs)/profile.tsx`
-- `expo/app/(tabs)/discover.tsx`
-- `expo/app/(tabs)/matches.tsx`
-- `expo/app/(tabs)/inbox.tsx`
-- `expo/app/match/[id].tsx`
-- `expo/app/chat/[id].tsx`
-- `expo/app/onboarding/index.tsx`
-- `expo/app/onboarding/sign-in.tsx`
-- `expo/app/onboarding/pending-confirmation.tsx`
-- `supabase/migrations/202607040001_profile_photo_visible_storage_reads.sql`
-- `supabase/migrations/202607040002_active_match_profile_reads.sql`
-- `supabase/migrations/202607040003_enable_match_message_realtime.sql`
-- `supabase/migrations/202607040004_match_read_states.sql`
-- `supabase/tests/database/202606200001_mvp_security.sql`
-- `docs/project-status.md`
-- `docs/milestone-tracker.md`
-
-## Read Only If Needed
-
-- `docs/session-handoff.md`
-- `docs/backend-migration-plan.md`
-- `docs/supabase-schema.md`
-- `.agents/handoff.md`
+- Rewrote `docs/milestone-tracker.md` as the canonical closed-beta roadmap/checklist/feedback-loop doc.
+- Rewrote `docs/repo-audit-and-foundation-plan.md` to make Option 3 PR-sized and safe.
+- Added `docs/architecture-history.md`.
+- Added `docs/README.md`.
+- Updated README/setup/backend/schema/hardening/Codex/provider-map/status docs to point to the canonical docs and remove stale current-state claims.
+- Deleted obsolete duplicate planning/checklist/audit docs listed above.
 
 ## Next Recommended Task
 
-Human UAT should verify the order-dependent Android Chrome sequence again: fresh incognito sign-in as `t`, open an Inbox conversation and swipe/device-back to Inbox, then open a real/dev Match Detail from the Match tab. While detail is visible, record whether the URL shows `/matches#match-...`; swiping/device-back should remove the hash, return to Matches without a blank white flash, keep all rows visible, and clear the opened match highlight/badge. If the white flash remains but the opened match highlight/badge stays cleared, the remaining bug is isolated to web route rendering. If the highlight/badge still resets, the awaited storage write is not completing before the page churn.
+After the docs consolidation is accepted, implement foundation Slice 1 from `docs/repo-audit-and-foundation-plan.md`: remove Match Detail web history/hash workarounds while preserving native Android `BackHandler`, then run `bun run typecheck`, `bun run lint`, `git diff --check`, and targeted desktop/Android Chrome UAT from `docs/milestone-tracker.md`.

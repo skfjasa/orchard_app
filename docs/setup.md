@@ -121,15 +121,16 @@ Keep changes PR-sized. Good first branches:
 
 ## Current App Mode
 
-The current app runs in local prototype mode:
+The app still supports mock/demo mode when Supabase environment variables are absent. Supabase mode now includes real auth, profile/member persistence, profile photo storage, backend discovery/display support, swipe/match service paths, backend text-message persistence/hydration, Realtime/polling refresh, and backend-backed read state.
 
-- Profile data is stored in AsyncStorage.
-- Discovery profiles come from local mocks.
-- Matches are created locally.
-- Chat is local and includes fake replies.
-- Paywall behavior is simulated.
+Some behavior is still local or prototype-oriented:
 
-Future work should add Supabase-backed behavior while keeping mock mode available when Supabase environment variables are absent.
+- Mock/Fruit fixture behavior remains intentionally available for demo/testing.
+- Local simulated replies and photo-request behavior still exist.
+- Some Supabase actions are still being moved from local-first behavior to backend-first/source-of-truth behavior.
+- Monetization remains disabled for the feedback MVP.
+
+Current milestone and next tasks live in `docs/milestone-tracker.md`.
 
 ## Expected Environment Variables
 
@@ -207,15 +208,4 @@ bunx eas submit --platform ios
 
 ## Development Priorities
 
-Start with foundation and docs before replacing app behavior:
-
-1. `.env.example`
-2. Typed environment/mock-mode helper
-3. Supabase client skeleton
-4. Data adapter interface
-5. Auth/session provider
-6. Profile persistence
-7. Photo upload
-8. Discovery/swipes/matches
-9. Chat
-10. Safety/account deletion
+Use `docs/milestone-tracker.md` for the canonical milestone/checklist view and `docs/repo-audit-and-foundation-plan.md` for the current foundation-refactor execution plan. Do not maintain separate backlog lists in setup docs.

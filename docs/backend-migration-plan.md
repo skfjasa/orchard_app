@@ -1,16 +1,16 @@
 # Backend Migration Plan
 
+Reference note: this file records backend migration principles and service-boundary guidance. Current milestone status, task order, UAT, and blockers live in `docs/milestone-tracker.md`.
+
 ## 1. Current State
 
-The current app is a local/mock Expo React Native prototype.
+The app is an Expo React Native prototype being converted into a Supabase-backed closed-beta app while preserving mock/demo mode.
 
-- `ProfileProvider` owns too much local behavior.
-- Persistence is local via AsyncStorage.
-- Discovery uses mock profiles.
-- Swipes create local matches/conversations.
-- Chat is local and simulated.
-- Paywall, boosts, subscriptions, and Super Likes are simulated.
-- No production backend is wired as the source of truth.
+- `ProfileProvider` owns too much behavior and is being reduced through the PR-sized plan in `docs/repo-audit-and-foundation-plan.md`.
+- Persistence includes local AsyncStorage caches plus Supabase-backed auth/profile/photo/match/message/read-state paths in Supabase mode.
+- Discovery, swipes, matches, chat, safety, and profile storage all have service boundaries; some remain partially local/mock while source-of-truth cleanup continues.
+- Paywall, boosts, subscriptions, and Super Likes are simulated/demo-only; monetization is out of scope for closed beta.
+- Production backend source-of-truth behavior is not complete yet.
 - Supabase JS dependency and env-gated client skeleton exist.
 - Auth/session provider foundation exists.
 - Supabase email/password auth is wired into sign-in and final onboarding completion when Supabase env vars are present.
@@ -27,12 +27,12 @@ The current app is a local/mock Expo React Native prototype.
 - The initial migration was pushed to hosted `orchard-dev`; migration history shows `202606190001` on both local and remote. Supabase Dashboard verification confirmed the hosted tables exist and RLS is enabled on public Orchard tables. CLI dry-run verification was temporarily blocked by Supabase auth throttling, but dashboard verification completed the hosted setup check.
 - Real Supabase auth flow exists for email/password sign-in and account creation, and onboarding/profile rows persist to `profiles` and `profile_members`.
 - Hosted email-confirmation flow is now resumable in app code: if signup returns a user id without a session, a pending onboarding profile is stored locally without credentials and persisted after the confirmation link returns with a session. The app explicitly handles web `?code=` and hash-token callback formats, routes users to a pending-confirmation screen after signup, and includes a development-only local test reset control on sign-in.
-- Supabase Storage-backed upload for selected local onboarding profile photos exists. It writes private bucket objects, `profile_photos.member_id` metadata rows, and signed URLs during current-profile hydration. The storage migration has been pushed to hosted `orchard-dev`; app smoke testing with a selected photo is still pending.
+- Supabase Storage-backed upload for selected local onboarding profile photos exists. It writes private bucket objects, `profile_photos.member_id` metadata rows, and signed URLs during current-profile hydration. Hosted onboarding/profile-photo smoke testing has passed.
 - GitHub Actions now runs Expo install/typecheck/lint on push/PR, and a manual Supabase DB test workflow has been validated against GitHub-hosted runners.
 - Dev fixture profile support exists in `202606210001_fixture_profiles_and_settings.sql`; hosted `orchard-dev` has 22 seeded fixture profiles, 30 fixture members, and settings rows. Real users who like fixture profiles auto-match for dev testing.
 - `user_settings` rows are created/backfilled at the database layer and also written during Supabase profile completion.
-- Reciprocal matching source of truth and chat backend are not fully wired yet for real user-to-user matching/chat.
-- The project review's `ProfileProvider` concern should be handled incrementally by continuing to move behavior behind service adapters; avoid a one-pass provider rewrite.
+- Reciprocal matching and backend chat are partially wired and have passed targeted hosted UAT, but source-of-truth cleanup remains for actions, startup, and mock/Supabase separation.
+- The project review's `ProfileProvider` concern should be handled incrementally by continuing to move behavior behind service adapters and domain hooks; avoid a one-pass provider rewrite. The active execution plan is `docs/repo-audit-and-foundation-plan.md`.
 
 ## 2. Migration Principle
 
@@ -46,6 +46,8 @@ Migration should:
 - Use env vars to choose backend vs mock mode.
 - Keep UI behavior stable while data sources change.
 - Avoid direct Supabase calls inside screens where a service boundary is practical.
+- Keep `ProfileProvider` as a compatibility facade until its active consumers have migrated.
+- Use React Query for backend/server state and small Zustand stores for local client preferences only where that reduces coupling.
 
 ## 3. Suggested Services / Adapters
 

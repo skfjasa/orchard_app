@@ -94,4 +94,4 @@ After the Supabase email limit clears, retest the hosted confirmation flow with 
 3. `.agents\handoff.md`
 4. `docs\project-status.md`
 5. `docs\backend-migration-plan.md`
-6. `docs\session-handoff.md`
+6. `docs\project-status.md`

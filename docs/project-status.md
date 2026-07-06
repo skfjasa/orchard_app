@@ -19,6 +19,7 @@ Last updated: 2026-07-06
 - Handoff procedure: global `handoff sync` / `session handoff` behavior is being recorded in global/workspace instructions and Orchard-specific docs.
 - Active legacy-generator toolchain coupling has been removed: app scripts now call Expo CLI directly, Metro uses the default Expo config, app scheme/package identifiers are Orchard-specific, generator metadata has been removed, and onboarding backgrounds use bundled Orchard assets instead of externally hosted generated image URLs.
 - Standardized milestone tracking now lives in `docs/milestone-tracker.md`; use it as the concise release/milestone checklist while this file remains the running narrative status log.
+- Active foundation refactor plan now lives in `docs/repo-audit-and-foundation-plan.md`. It replaces the one-pass provider deletion idea with PR-sized extraction slices and preserves older audit context in `docs/architecture-history.md`.
 
 ## Latest Foundation Commits
 
@@ -92,7 +93,7 @@ Last updated: 2026-07-06
 - Auth/session provider foundation exists and defaults to mock mode when Supabase env vars are absent.
 - Initial Supabase schema/RLS migration draft exists.
 - Draft RPCs exist for reciprocal swipe matching, unmatch, and block behavior.
-- Supabase service adapters exist for swipe, match, and safety behavior. Swipe persistence is lightly wired into the provider as a gated, non-blocking hook; match and safety adapters are not wired into UI/provider flows yet.
+- Supabase service adapters exist for swipe, match, safety, discovery, profile, storage, Realtime, and chat behavior in varying degrees. Some source-of-truth cleanup remains, especially around backend-first actions and mock/Supabase separation.
 - Backend/mock service factory exists and exposes per-service capabilities so partial Supabase support is explicit.
 - `ProfileProvider` can now call the swipe service factory as a non-blocking persistence hook when Supabase mode has a real authenticated profile id. Local state remains the UI source of truth.
 - Supabase hardening is tracked in `docs/supabase-hardening-plan.md`.
@@ -111,9 +112,9 @@ Last updated: 2026-07-06
 - Direct chat routes and local message/photo send helpers now require an active local match before showing or writing conversation content.
 - Onboarding now includes a pre-profile age/legal gate for 18+ confirmation, MVP terms, privacy notice, and community standards acceptance. Acceptance is stored on the local prototype profile.
 - Safety/legal links and support contact are env-configurable through `EXPO_PUBLIC_PRIVACY_POLICY_URL`, `EXPO_PUBLIC_TERMS_URL`, `EXPO_PUBLIC_COMMUNITY_STANDARDS_URL`, `EXPO_PUBLIC_SUPPORT_EMAIL`, `EXPO_PUBLIC_SUPPORT_URL`, and `EXPO_PUBLIC_ACCOUNT_DELETION_URL`.
-- MVP prototype gap assessment is recorded in `docs/mvp-prototype-gap-assessment.md`.
+- Historical MVP prototype gap assessment has been consolidated into `docs/milestone-tracker.md` and `docs/architecture-history.md`.
 - Product/release decisions recorded: app name `Orchard`, iOS bundle ID `com.orchardapp.ios`, Supabase dev project `orchard-dev`, production project later `orchard-prod`, Supabase region East US (North Virginia) / `us-east-1`, and placeholder public legal/support URLs under `https://yourdomain.com`.
-- Project review recorded in `docs/20260620_project_review.md`.
+- Historical project review findings have been consolidated into `docs/architecture-history.md`.
 - The Supabase migration now includes `profile_members` and requires `profile_photos.member_id` to reference a member on the same profile, resolving the review's blocking single/couple schema mismatch before hosted dev apply.
 - After a local Supabase database reset to apply the edited migration, `expo\node_modules\.bin\supabase test db` passes: 1 file, 22 tests.
 - The local Supabase CLI was linked to hosted `orchard-dev`, `supabase db push --dry-run` showed one pending migration, and `supabase db push` applied `202606190001_initial_mvp_schema.sql`.
@@ -213,23 +214,24 @@ Last updated: 2026-07-06
 - A hosted anon-client smoke test attempted to create a fresh test auth user and was blocked by Supabase's email rate limit before a session was returned. Retest after the rate limit clears or with an existing confirmed dev account.
 - A browser funnel test reached `/onboarding/photos`, sent a Supabase confirmation email, and exposed two hosted auth setup gaps: the redirect URL was still pointing at `http://localhost:3000`, and emails still used default Supabase Auth branding. App-side redirect handling has been patched; hosted Supabase Auth redirect allow-list, Site URL, and email templates/sender still need Dashboard review.
 - User updated Supabase Auth URL Configuration redirect entries for the browser preview. Supabase Dashboard currently requires SMTP configuration before auth email templates can be customized; SMTP fields are still blank except project auth secrets.
-- Project review recommendations remain relevant: avoid a broad `ProfileProvider` rewrite, keep moving behavior behind services, and add CI/database automation after the auth/profile path has a little more coverage.
+- Project review recommendations remain relevant: avoid a broad `ProfileProvider` rewrite, keep moving behavior behind services, and add CI/database automation after the auth/profile path has a little more coverage. The July 2026 amended plan makes this explicit: keep `ProfileProvider` as a compatibility facade, remove web navigation hacks first, then extract preferences, interactions, and backend server state in separate slices.
 - Session-close handoff records the backend profile display checkpoint. Latest implementation checkpoint: `00df6be` - Support backend profile discovery display. Local `main` should be clean and synced with `origin/main`.
 
 ## Current Task
 
-Human UAT for the order-dependent Android Chrome Match Detail browser-back fix.
+Docs-only architecture planning: update the July 2026 repo audit/foundation plan so Option 3 proceeds as an incremental compatibility-facade extraction rather than a one-pass `ProfileProvider` deletion. Runtime code has not changed in this planning pass.
 
 ## Next Planned Tasks
 
-1. Human UAT: in hosted Supabase mode with `t`, verify the narrowed Android Chrome order: fresh incognito sign-in, Inbox conversation back first, then without resetting the session open Match Detail and swipe/device-back. Matches should return without a blank white browser window, without empty/fixture-only state, and with the opened match highlight/badge cleared.
-2. Finish Supabase source-of-truth session bootstrap for inner-circle testing: profile, active matches, display profiles/photos, inbox summaries, thread snippets, unread/read state, and block/unmatch visibility should load before tabs render.
-3. Decide whether seen-match/highlight state remains local-only for inner-circle testing or moves to backend-backed per-user state.
-4. Continue backend source-of-truth cleanup for actions: like/pass/super-like, match creation, unmatch/block/report, message send/read should either write backend-first or use clearly bounded optimistic updates.
-5. Keep mock/Fruit behavior as demo/test mode, but isolate it from Supabase signed-in startup state.
-6. Decide whether to ingest fixture profile images into Supabase Storage for backend-backed discovery; the current dev fixtures intentionally omit `profile_photos` because mock image URLs are remote assets, not storage object paths.
-7. Decide whether to make Supabase DB tests automatic for Supabase migration pull requests.
-8. Closer to TestFlight: create Apple Developer Program account and finish release-readiness setup.
+1. Implement foundation Slice 1 from `docs/repo-audit-and-foundation-plan.md`: remove Match Detail web history/hash hacks while preserving native Android `BackHandler`, then run typecheck/lint and targeted web/Android Chrome UAT.
+2. Human UAT: in hosted Supabase mode with `t`, verify the narrowed Android Chrome order: fresh incognito sign-in, Inbox conversation back first, then without resetting the session open Match Detail and swipe/device-back. Matches should return without a blank white browser window, without empty/fixture-only state, and with the opened match highlight/badge cleared.
+3. Finish Supabase source-of-truth session bootstrap for inner-circle testing: profile, active matches, display profiles/photos, inbox summaries, thread snippets, unread/read state, and block/unmatch visibility should load before tabs render.
+4. Decide whether seen-match/highlight state remains local-only for inner-circle testing or moves to backend-backed per-user state.
+5. Continue backend source-of-truth cleanup for actions: like/pass/super-like, match creation, unmatch/block/report, message send/read should either write backend-first or use clearly bounded optimistic updates.
+6. Keep mock/Fruit behavior as demo/test mode, but isolate it from Supabase signed-in startup state.
+7. Decide whether to ingest fixture profile images into Supabase Storage for backend-backed discovery; the current dev fixtures intentionally omit `profile_photos` because mock image URLs are remote assets, not storage object paths.
+8. Decide whether to make Supabase DB tests automatic for Supabase migration pull requests.
+9. Closer to TestFlight: create Apple Developer Program account and finish release-readiness setup.
 
 ## Human Decisions Needed
 

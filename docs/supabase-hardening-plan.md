@@ -1,10 +1,12 @@
 # Supabase Hardening Plan
 
-Last updated: 2026-06-20
+Last updated: 2026-07-06
+
+Reference note: this file records Supabase security/RLS hardening principles and current hardening status. Current milestone/task tracking lives in `docs/milestone-tracker.md`.
 
 ## Goal
 
-Harden the initial Supabase MVP migration before applying it to a shared development project or wiring more app behavior to it.
+Keep the Supabase MVP schema, RLS policies, grants, and RPCs hardened as Orchard moves from hosted development testing toward closed beta.
 
 The database should enforce Orchard's core safety rules server-side:
 
@@ -130,9 +132,22 @@ Add SQL/RLS tests covering:
 
 ## Current Status
 
-- `supabase/migrations/202606190001_initial_mvp_schema.sql` has been hardened before any shared dev apply.
-- The migration now includes `profile_members` and member-scoped `profile_photos` so couple profiles can be represented before hosted dev apply.
-- Initial database/RLS tests exist at `supabase/tests/database/202606200001_mvp_security.sql`.
-- Docker Desktop is operational after enabling firmware virtualization.
-- `expo\node_modules\.bin\supabase start` runs the local database, and `expo\node_modules\.bin\supabase test db` passes locally after resetting the local database to apply the profile-member migration update: 1 file, 22 tests.
-- Next step: apply the passing hardened migration to a shared development Supabase project.
+- Hosted Supabase dev project `orchard-dev` exists and is aligned through migration `202607040004`.
+- `supabase/migrations/202606190001_initial_mvp_schema.sql` contains the hardened core schema/RLS/RPC foundation.
+- `202606200002_profile_photo_storage.sql` adds the private `profile-photos` bucket and member-scoped photo metadata constraints.
+- `202606210001_fixture_profiles_and_settings.sql` adds dev fixture support and default `user_settings`.
+- `202607030001_rematch_active_match_history.sql` preserves inactive match history and enforces one active match per pair.
+- `202607040001_profile_photo_visible_storage_reads.sql` lets eligible viewers sign visible profile photo storage objects.
+- `202607040002_active_match_profile_reads.sql` lets active matched users read each other's profile/member/photo rows and sign matched photos.
+- `202607040003_enable_match_message_realtime.sql` publishes `public.matches` and `public.messages` for Realtime.
+- `202607040004_match_read_states.sql` adds backend-backed match read states.
+- Database/RLS tests exist at `supabase/tests/database/202606200001_mvp_security.sql`.
+- Local `expo\node_modules\.bin\supabase db reset` and `expo\node_modules\.bin\supabase test db` have passed for the latest schema set: 1 file / 45 tests.
+
+## Current Hardening Gaps
+
+- Hosted UAT still needs to cover report profile, report message, block, unmatch, and account deletion request with real accounts.
+- Hosted UAT still needs to confirm blocked users disappear from discovery, matches, and chat.
+- Hosted UAT still needs to confirm suspended/invisible users do not appear in discovery.
+- Supabase Studio moderation workflow should be documented for inner-circle testing.
+- Production project `orchard-prod` should not be created or used until closed-beta hardening decisions are accepted.

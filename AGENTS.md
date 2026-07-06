@@ -121,7 +121,6 @@ For this repo, lightweight startup state lives in:
 
 Detailed or compatibility handoff/status files should be refreshed only when they are relevant or would otherwise become stale:
 
-- `docs/session-handoff.md`
 - `docs/project-status.md`
 - `docs/backend-migration-plan.md`
 - `docs/supabase-hardening-plan.md`

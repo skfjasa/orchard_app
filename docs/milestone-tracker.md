@@ -1,10 +1,28 @@
-# Orchard Milestone Tracker
+# Orchard Closed-Beta Milestone Tracker
 
 Last updated: 2026-07-06
 
-This is the durable checklist for Orchard release planning. Use it to answer "where are we?", "what is next?", and "what blocks the next milestone?" without reconstructing status from session handoffs.
+This is the single canonical milestone, roadmap, checklist, blocker, and feedback-loop document for getting Orchard to a closed beta with close friends and inner-circle testers.
 
-Status key:
+Use this file to answer:
+
+- Where are we?
+- What is the next milestone?
+- What blocks the next milestone?
+- What UAT feedback was accepted or still needs work?
+- What has been completed?
+- What human decisions are needed?
+
+Do not maintain separate active milestone, backlog, launch-plan, release-checklist, or MVP-gap docs. Older planning docs are historical only and should point here.
+
+Supporting docs:
+
+- Active foundation refactor plan: [Repo Audit & Foundation Refactor Plan](repo-audit-and-foundation-plan.md)
+- Historical audit lineage: [Architecture Audit History](architecture-history.md)
+- Running narrative status log: [Project Status](project-status.md)
+- Current schema/reference: [Supabase Schema Draft](supabase-schema.md)
+
+## Status Keys
 
 - `[x]` Done or accepted.
 - `[~]` In progress or partially accepted.
@@ -19,9 +37,38 @@ Owner key:
 - `[C+U]` Codex can implement or prepare, then human UAT must accept it.
 - `[C+H]` Codex can prepare options or scaffolding, but a human decision/action is required before completion.
 
+## Product Goal
+
+Orchard is an iOS-first dating app MVP for polyamorous / ENM users. The beta should validate whether structured relationship context improves dating outcomes: relationship structure, partnered status, dating mode, boundaries, looking-for intent, and compatibility expectations should be clear before chat.
+
+This should not become a generic swipe clone.
+
+## Closed-Beta Target
+
+Target audience:
+
+- Small trusted close-friends / inner-circle group.
+- Initial testing can use mobile web/ngrok or hosted preview while iOS TestFlight work is prepared.
+- TestFlight is the iOS distribution target once Apple/EAS/App Store Connect prerequisites are available.
+
+Closed-beta user outcome:
+
+1. Tester can create or sign into a real account.
+2. Tester can complete a structured profile and upload photos.
+3. Tester can discover eligible profiles.
+4. Tester can like/pass and match only on reciprocal likes.
+5. Tester can chat only with active matches.
+6. Tester can report, block, unmatch, access support/legal surfaces, and request account deletion.
+7. App remains stable across sign-out/sign-in, weak mobile network, and Android Chrome/browser back testing used during pre-TestFlight validation.
+8. Feedback can be captured through an approved channel.
+
 ## Current Priority
 
-Current milestone: **M4 - Supabase source-of-truth session bootstrap for inner-circle testing**.
+Current milestone: **M4 - Supabase source-of-truth app session**.
+
+Immediate engineering task:
+
+- Implement Slice 1 from [Repo Audit & Foundation Refactor Plan](repo-audit-and-foundation-plan.md): remove Match Detail web history/hash workarounds while preserving native Android `BackHandler`.
 
 Immediate acceptance target:
 
@@ -29,42 +76,42 @@ Immediate acceptance target:
 - Android Chrome device/browser back from Match Detail and Chat does not briefly show empty Matches/Inbox states.
 - Mock/Fruit/demo mode still works when Supabase env vars are absent or when explicitly testing fixture behavior.
 
-## Current UAT Guide
+## Current UAT Loop
 
-Purpose: validate the Supabase backend match/thread bootstrap gate and Android Chrome back behavior before continuing broader source-of-truth work.
+Purpose:
 
-Expected behavior:
+- Validate source-of-truth bootstrap and route/back stability before expanding the beta surface.
 
-- After signing into Supabase mode, the app may stay on a loader/finalizing state briefly.
-- Protected tabs should not render until backend profile and first match/thread hydration have completed.
-- On first tab entry, Matches should not briefly say "No matches" when hosted active matches exist.
-- On first tab entry, Inbox should not briefly say "No conversations" when hosted conversations exist.
-- Android Chrome device back or swipe-back from Match Detail should return to Matches with all expected rows visible.
-- Android Chrome device back or swipe-back from Chat should return to Inbox with all expected rows visible.
-- Match highlight/badge changes should apply after viewing a match detail.
-- Match highlight/badge should clear on Matches card press before navigation, so an immediate back gesture should not outrun the detail-screen seen effect.
-- A brand-new incognito session may show active matches as unseen again because seen-match/highlight state is still local-only unless we decide to move it backend-side.
-- Latest known failure before this patch: after fresh sign-in, Inbox conversation back can pass first, but then Match Detail back in the same Android Chrome session repeatedly shows a blank white ~0.5-1 second browser reload/state gap. The URL stays on `/matches` while Match Detail is visible and rows return by themselves. Earlier attempts also restored all match highlights/badge count after the flash; Match-tab navigation now awaits durable seen-match persistence before opening detail.
+Primary UAT setup:
+
+1. Use hosted Supabase mode.
+2. Use test account `t` unless a task specifies another account.
+3. Use `tt` and/or `test2` as reciprocal match/message counterparts when needed.
+4. Start from a fresh Android Chrome incognito tab for mobile web UAT.
+
+Expected behavior after Slice 1:
+
+- After sign-in, protected tabs wait on loader/finalizing state until backend profile and first match/thread hydration complete.
+- Matches and Inbox do not briefly render true empty states when hosted active rows exist.
+- Match Detail opened from Matches uses Expo Router navigation without a Match-tab hash sentinel.
+- Android device/swipe/browser back returns to Matches with rows visible, no blank white browser window, and no reset of already-cleared match highlights.
+- Chat opened from Inbox returns to Inbox with rows visible and read state stable.
 
 Primary UAT checklist:
 
-1. Open a fresh Android Chrome incognito tab with the current ngrok/web URL.
-2. Sign in as `t`.
-3. Confirm the app waits on loader/finalizing long enough to hydrate backend state, then enters the app.
-4. Open Matches and confirm expected rows appear on first render: fixture match plus real/dev matches for `tt` and `test2`, if hosted data still matches the current test fixture state.
-5. Open Inbox and confirm expected conversation rows appear on first render: fixture conversation plus real/dev hosted conversations, if hosted data still matches the current test fixture state.
-6. From Matches, open a real/dev profile and immediately use Android device back or swipe-back.
-7. Confirm Matches does not briefly render "No matches" or fixture-only state.
-8. Confirm the opened real/dev match no longer has the new-match highlight and the badge count updates.
-9. Repeat steps 6-8 for the other real/dev match.
-10. From Inbox, open a real/dev conversation and immediately use Android device back or swipe-back.
-11. Confirm Inbox does not briefly render "No conversations" and all expected conversation rows remain visible.
-12. Repeat step 10-11 for the other real/dev conversation.
-13. Run the order-dependent regression: fresh incognito sign-in, Inbox conversation back first, then without resetting the session open Match Detail and use Android device/swipe back.
-14. Confirm the URL shows `/matches#match-...` while Match Detail is visible from the Match tab.
-15. Confirm Android device/swipe back removes the hash, does not show a blank white browser window, and does not reset all match highlights.
-16. Regression-check the opposite order: fresh incognito sign-in, Match Detail back first, then Inbox conversation back.
-17. Regression-check desktop Chrome: browser back from Chat and Match Detail should return to the expected tab route without empty tab states.
+1. Sign in as `t`.
+2. Confirm the app waits long enough to hydrate backend state before tabs render.
+3. Open Matches and confirm expected rows appear on first render.
+4. Open Inbox and confirm expected conversation rows appear on first render.
+5. Open Inbox first, open one real/dev conversation, then immediately use Android device back or swipe-back.
+6. Confirm Inbox returns normally and keeps all expected rows visible.
+7. Without signing out or resetting incognito, open Matches, tap one real/dev match, then immediately use Android device back or swipe-back.
+8. Confirm the URL is managed by Expo Router without relying on `/matches#match-...`.
+9. Confirm Matches returns with all expected rows visible, no blank white browser window, no "No matches", and no fixture-only state.
+10. Confirm the opened match highlight clears and badge count updates correctly.
+11. Repeat for the other real/dev match.
+12. Regression-check the opposite order: fresh incognito sign-in, Match Detail back first, then Inbox conversation back.
+13. Regression-check desktop Chrome browser back from Chat and Match Detail.
 
 If UAT fails, capture:
 
@@ -72,16 +119,20 @@ If UAT fails, capture:
 - Exact route sequence.
 - URL before pressing Android back.
 - URL after Android back.
+- Whether any hash sentinel appears while Match Detail is visible; after Slice 1 it should not.
+- Whether the opened match highlight/badge stays cleared.
 - Whether the empty state says "No matches", "No conversations", fixture-only, or something else.
 - Whether rows return by themselves, and how long it takes.
 - Whether visiting Fruit/Discover restores rows.
 - Whether the issue happens only on first attempt after sign-in or on repeated attempts.
 - Any visible console output if Android Chrome remote debugging is available.
 
-If UAT fails, next Codex action:
+Feedback loop rule:
 
-- Use the newly added instrumentation to inspect canonical browser back, protected-route state, backend profile bootstrap, `refreshBackendMatches`, `likedIds` application, conversation application, and protected-route release timing.
-- Verify hosted SQL state for the affected accounts before assuming an app-side failure.
+- Accepted UAT results should update the relevant milestone Done/Remaining bullets.
+- Failed UAT should add or refine a Remaining bullet and keep the next task concrete.
+- Human decisions should move into the Human Decisions Register.
+- Material status changes should also update `docs/project-status.md`, `.agents/current.md`, and `.agents/next.md`.
 
 ## Milestone Map
 
@@ -94,8 +145,8 @@ If UAT fails, next Codex action:
 | M4 | Supabase source-of-truth app session | [~] | Signed-in Supabase app entry is backend-hydrated before tabs render; local state is fallback/cache, not first visible source of truth. |
 | M5 | Discovery, swipes, reciprocal matches | [~] | Eligible backend discovery, like/pass persistence, reciprocal match creation, block/invisible/suspended filtering, and no false local matches. |
 | M6 | Active-match chat | [~] | Text chat is backend-backed, read state persists, Realtime/polling updates work, and chat is impossible without an active match. |
-| M7 | Safety, moderation, privacy, account deletion | [~] | Report/block/unmatch/account deletion/support/legal flows work in backend-backed mode and satisfy TestFlight expectations. |
-| M8 | Inner-circle beta readiness | [ ] | A small trusted tester group can use Orchard on iOS with seeded/demo data, stable auth/session behavior, safety flows, and feedback capture. |
+| M7 | Safety, moderation, privacy, account deletion | [~] | Report/block/unmatch/account deletion/support/legal flows work in backend-backed mode and satisfy beta/TestFlight expectations. |
+| M8 | Inner-circle beta readiness | [ ] | A small trusted tester group can use Orchard with seeded/demo data, stable auth/session behavior, safety flows, and feedback capture. |
 | M9 | Analytics, crash reporting, QA hardening | [ ] | Privacy-safe analytics/crash reporting decisions are implemented or explicitly deferred, and repeatable QA exists. |
 | M10 | iOS TestFlight release | [!] | Apple Developer/App Store Connect/EAS/build metadata are ready and a TestFlight build can be submitted. |
 | M11 | Android later | [ ] | Android package/build/store work starts only after iOS MVP is stable. |
@@ -111,10 +162,12 @@ Done:
 - [x] [C] `status report` and `handoff sync` workflows are documented.
 - [x] [C] Core setup/status docs exist.
 - [x] [C] Validation commands are standardized: `bun run typecheck`, `bun run lint`, `git diff --check`.
+- [x] [C] This file is the canonical milestone/checklist/closed-beta source of truth.
 
 Remaining:
 
-- [ ] [C] Keep `docs/milestone-tracker.md`, `.agents/current.md`, `.agents/next.md`, and `docs/project-status.md` in sync when milestone status changes.
+- [ ] [C] Keep this tracker, `.agents/current.md`, `.agents/next.md`, and `docs/project-status.md` in sync when milestone status changes.
+- [ ] [C] Keep `docs/repo-audit-and-foundation-plan.md` aligned with the current provider extraction strategy when architecture decisions change.
 
 ## M1 - App Foundation And Adapter Boundaries
 
@@ -128,11 +181,16 @@ Done:
 - [x] [C] Supabase adapters exist for several backend domains.
 - [x] [C] Backend/mock service factory exists.
 - [x] [C] Read-path selectors exist for matched profiles, inbox rows, profile lookup, conversations, active-match checks, and tab badges.
+- [x] [C] Amended foundation refactor plan exists and avoids one-pass `ProfileProvider` deletion.
 
 Remaining:
 
-- [ ] [C] Continue reducing `ProfileProvider` responsibility without a bulk rewrite.
-- [ ] [C] Keep screens consuming provider/service selectors instead of rebuilding raw local state.
+- [ ] [C] Slice 1: remove Match Detail web history/hash hacks while preserving native Android `BackHandler`.
+- [ ] [C] Slice 2: update/freeze the `ProfileProvider` facade contract and responsibility inventory.
+- [ ] [C] Slice 3: extract local preferences such as read watermarks and seen-match ids.
+- [ ] [C] Slice 4: extract local/demo interaction state such as likes/passes/super-likes while keeping Supabase active matches backend-driven.
+- [ ] [C] Slice 5: introduce query-backed backend server-state hooks for matches, chat threads, and discovery.
+- [ ] [C+U] Migrate screens domain-by-domain without changing visible UI.
 - [ ] [C] Isolate mock/Fruit behavior from Supabase signed-in runtime state.
 
 Exit criteria:
@@ -140,6 +198,7 @@ Exit criteria:
 - Screens remain UI-focused.
 - Backend/mock behavior is chosen through service boundaries.
 - Mock mode remains reliable.
+- `ProfileProvider` is either small and facade-like, or retired only after consumers migrate.
 
 ## M2 - Supabase Backend Foundation
 
@@ -161,6 +220,7 @@ Remaining:
 
 - [ ] [H] Decide whether Supabase DB tests should run automatically on migration PRs.
 - [ ] [H+C] Create production Supabase project later: `orchard-prod`.
+- [ ] [C] Keep `docs/supabase-schema.md` current after schema/RLS migrations.
 
 Exit criteria:
 
@@ -202,20 +262,19 @@ Done:
 - [x] [C+U] Read watermarks hydrate from backend.
 - [x] [C+U] Realtime/polling refresh paths exist.
 - [x] [C] Protected routes wait for profile hydration.
-- [x] [C+U] Android Chrome browser-back handling uses canonical app routes.
+- [x] [C+U] Repeated Android Chrome browser-back flows across Matches and Inbox passed after earlier fixes.
 - [x] [C] `backendMatchesHydrated` bootstrap gate has been added so Supabase tabs wait for initial match/thread hydration after profile hydration.
 - [x] [C] Bootstrap/back instrumentation has been added for Android Chrome UAT diagnostics.
 - [x] [C] Matches cards mark a match as seen before navigating to detail, so immediate back cannot outrun the detail-screen seen effect.
-- [x] [C] Match Detail now opts into web `popstate` normalization and uses `router.replace` to the canonical tab destination; Match-tab cards add a web-only `/matches#match-...` sentinel and await direct seen-match storage persistence before opening detail. Chat remains unchanged because Inbox/Chat back currently passes.
 
 Remaining:
 
+- [ ] [C] Implement foundation Slice 1 navigation cleanup and remove Match-tab hash sentinel / Match Detail web `popstate` workaround as active strategy.
 - [ ] [U] UAT Android Chrome order-dependent browser-back behavior: Inbox conversation back first, then Match Detail back in the same session.
 - [ ] [C+U] Ensure first app entry does not render empty Matches/Inbox before backend state is ready.
 - [ ] [C+U] Confirm bootstrap does not deadlock for users with zero matches.
 - [ ] [C+U] Confirm bootstrap does not block mock mode.
 - [ ] [C+U] Confirm profile switch/sign-out/sign-in resets bootstrap state correctly.
-- [ ] [C] Instrument bootstrap sequence if UAT still shows transient empty state.
 - [ ] [H] Decide whether seen-match/highlight state must move from local storage to backend for inner-circle testing.
 
 Exit criteria:
@@ -284,6 +343,7 @@ Done:
 - [x] [C] Report profile/report message/block/unmatch/account deletion surfaces exist.
 - [x] [C] Safety RPCs/RLS tests exist for key server-side restrictions.
 - [x] [C] Account deletion request flow exists.
+- [x] [C] Service-role keys are not shipped in the mobile app.
 
 Remaining:
 
@@ -291,6 +351,8 @@ Remaining:
 - [ ] [C] Document Supabase Studio moderation workflow for inner-circle testing.
 - [ ] [C+U] Confirm blocked users disappear from discovery, matches, and chat in hosted mode.
 - [ ] [C+U] Confirm suspended/invisible users do not appear in discovery.
+- [ ] [C] Confirm no private messages, raw profile text, or PII are sent to analytics/logging.
+- [ ] [C] Confirm seed fixtures contain no real user data and no explicit sexual demo content.
 - [!] [H] Real public legal/support/account deletion URLs are still needed before production/TestFlight polish.
 
 Exit criteria:
@@ -303,7 +365,7 @@ Status: `[ ]`
 
 Goal:
 
-- A small trusted group can use Orchard on iOS or mobile web/ngrok with real accounts, profile photos, discovery, reciprocal matches, chat, and safety flows.
+- A small trusted group can use Orchard on iOS or mobile web/ngrok with real accounts, profile photos, discovery, reciprocal matches, chat, safety flows, and a feedback channel.
 
 Remaining:
 
@@ -313,6 +375,7 @@ Remaining:
 - [ ] [H] Decide feedback channel and support process.
 - [ ] [H] Decide whether analytics/crash reporting are required before inner-circle testing.
 - [ ] [C+H] Confirm privacy posture for test data and fixtures.
+- [ ] [C+H] Confirm whether mobile web/ngrok is acceptable for the first inner-circle pass before TestFlight.
 
 Exit criteria:
 
@@ -330,6 +393,7 @@ Remaining:
 - [ ] [C] Do not capture private messages, raw profile text, or PII.
 - [ ] [C] Create repeatable UAT checklist for auth, onboarding, discovery, matching, chat, safety, and sign-out/sign-in.
 - [ ] [H] Decide whether to automate more E2E/browser smoke checks.
+- [ ] [C] Add or confirm app-level error boundary strategy before broader tester release.
 
 Exit criteria:
 
@@ -379,12 +443,25 @@ Exit criteria:
 ## Human Decisions Register
 
 - [!] [H] Apple Developer Program account creation.
+- [!] [H] App Store Connect app setup.
 - [!] [H] Real public domain and legal/support/deletion URLs.
 - [!] [H] Supabase Auth custom SMTP/email branding for Orchard.
 - [ ] [H] Backend-backed seen-match/highlight state for inner-circle testing versus local-only seen state.
 - [ ] [H] Analytics/crash reporting stack and timing.
 - [ ] [H] Fixture image ingestion into Supabase Storage.
 - [ ] [H] Automatic Supabase DB tests in CI for migration PRs.
+- [ ] [H] Feedback channel and support process for inner-circle testers.
+- [ ] [H] Whether mobile web/ngrok is acceptable for first inner-circle testing before TestFlight.
+
+## Deferred / Out Of Scope For Closed Beta
+
+- Real purchases, App Store subscriptions, RevenueCat, or paid-service dependencies.
+- Boost/super-like upsells or artificial match limits.
+- Advanced ranking or ML matching.
+- Video profiles.
+- Group chat.
+- Public App Store launch polish.
+- Android production launch.
 
 ## Maintenance Rule
 
@@ -392,7 +469,9 @@ Update this tracker whenever:
 
 - A milestone changes status.
 - A task is completed or newly discovered.
+- UAT feedback is accepted or rejected.
 - A blocker is resolved or introduced.
 - A milestone exit criterion changes.
+- A human decision is made.
 
-`docs/project-status.md` should remain the narrative status log. This file should remain the concise milestone checklist.
+`docs/project-status.md` should remain the narrative status log. This file is the canonical checklist and milestone source of truth.
