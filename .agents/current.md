@@ -9,8 +9,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 ## Branch And Commit
 
 - Branch: `main`
-- Latest commit: `6dda28a` - Stabilize Supabase session bootstrap
-- Git state at compaction: docs-only working tree changes are present and uncommitted.
+- Latest pushed checkpoint: `64ebd44` - Consolidate Orchard planning docs
+- Current working state: foundation Slice 1 runtime changes are present and uncommitted.
 
 ## Canonical Docs
 
@@ -39,7 +39,8 @@ Old duplicate roadmap/checklist/audit docs were consolidated and deleted from ac
 - Supabase mode has auth/profile/photo/discovery/match/chat/read-state/Realtime paths in varying degrees.
 - Mock/Fruit/demo mode remains required.
 - `ProfileProvider` remains active and too broad; the accepted direction is staged extraction with a compatibility facade, not one-pass deletion.
-- Remaining immediate runtime issue is Android Chrome / web Match Detail back behavior after source-of-truth bootstrap work.
+- Foundation Slice 1 has removed Match Detail web history/hash workarounds while preserving native Android `BackHandler`.
+- Remaining immediate validation need is targeted desktop Chrome and Android Chrome UAT for Match Detail back behavior after source-of-truth bootstrap work.
 
 ## Validation State
 
@@ -55,6 +56,12 @@ Docs consolidation validation:
 - Deleted-doc reference scan found only intentional entries in consolidated/deleted-doc lists and architecture history.
 - Runtime code was not changed; changed files are docs, README, and `.agents` only.
 
+Foundation Slice 1 validation:
+
+- `cd expo; bun run typecheck`: passed.
+- `cd expo; bun run lint`: passed.
+- `git diff --check`: passed.
+
 ## Current Docs-Only Changes
 
 - Rewrote `docs/milestone-tracker.md` as the canonical closed-beta roadmap/checklist/feedback-loop doc.
@@ -66,4 +73,4 @@ Docs consolidation validation:
 
 ## Next Recommended Task
 
-After the docs consolidation is accepted, implement foundation Slice 1 from `docs/repo-audit-and-foundation-plan.md`: remove Match Detail web history/hash workarounds while preserving native Android `BackHandler`, then run `bun run typecheck`, `bun run lint`, `git diff --check`, and targeted desktop/Android Chrome UAT from `docs/milestone-tracker.md`.
+Run targeted desktop Chrome and Android Chrome UAT from `docs/milestone-tracker.md` for foundation Slice 1. If UAT passes, update the tracker and move to foundation Slice 2. If it fails, capture the exact route sequence, URLs before/after back, row/highlight behavior, and visible instrumentation logs.

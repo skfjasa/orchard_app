@@ -219,19 +219,18 @@ Last updated: 2026-07-06
 
 ## Current Task
 
-Docs-only architecture planning: update the July 2026 repo audit/foundation plan so Option 3 proceeds as an incremental compatibility-facade extraction rather than a one-pass `ProfileProvider` deletion. Runtime code has not changed in this planning pass.
+Foundation Slice 1 implemented: Match Detail web navigation cleanup removes manual Match-tab hash/history handling and removes the custom web `popstate` branch from `useCanonicalBack` while preserving native Android `BackHandler`.
 
 ## Next Planned Tasks
 
-1. Implement foundation Slice 1 from `docs/repo-audit-and-foundation-plan.md`: remove Match Detail web history/hash hacks while preserving native Android `BackHandler`, then run typecheck/lint and targeted web/Android Chrome UAT.
-2. Human UAT: in hosted Supabase mode with `t`, verify the narrowed Android Chrome order: fresh incognito sign-in, Inbox conversation back first, then without resetting the session open Match Detail and swipe/device-back. Matches should return without a blank white browser window, without empty/fixture-only state, and with the opened match highlight/badge cleared.
-3. Finish Supabase source-of-truth session bootstrap for inner-circle testing: profile, active matches, display profiles/photos, inbox summaries, thread snippets, unread/read state, and block/unmatch visibility should load before tabs render.
-4. Decide whether seen-match/highlight state remains local-only for inner-circle testing or moves to backend-backed per-user state.
-5. Continue backend source-of-truth cleanup for actions: like/pass/super-like, match creation, unmatch/block/report, message send/read should either write backend-first or use clearly bounded optimistic updates.
-6. Keep mock/Fruit behavior as demo/test mode, but isolate it from Supabase signed-in startup state.
-7. Decide whether to ingest fixture profile images into Supabase Storage for backend-backed discovery; the current dev fixtures intentionally omit `profile_photos` because mock image URLs are remote assets, not storage object paths.
-8. Decide whether to make Supabase DB tests automatic for Supabase migration pull requests.
-9. Closer to TestFlight: create Apple Developer Program account and finish release-readiness setup.
+1. Human UAT: in hosted Supabase mode with `t`, verify the narrowed Android Chrome order: fresh incognito sign-in, Inbox conversation back first, then without resetting the session open Match Detail and swipe/device-back. Matches should return without a blank white browser window, without empty/fixture-only state, and with the opened match highlight/badge cleared.
+2. Finish Supabase source-of-truth session bootstrap for inner-circle testing: profile, active matches, display profiles/photos, inbox summaries, thread snippets, unread/read state, and block/unmatch visibility should load before tabs render.
+3. Decide whether seen-match/highlight state remains local-only for inner-circle testing or moves to backend-backed per-user state.
+4. Continue backend source-of-truth cleanup for actions: like/pass/super-like, match creation, unmatch/block/report, message send/read should either write backend-first or use clearly bounded optimistic updates.
+5. Keep mock/Fruit behavior as demo/test mode, but isolate it from Supabase signed-in startup state.
+6. Decide whether to ingest fixture profile images into Supabase Storage for backend-backed discovery; the current dev fixtures intentionally omit `profile_photos` because mock image URLs are remote assets, not storage object paths.
+7. Decide whether to make Supabase DB tests automatic for Supabase migration pull requests.
+8. Closer to TestFlight: create Apple Developer Program account and finish release-readiness setup.
 
 ## Human Decisions Needed
 

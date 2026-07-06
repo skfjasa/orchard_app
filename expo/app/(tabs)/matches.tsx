@@ -2,7 +2,7 @@ import { Image } from "expo-image";
 import { router, useFocusEffect } from "expo-router";
 import { Heart, Users } from "lucide-react-native";
 import React, { useCallback } from "react";
-import { FlatList, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Colors from "@/constants/colors";
@@ -28,17 +28,6 @@ export default function MatchesScreen() {
   const openMatch = useCallback(
     async (profileId: string) => {
       await markMatchSeen(profileId);
-      if (
-        Platform.OS === "web" &&
-        typeof window !== "undefined" &&
-        window.location.hash !== `#match-${profileId}`
-      ) {
-        window.history.pushState(
-          { orchardMatchDetail: profileId },
-          "",
-          `${window.location.pathname}${window.location.search}#match-${profileId}`
-        );
-      }
       router.push(`/match/${profileId}?from=matches`);
     },
     [markMatchSeen]

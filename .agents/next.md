@@ -1,6 +1,6 @@
 # Next Task
 
-Implement foundation Slice 1 from `docs/repo-audit-and-foundation-plan.md`: web navigation cleanup for Match Detail, without changing runtime data/bootstrap behavior.
+Run targeted UAT for foundation Slice 1 from `docs/repo-audit-and-foundation-plan.md`.
 
 ## Canonical Startup Context
 
@@ -20,24 +20,17 @@ Read only if needed:
 - `docs/supabase-schema.md`
 - `docs/backend-migration-plan.md`
 
-## Scope
+## Implemented Scope
 
-- `expo/hooks/use-canonical-back.ts`: remove web `popstate` behavior and web options; keep Android `BackHandler`.
-- `expo/app/(tabs)/matches.tsx`: remove `window.history.pushState` / hash sentinel before opening Match Detail.
-- `expo/app/match/[id].tsx`: remove web-specific `useCanonicalBack` options.
-
-## Do Not Change In This Slice
-
-- Do not change auth callback URL handling in `AuthProvider`.
-- Do not change protected-route bootstrap behavior.
-- Do not change backend match/thread/profile hydration logic.
-- Do not begin Zustand/React Query provider extraction yet.
+- `expo/hooks/use-canonical-back.ts`: removed web `popstate` behavior and web options; kept Android `BackHandler`.
+- `expo/app/(tabs)/matches.tsx`: removed `window.history.pushState` / hash sentinel before opening Match Detail.
+- `expo/app/match/[id].tsx`: removed web-specific `useCanonicalBack` options.
 
 ## Validation
 
-- `cd expo; bun run typecheck`
-- `cd expo; bun run lint`
-- `git diff --check`
+- `cd expo; bun run typecheck`: passed.
+- `cd expo; bun run lint`: passed.
+- `git diff --check`: passed.
 - Targeted desktop Chrome and Android Chrome UAT from `docs/milestone-tracker.md`.
 
 ## Follow-Up After Slice 1

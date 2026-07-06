@@ -105,7 +105,7 @@ function MatchDetailContent() {
     }
     return null;
   }, [from, id]);
-  useCanonicalBack(canonicalBackHref, true, { web: true, webAction: "replace" });
+  useCanonicalBack(canonicalBackHref);
 
   if (!other || !profile) return null;
 

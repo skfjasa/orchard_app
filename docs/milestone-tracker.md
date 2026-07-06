@@ -66,9 +66,9 @@ Closed-beta user outcome:
 
 Current milestone: **M4 - Supabase source-of-truth app session**.
 
-Immediate engineering task:
+Immediate engineering state:
 
-- Implement Slice 1 from [Repo Audit & Foundation Refactor Plan](repo-audit-and-foundation-plan.md): remove Match Detail web history/hash workarounds while preserving native Android `BackHandler`.
+- Foundation Slice 1 from [Repo Audit & Foundation Refactor Plan](repo-audit-and-foundation-plan.md) is implemented and passed automated checks. Targeted desktop Chrome and Android Chrome UAT is still needed.
 
 Immediate acceptance target:
 
@@ -185,7 +185,7 @@ Done:
 
 Remaining:
 
-- [ ] [C] Slice 1: remove Match Detail web history/hash hacks while preserving native Android `BackHandler`.
+- [x] [C] Slice 1: remove Match Detail web history/hash hacks while preserving native Android `BackHandler`.
 - [ ] [C] Slice 2: update/freeze the `ProfileProvider` facade contract and responsibility inventory.
 - [ ] [C] Slice 3: extract local preferences such as read watermarks and seen-match ids.
 - [ ] [C] Slice 4: extract local/demo interaction state such as likes/passes/super-likes while keeping Supabase active matches backend-driven.
@@ -269,7 +269,7 @@ Done:
 
 Remaining:
 
-- [ ] [C] Implement foundation Slice 1 navigation cleanup and remove Match-tab hash sentinel / Match Detail web `popstate` workaround as active strategy.
+- [x] [C] Implement foundation Slice 1 navigation cleanup and remove Match-tab hash sentinel / Match Detail web `popstate` workaround as active strategy.
 - [ ] [U] UAT Android Chrome order-dependent browser-back behavior: Inbox conversation back first, then Match Detail back in the same session.
 - [ ] [C+U] Ensure first app entry does not render empty Matches/Inbox before backend state is ready.
 - [ ] [C+U] Confirm bootstrap does not deadlock for users with zero matches.

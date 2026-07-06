@@ -4,8 +4,7 @@ import { BackHandler, Platform } from "react-native";
 
 export function useCanonicalBack(
   href: Href | null,
-  enabled = true,
-  options: { web?: boolean; webAction?: "dismissTo" | "replace" } = {}
+  enabled = true
 ) {
   const goBack = useCallback(() => {
     if (!href) return;
@@ -15,23 +14,6 @@ export function useCanonicalBack(
   useFocusEffect(
     useCallback(() => {
       if (!href || !enabled) return undefined;
-      if (options.web && Platform.OS === "web") {
-        const onPopState = () => {
-          setTimeout(() => {
-            if (options.webAction === "replace") {
-              router.replace(href);
-              return;
-            }
-            router.dismissTo(href);
-          }, 0);
-        };
-
-        globalThis.addEventListener?.("popstate", onPopState);
-        return () => {
-          globalThis.removeEventListener?.("popstate", onPopState);
-        };
-      }
-
       if (Platform.OS !== "android") return undefined;
 
       const subscription = BackHandler.addEventListener(
@@ -43,7 +25,7 @@ export function useCanonicalBack(
       );
 
       return () => subscription.remove();
-    }, [enabled, goBack, href, options.web, options.webAction])
+    }, [enabled, goBack, href])
   );
 
   return goBack;
