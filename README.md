@@ -142,6 +142,7 @@ The app should continue to run in mock mode when Supabase environment variables 
 - [MVP plan](docs/mvp-plan.md)
 - [Development setup](docs/setup.md)
 - [Current project status](docs/project-status.md)
+- [Milestone tracker](docs/milestone-tracker.md)
 - [Session handoff](docs/session-handoff.md)
 - [MVP prototype gap assessment](docs/mvp-prototype-gap-assessment.md)
 - [Backend migration plan](docs/backend-migration-plan.md)

@@ -10,6 +10,7 @@ import {
   toBackendProfileId,
 } from "@/constants/mock-profile-ids";
 import { MVP_MONETIZATION_ENABLED } from "@/constants/features";
+import { useTransientEmptyList } from "@/hooks/use-transient-empty-list";
 import { useAuth } from "@/providers/auth-provider";
 import { createAppServices } from "@/services/app-services";
 import {
@@ -215,6 +216,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const pendingBackendMatchRefreshRef = useRef<boolean>(false);
   const knownProfilesRef = useRef<Profile[]>([]);
   const displayProfilesRef = useRef<Record<string, Profile>>({});
+  const lastResolvedProfilesRef = useRef<Record<string, Profile>>({});
   const [profile, setProfile] = useState<Profile | null>(null);
   const [knownProfiles, setKnownProfiles] = useState<Profile[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -244,6 +246,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   );
   const [hydrated, setHydrated] = useState<boolean>(false);
   const [backendProfileHydrated, setBackendProfileHydrated] =
+    useState<boolean>(false);
+  const [backendMatchesHydrated, setBackendMatchesHydrated] =
     useState<boolean>(false);
 
   const loadQuery = useQuery({
@@ -329,12 +333,9 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     mutationFn: saveStoredReadWatermarks,
   });
 
-  const saveSeenMatchIdsMutation = useMutation({
-    mutationFn: saveStoredSeenMatchIds,
-  });
-
   useEffect(() => {
     if (mode !== "supabase") {
+      console.log("[profile-provider] backend bootstrap reset: mock mode");
       lastBackendProfileSessionKey.current = null;
       lastBackendProfileUserId.current = null;
       lastBackendMatchHydrationKey.current = null;
@@ -342,25 +343,24 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       pendingBackendMatchRefreshRef.current = false;
       knownProfilesRef.current = [];
       displayProfilesRef.current = {};
+      lastResolvedProfilesRef.current = {};
       void saveStoredKnownProfiles([]);
       setBackendActiveMatchIds([]);
       setKnownProfiles([]);
       setBackendProfileHydrated(false);
+      setBackendMatchesHydrated(false);
       return;
     }
 
     if (!userId) {
+      console.log("[profile-provider] backend bootstrap reset: no user");
       lastBackendProfileSessionKey.current = null;
-      lastBackendProfileUserId.current = null;
       lastBackendMatchHydrationKey.current = null;
       inFlightBackendMatchHydrationKey.current = null;
       pendingBackendMatchRefreshRef.current = false;
-      knownProfilesRef.current = [];
-      displayProfilesRef.current = {};
-      void saveStoredKnownProfiles([]);
       setBackendActiveMatchIds([]);
-      setKnownProfiles([]);
       setBackendProfileHydrated(false);
+      setBackendMatchesHydrated(false);
       return;
     }
 
@@ -380,12 +380,17 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     lastBackendProfileSessionKey.current = sessionKey;
     lastBackendProfileUserId.current = userId;
     pendingBackendMatchRefreshRef.current = false;
+    console.log("[profile-provider] backend bootstrap reset: user changed", {
+      userId,
+    });
     knownProfilesRef.current = [];
     displayProfilesRef.current = {};
+    lastResolvedProfilesRef.current = {};
     void saveStoredKnownProfiles([]);
     setBackendActiveMatchIds([]);
     setKnownProfiles([]);
     setBackendProfileHydrated(false);
+    setBackendMatchesHydrated(false);
   }, [mode, session?.access_token, userId]);
 
   useEffect(() => {
@@ -400,7 +405,18 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     setProfile(null);
     saveProfileMutation.mutate(null);
     setBackendProfileHydrated(false);
+    setBackendMatchesHydrated(false);
   }, [hydrated, mode, profile, saveProfileMutation, userId]);
+
+  useEffect(() => {
+    if (mode !== "supabase") return;
+    if (!hydrated || !userId || !profile) return;
+    if (profile.id !== userId || backendProfileHydrated) return;
+    console.log("[profile-provider] cached profile accepted for backend bootstrap", {
+      userId,
+    });
+    setBackendProfileHydrated(true);
+  }, [backendProfileHydrated, hydrated, mode, profile, userId]);
 
   useEffect(() => {
     if (mode !== "supabase") return;
@@ -485,6 +501,10 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
           ...displayProfilesRef.current,
           [item.id]: item,
         };
+        lastResolvedProfilesRef.current = {
+          ...lastResolvedProfilesRef.current,
+          [item.id]: item,
+        };
         if (byId.get(item.id) === item) continue;
         byId.set(item.id, item);
         changed = true;
@@ -510,9 +530,16 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     const hydrationKey = `${userId}:${sessionKey}`;
     if (inFlightBackendMatchHydrationKey.current === hydrationKey) {
       pendingBackendMatchRefreshRef.current = true;
+      console.log("[profile-provider] backend match bootstrap queued", {
+        userId,
+      });
       return;
     }
     inFlightBackendMatchHydrationKey.current = hydrationKey;
+    console.log("[profile-provider] backend match bootstrap start", {
+      knownProfiles: knownProfilesRef.current.length,
+      userId,
+    });
 
     try {
       const matchResult = await appServices.matches.listMatches(userId);
@@ -522,11 +549,16 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
           code: matchResult.error.code,
           message: matchResult.error.message,
         });
+        setBackendMatchesHydrated(true);
         return;
       }
 
       const matchedLocalProfileIds = new Set<string>();
       const activeBackendMatchIds = matchResult.value.map((match) => match.id);
+      console.log("[profile-provider] backend match bootstrap loaded matches", {
+        count: matchResult.value.length,
+        userId,
+      });
       const discoveryProfilesById = new Map<string, Profile>();
       const missingRealProfileIds = matchResult.value
         .map((match) =>
@@ -684,8 +716,18 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         return next;
       });
       lastBackendMatchHydrationKey.current = hydrationKey;
+      console.log("[profile-provider] backend match bootstrap applied", {
+        backendConversations: backendConversations.length,
+        matchedLocalProfileIds: [...matchedLocalProfileIds],
+        userId,
+      });
+      setBackendMatchesHydrated(true);
     } finally {
       if (inFlightBackendMatchHydrationKey.current === hydrationKey) {
+        console.log("[profile-provider] backend match bootstrap released", {
+          userId,
+        });
+        setBackendMatchesHydrated(true);
         inFlightBackendMatchHydrationKey.current = null;
       }
       if (pendingBackendMatchRefreshRef.current) {
@@ -843,10 +885,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       result = await signOutAuth();
     }
     setProfile(null);
-    setKnownProfiles([]);
-    knownProfilesRef.current = [];
-    displayProfilesRef.current = {};
-    void saveStoredKnownProfiles([]);
     setConversations([]);
     setLikedIds([]);
     setNewMatchIds([]);
@@ -858,6 +896,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     setSuperLikeLastUseAt(null);
     setSubscription(null);
     setBackendProfileHydrated(false);
+    setBackendMatchesHydrated(false);
+    lastBackendProfileSessionKey.current = null;
     lastBackendMatchHydrationKey.current = null;
     inFlightBackendMatchHydrationKey.current = null;
     pendingBackendMatchRefreshRef.current = false;
@@ -944,19 +984,22 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     [saveConvosMutation, saveLikesMutation]
   );
 
-  const markMatchSeen = useCallback((profileId: string) => {
+  const markMatchSeen = useCallback(async (profileId: string) => {
     setNewMatchIds((prev) => removeId(prev, profileId));
-    if (!profile?.id) return;
-    setSeenMatchIds((prev) => {
-      const ownerSeen = prev[profile.id] ?? [];
-      const nextOwnerSeen = addUniqueId(ownerSeen, profileId);
-      if (nextOwnerSeen === ownerSeen) return prev;
-      const next = { ...prev, [profile.id]: nextOwnerSeen };
-      seenMatchIdsRef.current = next;
-      saveSeenMatchIdsMutation.mutate(next);
-      return next;
-    });
-  }, [profile?.id, saveSeenMatchIdsMutation]);
+    const ownerId = profile?.id;
+    if (!ownerId) return;
+    const ownerSeen = seenMatchIdsRef.current[ownerId] ?? [];
+    const nextOwnerSeen = addUniqueId(ownerSeen, profileId);
+    if (nextOwnerSeen === ownerSeen) return;
+
+    const next = {
+      ...seenMatchIdsRef.current,
+      [ownerId]: nextOwnerSeen,
+    };
+    seenMatchIdsRef.current = next;
+    setSeenMatchIds(next);
+    await saveStoredSeenMatchIds(next);
+  }, [profile?.id]);
 
   const persistBackendChatMessage = useCallback(
     (
@@ -1645,8 +1688,16 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         knownProfiles.find((item) => item.id === profileId) ??
         knownProfilesRef.current.find((item) => item.id === profileId) ??
         displayProfilesRef.current[profileId] ??
+        lastResolvedProfilesRef.current[profileId] ??
         MOCK_PROFILES.find((item) => item.id === profileId);
-      return isIncompleteBackendProfile(profile) ? undefined : profile;
+      if (isIncompleteBackendProfile(profile)) return undefined;
+      if (profile) {
+        lastResolvedProfilesRef.current = {
+          ...lastResolvedProfilesRef.current,
+          [profile.id]: profile,
+        };
+      }
+      return profile;
     },
     [knownProfiles]
   );
@@ -1662,15 +1713,16 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     [likedIds]
   );
 
-  const matchedProfiles = useMemo(
+  const rawMatchedProfiles = useMemo(
     () =>
       likedIds
         .map((profileId) => getProfileById(profileId))
         .filter((item): item is Profile => !!item),
     [getProfileById, likedIds]
   );
+  const matchedProfiles = useTransientEmptyList(rawMatchedProfiles, !!profile);
 
-  const inboxItems = useMemo(
+  const rawInboxItems = useMemo(
     () =>
       conversations
         .map<InboxListItem | null>((conversation) => {
@@ -1694,6 +1746,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         }),
     [conversations, getProfileById]
   );
+  const inboxItems = useTransientEmptyList(rawInboxItems, !!profile);
 
   const newMatchCount = useMemo(() => newMatchIds.length, [newMatchIds]);
 
@@ -1740,6 +1793,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       passedIds,
       hydrated,
       backendProfileHydrated,
+      backendMatchesHydrated,
       isLoading: loadQuery.isLoading,
       totalSlots,
       slotsUsed,
@@ -1798,6 +1852,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       passedIds,
       hydrated,
       backendProfileHydrated,
+      backendMatchesHydrated,
       loadQuery.isLoading,
       totalSlots,
       slotsUsed,

@@ -1,5 +1,5 @@
 import { Redirect } from "expo-router";
-import React from "react";
+import React, { useEffect } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 
 import Colors from "@/constants/colors";
@@ -16,11 +16,45 @@ export default function ProtectedRoute({
   loadingTestID = "protected-route-loader",
 }: ProtectedRouteProps) {
   const { initialized: authInitialized, mode, session } = useAuth();
-  const { backendProfileHydrated, hydrated, profile } = useProfile();
+  const { backendMatchesHydrated, backendProfileHydrated, hydrated, profile } =
+    useProfile();
   const waitingForBackendProfile =
-    mode === "supabase" && !!session && !profile && !backendProfileHydrated;
+    mode === "supabase" && !!session && !backendProfileHydrated;
+  const waitingForBackendMatches =
+    mode === "supabase" &&
+    !!session &&
+    !!profile &&
+    backendProfileHydrated &&
+    !backendMatchesHydrated;
 
-  if (!hydrated || !authInitialized || waitingForBackendProfile) {
+  useEffect(() => {
+    console.log("[protected-route] state", {
+      authInitialized,
+      backendMatchesHydrated,
+      backendProfileHydrated,
+      hasProfile: !!profile,
+      hasSession: !!session,
+      hydrated,
+      waitingForBackendMatches,
+      waitingForBackendProfile,
+    });
+  }, [
+    authInitialized,
+    backendMatchesHydrated,
+    backendProfileHydrated,
+    hydrated,
+    profile,
+    session,
+    waitingForBackendMatches,
+    waitingForBackendProfile,
+  ]);
+
+  if (
+    !hydrated ||
+    !authInitialized ||
+    waitingForBackendProfile ||
+    waitingForBackendMatches
+  ) {
     return (
       <View style={styles.center} testID={loadingTestID}>
         <ActivityIndicator color={Colors.light.accent} />

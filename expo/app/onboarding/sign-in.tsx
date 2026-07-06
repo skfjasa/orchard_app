@@ -93,7 +93,8 @@ export default function SignInScreen() {
     signInWithEmail,
     signOut,
   } = useAuth();
-  const { backendProfileHydrated, hydrated, profile } = useProfile();
+  const { backendMatchesHydrated, backendProfileHydrated, hydrated, profile } =
+    useProfile();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -105,19 +106,27 @@ export default function SignInScreen() {
   useEffect(() => {
     if (mode !== "supabase") return;
     if (!authInitialized || !session) return;
-    if (profile) {
+    if (profile && backendMatchesHydrated) {
       router.replace("/(tabs)/discover");
       return;
     }
     if (!hydrated || !backendProfileHydrated) return;
-  }, [authInitialized, backendProfileHydrated, hydrated, mode, profile, session]);
+  }, [
+    authInitialized,
+    backendMatchesHydrated,
+    backendProfileHydrated,
+    hydrated,
+    mode,
+    profile,
+    session,
+  ]);
 
   const finalizingConfirmedProfile =
     mode === "supabase" &&
     authInitialized &&
     !!session &&
-    !profile &&
-    (!hydrated || !backendProfileHydrated);
+    (!profile || !backendMatchesHydrated) &&
+    (!hydrated || !backendProfileHydrated || !backendMatchesHydrated);
   const signedInWithoutProfile =
     mode === "supabase" &&
     authInitialized &&

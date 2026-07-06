@@ -6,6 +6,7 @@ import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Colors from "@/constants/colors";
+import { useTransientEmptyList } from "@/hooks/use-transient-empty-list";
 import { useProfile } from "@/providers/profile-provider";
 
 function formatTime(t: number): string {
@@ -28,6 +29,7 @@ export default function InboxScreen() {
     typingProfileIds,
   } = useProfile();
   const isCouple = profile?.accountType === "couple";
+  const visibleItems = useTransientEmptyList(items);
 
   useFocusEffect(
     useCallback(() => {
@@ -48,7 +50,7 @@ export default function InboxScreen() {
           )}
         </View>
 
-        {items.length === 0 ? (
+        {visibleItems.length === 0 ? (
           <View style={styles.empty}>
             <View style={styles.emptyIcon}>
               <MessageCircle color={Colors.light.accent} size={28} />
@@ -71,7 +73,7 @@ export default function InboxScreen() {
           </View>
         ) : (
           <FlatList
-            data={items}
+            data={visibleItems}
             keyExtractor={(i) => i.conversation.id}
             contentContainerStyle={{ paddingBottom: 20 }}
             renderItem={({ item }) => {

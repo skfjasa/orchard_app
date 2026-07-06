@@ -1,6 +1,14 @@
 # Next Task
 
-Investigate intermittent Inbox conversation device/browser back disappearance under weak mobile network.
+Human UAT for the order-dependent Android Chrome Match Detail browser-back fix.
+
+## Milestone Context
+
+This is still part of the inner-circle testing readiness path, not just an Android back-navigation bug. Supabase mode should authenticate, hydrate the current profile, hydrate active matches/profile display data/thread summaries/read state, and only then release the protected app tabs. Local/mock state should remain a fallback and demo mode, not the first visible source of truth for signed-in Supabase users.
+
+Latest UAT narrowed the remaining issue: Match tab first passes, and Inbox conversation back first passes after a fresh sign-in, but doing Inbox first and then Match Detail in the same Android Chrome session repeatedly causes a blank white ~0.5-1 second reload/state gap. The URL stayed on `/matches` while Match Detail was visible and rows returned by themselves, so this is stale browser history behind an in-memory detail screen rather than missing backend rows. The current code re-enables web `popstate` normalization only for Match Detail, uses deterministic `router.replace` to the canonical tab destination, adds a Match-tab-only web hash sentinel (`/matches#match-...`) before opening detail, and awaits direct seen-match storage persistence before navigation so a transient page churn should not restore the opened match highlight/badge.
+
+Use `docs/milestone-tracker.md` as the standardized milestone checklist. Keep it current whenever milestone status, blockers, or priority order changes.
 
 ## Likely Areas
 
@@ -20,6 +28,7 @@ Investigate intermittent Inbox conversation device/browser back disappearance un
 - `expo/app/report.tsx`
 - `expo/app/safety-legal.tsx`
 - `docs/project-status.md`
+- `docs/milestone-tracker.md`
 
 ## Pre-Edit Checks
 
@@ -51,17 +60,52 @@ Investigate intermittent Inbox conversation device/browser back disappearance un
 
 ## Validation
 
-- `cd expo; bun run typecheck`
-- `cd expo; bun run lint`
-- `git diff --check`
+- `cd expo; bun run typecheck` passed for the cache-retention, web canonical-back, last-resolved profile fallback, provider-level transient-empty list guard, Supabase backend bootstrap gate, Match-detail-only hash-sentinel/replace-based browser-back fixes, and awaited seen-match persistence.
+- `cd expo; bun run lint` passed for the cache-retention, web canonical-back, last-resolved profile fallback, provider-level transient-empty list guard, Supabase backend bootstrap gate, Match-detail-only hash-sentinel/replace-based browser-back fixes, and awaited seen-match persistence.
+- `git diff --check` passed for the cache-retention, web canonical-back, last-resolved profile fallback, provider-level transient-empty list guard, Supabase backend bootstrap gate, Match-detail-only hash-sentinel/replace-based browser-back fixes, and awaited seen-match persistence.
 - For schema/RLS changes only: `expo\node_modules\.bin\supabase db reset` and `expo\node_modules\.bin\supabase test db`
 
 ## Manual QA
 
-1. Reproduce on mobile Chrome with weak reception using `t`, `tt`, or `test2`.
-2. From Inbox, open a real/dev conversation and use device/browser back repeatedly.
-3. If real/dev conversations disappear, inspect whether a backend match refresh applied with incomplete profile/thread data.
-4. Check whether request ordering lets an older/slower refresh overwrite newer complete state.
-5. Confirm whether hosted profile/member/photo rows return consistently for the affected accounts.
-6. Confirm Fruit/Discover restores rows by re-running discovery and `rememberProfiles`.
-7. Fix with stricter non-destructive reconciliation: no partial refresh may remove real/dev rows unless the backend explicitly reports unmatch/block/delete.
+1. Use hosted Supabase mode with account `t`.
+2. Start from a fresh Android Chrome incognito tab after signing in.
+3. Confirm the app stays on the loader/finalizing state until backend matches and inbox summaries are ready.
+4. Open Inbox first, open one real/dev conversation, then immediately use Android device back or swipe-back.
+5. Confirm Inbox returns normally and keeps all expected rows visible.
+6. Without signing out or resetting incognito, open Matches, tap one real/dev match, then immediately use Android device back or swipe-back.
+7. Confirm the URL shows `/matches#match-...` while the Match Detail is visible.
+8. Confirm Android device/swipe back removes the hash and Matches returns with all expected rows visible immediately, without a blank white browser window, "No matches", or fixture-only state.
+9. Confirm the opened match highlight clears and badge count updates correctly.
+10. Repeat steps 6-9 for the other real/dev match.
+11. Regression check the opposite order: fresh incognito sign-in, Match back first, then Inbox back.
+12. Regression check desktop Chrome: browser back from Chat and Match Detail should still return to the expected tab route.
+13. If it still fails, capture the exact route sequence, URL before/after device back, whether the hash appears while detail is visible, whether rows return without Fruit/Discover, and any visible instrumentation logs.
+
+## UAT Failure Notes To Capture
+
+- Account used.
+- Exact route sequence.
+- URL before pressing Android back.
+- URL after Android back.
+- Whether `/matches#match-...` appears while Match Detail is visible.
+- Whether the opened match highlight/badge stays cleared even if the white flash remains.
+- Whether the empty state says "No matches", "No conversations", fixture-only, or something else.
+- Whether rows return by themselves, and how long it takes.
+- Whether the blank state is about 0.5 seconds or longer.
+- Whether visiting Fruit/Discover restores rows.
+- Whether the issue happens only on first attempt after sign-in or on repeated attempts.
+- Any visible console output if Android Chrome remote debugging is available.
+
+## If UAT Fails
+
+- Use the newly added instrumentation to inspect canonical browser back, protected-route state, backend profile bootstrap, `refreshBackendMatches`, `likedIds` application, conversation application, and protected-route release timing.
+- If the hash does not appear, verify that the running bundle is current and that the detail was opened by tapping a Match-tab card, not via Inbox avatar/Chat/Discover/Fruit.
+- Verify hosted SQL state for the affected accounts before assuming an app-side failure.
+
+## Reprioritized Next Project Tasks
+
+1. Finish Supabase source-of-truth session bootstrap for inner-circle testing: profile, active matches, display profiles/photos, inbox summaries, thread snippets, unread/read state, and block/unmatch visibility should load before tabs render.
+2. Move seen-match/highlight state from local-only storage to backend-backed per-user state or explicitly decide it may remain device-local for the first inner-circle build.
+3. Continue backend source-of-truth cleanup for actions: like/pass/super-like, match creation, unmatch/block/report, message send/read should either write backend-first or use clearly bounded optimistic updates.
+4. Keep mock/Fruit behavior as demo/test mode, but isolate it from Supabase signed-in startup state.
+5. After bootstrap/source-of-truth is stable, proceed to remaining MVP readiness: safety/moderation polish, account deletion/support/legal surfaces, analytics/crash reporting decisions, then iOS TestFlight preparation.

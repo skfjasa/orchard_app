@@ -2,7 +2,11 @@ import { type Href, router, useFocusEffect } from "expo-router";
 import { useCallback } from "react";
 import { BackHandler, Platform } from "react-native";
 
-export function useCanonicalBack(href: Href | null, enabled = true) {
+export function useCanonicalBack(
+  href: Href | null,
+  enabled = true,
+  options: { web?: boolean; webAction?: "dismissTo" | "replace" } = {}
+) {
   const goBack = useCallback(() => {
     if (!href) return;
     router.dismissTo(href);
@@ -10,7 +14,25 @@ export function useCanonicalBack(href: Href | null, enabled = true) {
 
   useFocusEffect(
     useCallback(() => {
-      if (!href || !enabled || Platform.OS !== "android") return undefined;
+      if (!href || !enabled) return undefined;
+      if (options.web && Platform.OS === "web") {
+        const onPopState = () => {
+          setTimeout(() => {
+            if (options.webAction === "replace") {
+              router.replace(href);
+              return;
+            }
+            router.dismissTo(href);
+          }, 0);
+        };
+
+        globalThis.addEventListener?.("popstate", onPopState);
+        return () => {
+          globalThis.removeEventListener?.("popstate", onPopState);
+        };
+      }
+
+      if (Platform.OS !== "android") return undefined;
 
       const subscription = BackHandler.addEventListener(
         "hardwareBackPress",
@@ -21,7 +43,7 @@ export function useCanonicalBack(href: Href | null, enabled = true) {
       );
 
       return () => subscription.remove();
-    }, [enabled, goBack, href])
+    }, [enabled, goBack, href, options.web, options.webAction])
   );
 
   return goBack;

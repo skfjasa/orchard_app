@@ -105,7 +105,7 @@ function MatchDetailContent() {
     }
     return null;
   }, [from, id]);
-  useCanonicalBack(canonicalBackHref);
+  useCanonicalBack(canonicalBackHref, true, { web: true, webAction: "replace" });
 
   if (!other || !profile) return null;
 
@@ -239,7 +239,9 @@ function MatchDetailContent() {
       <MarkMatchSeen
         isMatched={isMatched}
         profileId={other.id}
-        onSeen={markMatchSeen}
+        onSeen={(profileId) => {
+          void markMatchSeen(profileId);
+        }}
       />
       <View style={styles.root}>
         <ScrollView contentContainerStyle={{ paddingBottom: 140 }}>

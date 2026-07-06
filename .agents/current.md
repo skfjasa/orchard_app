@@ -8,6 +8,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 
 - Branch: `main`
 - Latest implementation checkpoint: `00f3075` - Fix known profile cache sign-in loop
+- Latest handoff checkpoint: `2c73aa7` - Refresh handoff after sign-in loop fix
 - Previous pushed checkpoint: `bc7ce9d` - Persist match display profile cache
 
 ## Recent Changes
@@ -57,6 +58,15 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - Follow-up sign-in UAT found a maximum-update-depth loop on the sign-in screen before credentials could be entered. Root cause was saving the known-profile display cache through a TanStack mutation inside auth/session reset effects. `00f3075` replaced that cache mutation with direct async storage writes and fixed the sign-in loop.
 - Latest UAT after `00f3075`: sign-in loop is fixed, Matches -> profile -> device back is mostly stable, but Inbox -> conversation -> device/browser back can still intermittently make real/dev conversations and matches disappear until Fruit/Discover restores display state. This appears more likely under weak mobile reception and should be treated as a remaining intermittent stale/partial refresh issue.
 - Current workflow cleanup updates both GitHub Actions workflows from `actions/checkout@v4` to `actions/checkout@v6`, resolving the tracked Node 20 checkout warning follow-up.
+- Current follow-up fix preserves the known-profile display cache across transient Supabase `userId` gaps and same-account sign-out/sign-in, while still clearing it on a real account switch. This targets the remaining weak-network/back-navigation path where Matches/Inbox could lose real/dev display rows before backend refresh repaired them.
+- Human UAT confirmed the cache-retention fix passes on desktop Chrome, but Android Chrome still fails because device back is delivered as browser history/back rather than native Android `BackHandler`. Current follow-up extends `useCanonicalBack` to web `popstate` by adding a focused history sentinel and routing browser back through the same canonical `dismissTo` target used by in-app back.
+- Human UAT confirmed the web canonical-back fix resolves repeated Android Chrome device-back flows across Matches and Inbox. One first-attempt Matches -> profile -> immediate Android back case briefly showed only the fixture match before real/dev matches returned after about 0.5-1 second. Current follow-up adds a provider-level last-resolved profile snapshot in shared `getProfileById`, so transient profile lookup misses cannot hide active `likedIds` rows in Matches or conversation rows in Inbox while focus refresh catches up.
+- Follow-up UAT found the first immediate Android swipe-back could briefly render the true empty state ("No matches"), so the gap is a transient empty list render rather than only a profile lookup miss. Initial screen-level `useTransientEmptyList` did not fix it because the tab can remount after the list is already empty. Current refinement applies the same guard at the provider selector level for `matchedProfiles` and `inboxItems`, and the hook now returns the last non-empty list synchronously on the first empty render instead of waiting for an effect tick. It keeps that list visible for up to 1.5 seconds during route/back refresh gaps while still allowing the real empty state if the list remains empty. The guard is disabled/cleared when no active profile exists.
+- User correctly identified the deeper cause: Supabase mode still entered app screens from local/mock state before backend profile/match/thread bootstrap had completed. Current production-direction fix adds `backendMatchesHydrated` as a first-session bootstrap state, has Supabase root/protected/sign-in flows wait for initial backend match/thread/profile-display hydration after profile hydration, and bridges cached same-user profiles into backend match bootstrap instead of bypassing it. This should move the issue from UI-level back patches toward the intended source-of-truth startup model for inner-circle testing.
+- Standardized release/milestone tracking now lives in `docs/milestone-tracker.md`. Use it as the concise checklist for milestone status, blockers, task ownership, UAT guidance, and next priority; `docs/project-status.md` remains the running narrative log.
+- Follow-up UAT still failed on first Android Chrome swipe-back: browser briefly went blank white and returned with all three matches highlighted; the opened match did not clear highlight/badge. Current diagnostic slice adds instrumentation for canonical browser back, protected-route gate state, backend match bootstrap start/load/apply/release, and backend bootstrap resets. Matches cards now call `markMatchSeen` before navigating to detail, so immediate back cannot outrun the detail-screen seen effect.
+- Current follow-up removes the web `popstate` canonical-back handler to avoid double navigation during Android Chrome browser/device back; in-app back and native Android hardware back still use canonical `dismissTo`. `markMatchSeen` now updates `seenMatchIdsRef` synchronously before React state scheduling so backend refresh cannot re-highlight a just-opened card from stale seen state.
+- Latest UAT found an order-dependent browser-history issue: fresh sign-in followed by Match tab first passes, and fresh sign-in followed by Inbox conversation back first passes, but then opening Match Detail in the same session repeatedly triggers a blank white ~0.5-1 second reload/state gap. The URL stayed on `/matches` while Match Detail was visible and rows returned by themselves, which points to stale browser history behind an in-memory detail screen rather than missing backend data. Current follow-up keeps web `popstate` normalization only for Match Detail, uses `router.replace` to the canonical tab destination, and adds a Match-tab-only web hash sentinel (`/matches#match-...`) before opening detail so Android Chrome back consumes the sentinel instead of an older app-history entry. A later UAT still showed the white flash and all three match highlights returning; `markMatchSeen` now persists directly to storage and Match-tab card navigation awaits that write before opening detail, so a hard transient reload should no longer lose the seen/badge update.
 
 ## Validation State
 
@@ -84,12 +94,20 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - Fruit matched-profile exclusion and eager Inbox read clearing passed typecheck, lint, and diff check.
 - Match profile retention/focus refresh/origin back fix, incomplete profile rejection, same-user token-refresh cache preservation, display-profile snapshot, normal stack match detail presentation, and stack-aware canonical back passed typecheck, lint, and diff check.
 - Checkout workflow cleanup is docs/config only; `git diff --check` passed.
+- Transient auth-gap known-profile cache retention passed typecheck, lint, and diff check.
+- Web/browser canonical-back interception for Android Chrome passed typecheck, lint, and diff check.
+- Last-resolved profile selector fallback for first-return flicker passed typecheck, lint, and diff check.
+- Provider-level transient-empty list guard for Matches and Inbox passed typecheck, lint, and diff check.
+- Supabase backend match/thread bootstrap gate passed typecheck, lint, and diff check.
+- Bootstrap/back instrumentation and card-press match-seen clearing passed typecheck, lint, and diff check.
+- Web popstate double-navigation removal and synchronous match-seen ref update passed typecheck, lint, and diff check.
+- Match-detail-only web browser-back normalization with deterministic web `replace`, a Match-tab hash sentinel, and awaited seen-match persistence before navigation passed typecheck, lint, and diff check.
 
 ## Current Risks / Blockers
 
 - Chat UI still preserves local simulated/photo behavior; only real text messages are persisted/hydrated from Supabase.
 - Remaining backend source-of-truth cleanup should continue behind service boundaries and preserve mock mode.
-- No current git sync blocker: local `main` is clean and synced with `origin/main` at `00f3075`.
+- No current git sync blocker: local `main` is clean and synced with `origin/main` at `2c73aa7`.
 - Supabase Auth email sender/template branding still requires custom SMTP setup if branded emails are needed.
 
 ## Likely Relevant Files
@@ -118,6 +136,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 - `supabase/migrations/202607040004_match_read_states.sql`
 - `supabase/tests/database/202606200001_mvp_security.sql`
 - `docs/project-status.md`
+- `docs/milestone-tracker.md`
 
 ## Read Only If Needed
 
@@ -128,4 +147,4 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP while preservi
 
 ## Next Recommended Task
 
-Investigate remaining intermittent Inbox -> conversation -> device/browser back issue under weak mobile network: real/dev conversations and matches can still disappear until Fruit/Discover restores state. Next pass should inspect refresh ordering/partial refresh application and hosted profile/member/photo response behavior under latency.
+Human UAT should verify the order-dependent Android Chrome sequence again: fresh incognito sign-in as `t`, open an Inbox conversation and swipe/device-back to Inbox, then open a real/dev Match Detail from the Match tab. While detail is visible, record whether the URL shows `/matches#match-...`; swiping/device-back should remove the hash, return to Matches without a blank white flash, keep all rows visible, and clear the opened match highlight/badge. If the white flash remains but the opened match highlight/badge stays cleared, the remaining bug is isolated to web route rendering. If the highlight/badge still resets, the awaited storage write is not completing before the page churn.

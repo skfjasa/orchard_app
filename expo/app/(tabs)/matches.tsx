@@ -2,24 +2,46 @@ import { Image } from "expo-image";
 import { router, useFocusEffect } from "expo-router";
 import { Heart, Users } from "lucide-react-native";
 import React, { useCallback } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Colors from "@/constants/colors";
+import { useTransientEmptyList } from "@/hooks/use-transient-empty-list";
 import { useProfile } from "@/providers/profile-provider";
 import { Profile } from "@/types";
 
 export default function MatchesScreen() {
   const {
     matchedProfiles: matches,
+    markMatchSeen,
     newMatchIds,
     refreshBackendMatches,
   } = useProfile();
+  const visibleMatches = useTransientEmptyList(matches);
 
   useFocusEffect(
     useCallback(() => {
       void refreshBackendMatches();
     }, [refreshBackendMatches])
+  );
+
+  const openMatch = useCallback(
+    async (profileId: string) => {
+      await markMatchSeen(profileId);
+      if (
+        Platform.OS === "web" &&
+        typeof window !== "undefined" &&
+        window.location.hash !== `#match-${profileId}`
+      ) {
+        window.history.pushState(
+          { orchardMatchDetail: profileId },
+          "",
+          `${window.location.pathname}${window.location.search}#match-${profileId}`
+        );
+      }
+      router.push(`/match/${profileId}?from=matches`);
+    },
+    [markMatchSeen]
   );
 
   return (
@@ -28,11 +50,11 @@ export default function MatchesScreen() {
         <View style={styles.header}>
           <Text style={styles.title}>Matches</Text>
           <Text style={styles.sub}>
-            {matches.length} {matches.length === 1 ? "connection" : "connections"}
+            {visibleMatches.length} {visibleMatches.length === 1 ? "connection" : "connections"}
           </Text>
         </View>
 
-        {matches.length === 0 ? (
+        {visibleMatches.length === 0 ? (
           <View style={styles.empty}>
             <View style={styles.emptyIcon}>
               <Heart color={Colors.light.tint} size={28} />
@@ -44,7 +66,7 @@ export default function MatchesScreen() {
           </View>
         ) : (
           <FlatList
-            data={matches}
+            data={visibleMatches}
             keyExtractor={(m) => m.id}
             numColumns={2}
             columnWrapperStyle={{ gap: 12, paddingHorizontal: 20 }}
@@ -53,7 +75,9 @@ export default function MatchesScreen() {
               <MatchCard
                 profile={item}
                 isNew={newMatchIds.includes(item.id)}
-                onPress={() => router.push(`/match/${item.id}?from=matches`)}
+                onPress={() => {
+                  void openMatch(item.id);
+                }}
               />
             )}
           />
