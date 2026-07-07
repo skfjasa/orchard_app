@@ -9,8 +9,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 ## Branch And Commit
 
 - Branch: `main`
-- Latest implementation checkpoint: pending commit - Extract profile/safety/paywall route facades
-- Current working state: uncommitted Edit Profile, Paywall, Report, and Safety & Legal route facade extraction plus status-doc updates.
+- Latest implementation checkpoint: `e7e0ece` - Extract profile utility route facades
+- Current working state: clean locally, pending push/sync verification.
 
 ## Canonical Docs
 
