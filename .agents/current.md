@@ -9,8 +9,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 ## Branch And Commit
 
 - Branch: `main`
-- Latest implementation checkpoint: pending commit - Extract monetization store
-- Current working state: uncommitted monetization store extraction plus doc/handoff alignment.
+- Latest implementation checkpoint: `9eb26e2` - Extract monetization store
+- Current working state: clean after monetization store extraction; pending status refresh commit/push.
 
 ## Canonical Docs
 
@@ -83,7 +83,7 @@ Foundation Slice 1 validation:
 - Foundation Slice 6 profile/safety/paywall route facade validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed.
 - Foundation Slice 6 final route migration validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed.
 - Provider selector extraction validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed.
-- Monetization store extraction validation: pending final rerun in current working tree.
+- Monetization store extraction validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
 
 ## Recent Docs Consolidation
 

@@ -72,7 +72,7 @@ Read only if needed:
 - Foundation Slice 6 profile/safety/paywall route facades: `cd expo; bun run typecheck` passed and `cd expo; bun run lint` passed.
 - Foundation Slice 6 final route migration: `cd expo; bun run typecheck` passed and `cd expo; bun run lint` passed.
 - Provider selector extraction: `cd expo; bun run typecheck` passed and `cd expo; bun run lint` passed.
-- Monetization store extraction: pending final rerun in current working tree.
+- Monetization store extraction: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, and `git diff --check` passed.
 
 ## Follow-Up After Slice 1
 
