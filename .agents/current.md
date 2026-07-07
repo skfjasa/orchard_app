@@ -9,8 +9,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 ## Branch And Commit
 
 - Branch: `main`
-- Latest implementation checkpoint: `bc50d91` - Extract chat UI store
-- Current working state: clean after chat UI store extraction; verify push status at session close.
+- Latest implementation checkpoint: `646104c` - Extract conversation merge helpers
+- Current working state: clean after conversation helper extraction; verify push status at session close.
 
 ## Canonical Docs
 
