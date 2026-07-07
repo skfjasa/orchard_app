@@ -142,6 +142,26 @@ Not moved in Slice 5:
 - Matches/Inbox/Chat route consumers.
 - Full provider retirement or route migration.
 
+## Screen Migration Progress
+
+Slice 6 has started with the Matches read path.
+
+Implemented:
+
+- `expo/hooks/use-matches-read-model.ts` wraps the Matches tab's read-model needs: visible matches, new-match detection, focus refresh, and `markMatchSeen`.
+- `expo/app/(tabs)/matches.tsx` consumes `useMatchesReadModel` instead of importing `useProfile()` directly.
+
+Preserved behavior:
+
+- Existing Matches layout, empty state, card rendering, new-match highlight, focus refresh, transient-empty guard, and `markMatchSeen` before navigation.
+
+Not moved yet:
+
+- Inbox read path.
+- Match Detail read path and seen-state calls.
+- Chat thread/read/send path.
+- Provider ownership of Matches selectors.
+
 ## Current Role
 
 `ProfileProvider` is the central app-state provider for the prototype. It still owns UI-facing local state and coordinates persistence, but the first service boundaries have been extracted.

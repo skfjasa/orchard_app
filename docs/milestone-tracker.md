@@ -191,7 +191,13 @@ Remaining:
 - [x] [C] Slice 3: extract local preferences such as read watermarks and seen-match ids.
 - [x] [C] Slice 4: extract local/demo interaction state such as likes/passes/super-likes while keeping Supabase active matches backend-driven.
 - [x] [C] Slice 5: introduce query-backed backend server-state hooks for matches, chat threads, and discovery.
-- [ ] [C+U] Migrate screens domain-by-domain without changing visible UI.
+- [ ] [C+U] Slice 6: migrate screens domain-by-domain without changing visible UI.
+  - [x] [C] Matches read path now uses `useMatchesReadModel`.
+  - [ ] [C] Inbox read path.
+  - [ ] [C] Match Detail read path and seen-state calls.
+  - [ ] [C] Chat thread/read/send path.
+  - [ ] [C] Discover/Fruit discovery and local fixture behavior.
+  - [ ] [C] Profile/safety/paywall/onboarding calls.
 - [ ] [C] Isolate mock/Fruit behavior from Supabase signed-in runtime state.
 
 Exit criteria:

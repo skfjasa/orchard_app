@@ -1,29 +1,17 @@
 import { Image } from "expo-image";
-import { router, useFocusEffect } from "expo-router";
+import { router } from "expo-router";
 import { Heart, Users } from "lucide-react-native";
 import React, { useCallback } from "react";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Colors from "@/constants/colors";
-import { useTransientEmptyList } from "@/hooks/use-transient-empty-list";
-import { useProfile } from "@/providers/profile-provider";
+import { useMatchesReadModel } from "@/hooks/use-matches-read-model";
 import { Profile } from "@/types";
 
 export default function MatchesScreen() {
-  const {
-    matchedProfiles: matches,
-    markMatchSeen,
-    newMatchIds,
-    refreshBackendMatches,
-  } = useProfile();
-  const visibleMatches = useTransientEmptyList(matches);
-
-  useFocusEffect(
-    useCallback(() => {
-      void refreshBackendMatches();
-    }, [refreshBackendMatches])
-  );
+  const { isNewMatch, markMatchSeen, visibleMatches } =
+    useMatchesReadModel();
 
   const openMatch = useCallback(
     async (profileId: string) => {
@@ -63,7 +51,7 @@ export default function MatchesScreen() {
             renderItem={({ item }) => (
               <MatchCard
                 profile={item}
-                isNew={newMatchIds.includes(item.id)}
+                isNew={isNewMatch(item.id)}
                 onPress={() => {
                   void openMatch(item.id);
                 }}
