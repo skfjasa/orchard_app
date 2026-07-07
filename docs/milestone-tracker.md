@@ -194,7 +194,7 @@ Remaining:
 - [ ] [C+U] Slice 6: migrate screens domain-by-domain without changing visible UI.
   - [x] [C] Matches read path now uses `useMatchesReadModel`.
   - [x] [C] Inbox read path now uses `useInboxReadModel`.
-  - [ ] [C] Match Detail read path and seen-state calls.
+  - [x] [C] Match Detail read path and seen-state calls now use `useMatchDetailReadModel`.
   - [ ] [C] Chat thread/read/send path.
   - [ ] [C] Discover/Fruit discovery and local fixture behavior.
   - [ ] [C] Profile/safety/paywall/onboarding calls.

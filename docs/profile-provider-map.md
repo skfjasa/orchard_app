@@ -144,7 +144,7 @@ Not moved in Slice 5:
 
 ## Screen Migration Progress
 
-Slice 6 has started with route read-model migration for Matches and Inbox.
+Slice 6 has started with route read-model migration for Matches, Inbox, and Match Detail.
 
 Implemented:
 
@@ -152,15 +152,17 @@ Implemented:
 - `expo/app/(tabs)/matches.tsx` consumes `useMatchesReadModel` instead of importing `useProfile()` directly.
 - `expo/hooks/use-inbox-read-model.ts` wraps the Inbox tab's read-model needs: visible inbox rows, typing state, couple mirror display, focus refresh, and `markRead`.
 - `expo/app/(tabs)/inbox.tsx` consumes `useInboxReadModel` instead of importing `useProfile()` directly.
+- `expo/hooks/use-match-detail-read-model.ts` wraps Match Detail profile lookup, active-match state, super-like state, seen-state calls, and existing action wrappers.
+- `expo/app/match/[id].tsx` consumes `useMatchDetailReadModel` instead of importing `useProfile()` directly.
 
 Preserved behavior:
 
 - Existing Matches layout, empty state, card rendering, new-match highlight, focus refresh, transient-empty guard, and `markMatchSeen` before navigation.
 - Existing Inbox layout, empty state, row rendering, typing preview, unread badges, focus refresh, transient-empty guard, profile-link navigation, and `markRead` before Chat navigation.
+- Existing Match Detail layout, canonical back behavior, seen-state effect, profile sections, like/pass/super-like actions, block/report controls, and chat entry behavior.
 
 Not moved yet:
 
-- Match Detail read path and seen-state calls.
 - Chat thread/read/send path.
 - Provider ownership of Matches selectors.
 

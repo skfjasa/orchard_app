@@ -211,7 +211,7 @@ Last updated: 2026-07-07
 - Foundation Slice 3 moves local read/seen preferences into `expo/store/use-preferences-store.ts` while preserving existing storage keys and provider wrappers. `ProfileProvider.markRead` and `ProfileProvider.markMatchSeen` remain screen-facing compatibility APIs, and Supabase `match_read_states` behavior remains in the provider for now.
 - Foundation Slice 4 moves local/demo swipe interaction arrays into `expo/store/use-interaction-store.ts` while preserving existing storage keys. `ProfileProvider` still exposes `likedIds`, `passedIds`, `superLikedIds`, and wrapper actions, and Supabase reciprocal-match decisions remain behind the existing swipe/match services.
 - Foundation Slice 5 introduces query-backed server-state hooks under `expo/hooks/api/` for matches, chat threads, and discovery. Discover and Fruit now read discovery through `useDiscoveryProfilesQuery`, and `ProfileProvider.refreshBackendMatches` uses `useMatchesQuery().refetch()` while preserving the existing hydration algorithm, Realtime/polling fallback, and mock mode behavior.
-- Foundation Slice 6 has started with route read-model migration. `expo/hooks/use-matches-read-model.ts` now wraps the Matches tab's compatibility facade reads and focus refresh, and `expo/app/(tabs)/matches.tsx` no longer imports `useProfile()` directly. `expo/hooks/use-inbox-read-model.ts` now wraps Inbox rows, typing state, shared-couple display, focus refresh, and `markRead`, and `expo/app/(tabs)/inbox.tsx` no longer imports `useProfile()` directly.
+- Foundation Slice 6 has started with route read-model migration. `expo/hooks/use-matches-read-model.ts` now wraps the Matches tab's compatibility facade reads and focus refresh, and `expo/app/(tabs)/matches.tsx` no longer imports `useProfile()` directly. `expo/hooks/use-inbox-read-model.ts` now wraps Inbox rows, typing state, shared-couple display, focus refresh, and `markRead`, and `expo/app/(tabs)/inbox.tsx` no longer imports `useProfile()` directly. `expo/hooks/use-match-detail-read-model.ts` now wraps Match Detail profile lookup, active-match state, super-like state, seen-state calls, and existing action wrappers, and `expo/app/match/[id].tsx` no longer imports `useProfile()` directly.
 - Profile-tab sign-out now clears profile/auth state before routing to `/onboarding`, preventing the user from landing on Discover with no profile/data loaded.
 - Remaining observed behavior to decide/fix later: after sign-out/sign-in, only hosted messages are restored; local fixture greeting/simulated messages are intentionally not persisted to hosted chat yet.
 - The original generated onboarding background was recovered from the previous remote URL, vendored as `expo/assets/images/welcome-background.png`, and the welcome, sign-in, and pending-confirmation screens now use the local bundled asset instead of the app icon background or a remote Rork URL.
@@ -227,12 +227,12 @@ Last updated: 2026-07-07
 
 ## Current Task
 
-Foundation Slice 6 read-path migration now covers Matches and Inbox. Matches uses `useMatchesReadModel`; Inbox uses `useInboxReadModel` while preserving existing UI, focus refresh, transient-empty guard, typing preview, unread badge behavior, and `markRead` before Chat navigation.
+Foundation Slice 6 read-path migration now covers Matches, Inbox, and Match Detail. Match Detail uses `useMatchDetailReadModel` while preserving existing navigation/back behavior, profile rendering, seen-state effect, like/pass/super-like actions, block/report controls, and chat entry behavior.
 
 ## Next Planned Tasks
 
 1. Human UAT forgot-password flow on hosted Supabase/ngrok when practical: request reset email, open link, set new password, sign in with the new password, and confirm the old password no longer works.
-2. Continue foundation Slice 6 with Match Detail read path and seen-state calls, without changing navigation/back behavior or visible UI.
+2. Continue foundation Slice 6 with Chat thread/read/send path, without changing navigation/back behavior or visible UI.
 3. Continue Supabase source-of-truth session bootstrap for inner-circle testing: profile, active matches, display profiles/photos, inbox summaries, thread snippets, unread/read state, and block/unmatch visibility should load before tabs render.
 4. Monitor Android Match Detail's brief app-background loading step; optimize only if it is multi-second, frequent after warmup, or loses rows/highlight state.
 5. Decide whether seen-match/highlight state remains local-only for inner-circle testing or moves to backend-backed per-user state.

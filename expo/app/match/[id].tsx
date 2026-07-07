@@ -40,7 +40,7 @@ import SuperLikeBurst from "@/components/SuperLikeBurst";
 import Colors from "@/constants/colors";
 import { getPolyFruit } from "@/constants/poly-fruits";
 import { useCanonicalBack } from "@/hooks/use-canonical-back";
-import { useProfile } from "@/providers/profile-provider";
+import { useMatchDetailReadModel } from "@/hooks/use-match-detail-read-model";
 import { PersonProfile, PromptAnswer, VoicePrompt } from "@/types";
 import { scoreMatch } from "@/utils/match";
 
@@ -65,20 +65,16 @@ function MatchDetailContent() {
     id: string;
   }>();
   const {
-    profile,
-    getProfileById,
-    hasActiveMatch,
+    blockProfile,
+    currentProfile,
+    isMatched,
+    isSuperLiked,
     likeProfile,
     markMatchSeen,
+    otherProfile: other,
     passProfile,
     superLikeProfile,
-    superLikedIds,
-    blockProfile,
-  } = useProfile();
-  const other = useMemo(
-    () => (id ? getProfileById(id) : undefined),
-    [getProfileById, id]
-  );
+  } = useMatchDetailReadModel(id);
 
   const allPhotos: string[] = useMemo(() => {
     if (!other) return [];
@@ -107,11 +103,10 @@ function MatchDetailContent() {
   }, [from, id]);
   useCanonicalBack(canonicalBackHref);
 
-  if (!other || !profile) return null;
+  if (!other || !currentProfile) return null;
 
-  const score = scoreMatch(profile, other);
+  const score = scoreMatch(currentProfile, other);
   const pct = Math.round(score.total * 100);
-  const isMatched = hasActiveMatch(other.id);
   const isCouple = other.accountType === "couple";
   const isBoosted = !!(other.boostedUntil && other.boostedUntil > Date.now());
 
@@ -177,8 +172,6 @@ function MatchDetailContent() {
   const handleSuperLike = () => {
     setSuperBurstVisible(true);
   };
-
-  const isSuperLiked = superLikedIds.includes(other.id);
 
   const openSocial = (url: string) => {
     Linking.openURL(url).catch(() =>

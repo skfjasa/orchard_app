@@ -10,7 +10,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 
 - Branch: `main`
 - Latest implementation checkpoint: `e2935ba` - Extract inbox read model
-- Current working state: clean and synced with `origin/main`.
+- Current working state: foundation Slice 6 Match Detail read-path changes are present and uncommitted.
 
 ## Canonical Docs
 
@@ -46,7 +46,7 @@ Old duplicate roadmap/checklist/audit docs were consolidated and deleted from ac
 - Foundation Slice 3 is implemented: local `readWatermarks` and `seenMatchIds` now live behind `expo/store/use-preferences-store.ts` using the existing AsyncStorage keys. Provider wrappers `markRead` and `markMatchSeen` remain intact.
 - Foundation Slice 4 is implemented: local/demo `likedIds`, `passedIds`, and `superLikedIds` now live behind `expo/store/use-interaction-store.ts` using the existing AsyncStorage keys. Provider wrappers remain intact and Supabase reciprocal-match decisions remain service-owned.
 - Foundation Slice 5 is implemented: `expo/hooks/api/` now contains query keys and query hooks for matches, chat threads, and discovery. Discover/Fruit consume discovery through `useDiscoveryProfilesQuery`, and provider match bootstrap uses `useMatchesQuery().refetch()` without moving the whole hydration algorithm.
-- Foundation Slice 6 has started: Matches read path now uses `expo/hooks/use-matches-read-model.ts`, Inbox read path now uses `expo/hooks/use-inbox-read-model.ts`, and both tab screens no longer import `useProfile()` directly.
+- Foundation Slice 6 has started: Matches read path now uses `expo/hooks/use-matches-read-model.ts`, Inbox read path now uses `expo/hooks/use-inbox-read-model.ts`, Match Detail now uses `expo/hooks/use-match-detail-read-model.ts`, and those screens no longer import `useProfile()` directly.
 
 ## Validation State
 
@@ -75,6 +75,7 @@ Foundation Slice 1 validation:
 - Foundation Slice 5 validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
 - Foundation Slice 6 Matches read-path validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
 - Foundation Slice 6 Inbox read-path validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
+- Foundation Slice 6 Match Detail read-path validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
 
 ## Current Docs-Only Changes
 
@@ -87,4 +88,4 @@ Foundation Slice 1 validation:
 
 ## Next Recommended Task
 
-Human UAT forgot-password when practical, then continue foundation Slice 6 with Match Detail read path and seen-state calls. Keep the Android Match Detail loader as a monitored follow-up, not a blocker unless it worsens.
+Human UAT forgot-password when practical, then continue foundation Slice 6 with Chat thread/read/send path. Keep the Android Match Detail loader as a monitored follow-up, not a blocker unless it worsens.
