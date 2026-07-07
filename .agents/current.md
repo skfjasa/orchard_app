@@ -9,8 +9,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 ## Branch And Commit
 
 - Branch: `main`
-- Latest implementation checkpoint: pending commit - Extract chat thread read model
-- Current working state: uncommitted Slice 6 Chat read-model extraction and status-doc updates.
+- Latest implementation checkpoint: `1701281` - Extract chat thread read model
+- Current working state: clean locally, pending push/sync verification.
 
 ## Canonical Docs
 
