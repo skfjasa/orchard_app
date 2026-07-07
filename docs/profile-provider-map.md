@@ -144,7 +144,7 @@ Not moved in Slice 5:
 
 ## Screen Migration Progress
 
-Slice 6 has started with route read-model migration for Matches, Inbox, Match Detail, Chat, Discover, Fruit, Edit Profile, Paywall, Report, and Safety & Legal.
+Slice 6 route read-model migration now covers all current app route/component `useProfile()` consumers.
 
 Implemented:
 
@@ -168,6 +168,16 @@ Implemented:
 - `expo/app/report.tsx` consumes `useReportReadModel` instead of importing `useProfile()` directly.
 - `expo/hooks/use-safety-legal-read-model.ts` wraps account deletion request submission.
 - `expo/app/safety-legal.tsx` consumes `useSafetyLegalReadModel` instead of importing `useProfile()` directly.
+- `expo/hooks/use-tab-badge-read-model.ts` wraps tab badge counts.
+- `expo/app/(tabs)/_layout.tsx` consumes `useTabBadgeReadModel` instead of importing `useProfile()` directly.
+- `expo/hooks/use-profile-tab-read-model.ts` wraps Profile tab profile, sign-out, monetization, and partner-link actions.
+- `expo/app/(tabs)/profile.tsx` consumes `useProfileTabReadModel` instead of importing `useProfile()` directly.
+- `expo/hooks/use-onboarding-completion-read-model.ts` wraps final onboarding profile completion.
+- `expo/app/onboarding/photos.tsx` consumes `useOnboardingCompletionReadModel` instead of importing `useProfile()` directly.
+- `expo/hooks/use-sign-in-profile-read-model.ts` wraps sign-in profile/bootstrap readiness.
+- `expo/app/onboarding/sign-in.tsx` consumes `useSignInProfileReadModel` instead of importing `useProfile()` directly.
+- `expo/hooks/use-app-bootstrap-read-model.ts` wraps root/protected-route auth/profile bootstrap readiness.
+- `expo/app/index.tsx` and `expo/components/navigation/ProtectedRoute.tsx` consume `useAppBootstrapReadModel` instead of importing `useProfile()` directly.
 
 Preserved behavior:
 
@@ -178,13 +188,10 @@ Preserved behavior:
 - Existing Discover deck layout, swipe animations, haptics, match confirmation, paywall routing, super-like burst, profile-detail navigation, and discovered-profile remembering.
 - Existing Fruit grid layout, backend non-fixture priority, local fixture availability, fixture exclusion rules, like-sent/match overlays, boost action, and profile-detail navigation.
 - Existing Edit Profile save behavior, Paywall demo purchase/subscription behavior, Report submission behavior, and Safety & Legal account-deletion request behavior.
+- Existing tab badge behavior, Profile tab sign-out/partner-link/monetization behavior, onboarding completion behavior, sign-in readiness behavior, root redirect behavior, and ProtectedRoute bootstrap gates.
 
 Not moved yet:
 
-- Profile tab calls.
-- Onboarding photos/sign-in calls.
-- Tab badge calls.
-- Root redirect and ProtectedRoute/bootstrap gates.
 - Provider ownership of Matches selectors.
 
 ## Current Role

@@ -5,7 +5,7 @@ import { Platform, StyleSheet } from "react-native";
 
 import ProtectedRoute from "@/components/navigation/ProtectedRoute";
 import Colors from "@/constants/colors";
-import { useProfile } from "@/providers/profile-provider";
+import { useTabBadgeReadModel } from "@/hooks/use-tab-badge-read-model";
 
 export default function TabLayout() {
   return (
@@ -16,7 +16,7 @@ export default function TabLayout() {
 }
 
 function TabNavigator() {
-  const { newMatchCount, unreadMessageCount } = useProfile();
+  const { newMatchCount, unreadMessageCount } = useTabBadgeReadModel();
   return (
     <Tabs
       screenOptions={{

@@ -50,7 +50,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "@/constants/colors";
 import { MVP_MONETIZATION_ENABLED } from "@/constants/features";
 import { getPolyFruit } from "@/constants/poly-fruits";
-import { useProfile } from "@/providers/profile-provider";
+import { useProfileTabReadModel } from "@/hooks/use-profile-tab-read-model";
 import {
   DEFAULT_SUPER_LIKES,
   LinkedPartner,
@@ -78,7 +78,7 @@ export default function ProfileScreen() {
     resendPartnerInvite,
     acceptPartnerLink,
     removePartnerLink,
-  } = useProfile();
+  } = useProfileTabReadModel();
   const [inviteOpen, setInviteOpen] = React.useState<boolean>(false);
 
   const performSignOut = React.useCallback(async () => {

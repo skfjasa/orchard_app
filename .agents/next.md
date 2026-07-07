@@ -1,6 +1,6 @@
 # Next Task
 
-Human UAT forgot-password when practical, then continue foundation Slice 6 with Profile tab, onboarding photos/sign-in, tab badges, root redirect, and ProtectedRoute/bootstrap gates.
+Human UAT forgot-password when practical, then continue provider-internal cleanup after Slice 6.
 
 ## Canonical Startup Context
 
@@ -45,6 +45,11 @@ Read only if needed:
 - `expo/hooks/use-paywall-read-model.ts` and `expo/app/paywall.tsx`: moved Paywall route provider calls behind a focused hook without changing demo purchase/subscription behavior.
 - `expo/hooks/use-report-read-model.ts` and `expo/app/report.tsx`: moved Report route provider calls behind a focused hook without changing report submission behavior.
 - `expo/hooks/use-safety-legal-read-model.ts` and `expo/app/safety-legal.tsx`: moved Safety & Legal route provider calls behind a focused hook without changing account-deletion request behavior.
+- `expo/hooks/use-tab-badge-read-model.ts` and `expo/app/(tabs)/_layout.tsx`: moved tab badge provider calls behind a focused hook without changing badge behavior.
+- `expo/hooks/use-profile-tab-read-model.ts` and `expo/app/(tabs)/profile.tsx`: moved Profile tab provider calls behind a focused hook without changing profile, sign-out, monetization, or partner-link behavior.
+- `expo/hooks/use-onboarding-completion-read-model.ts` and `expo/app/onboarding/photos.tsx`: moved final onboarding completion behind a focused hook without changing auth/profile completion behavior.
+- `expo/hooks/use-sign-in-profile-read-model.ts` and `expo/app/onboarding/sign-in.tsx`: moved sign-in profile readiness reads behind a focused hook without changing forgot-password or bootstrap behavior.
+- `expo/hooks/use-app-bootstrap-read-model.ts`, `expo/app/index.tsx`, and `expo/components/navigation/ProtectedRoute.tsx`: moved root/protected-route bootstrap reads behind a focused hook without changing redirect or loader behavior.
 
 ## Validation
 
@@ -63,7 +68,8 @@ Read only if needed:
 - Foundation Slice 6 Chat thread/read/send path: `cd expo; bun run typecheck` passed and `cd expo; bun run lint` passed.
 - Foundation Slice 6 Discover/Fruit read path: `cd expo; bun run typecheck` passed and `cd expo; bun run lint` passed.
 - Foundation Slice 6 profile/safety/paywall route facades: `cd expo; bun run typecheck` passed and `cd expo; bun run lint` passed.
+- Foundation Slice 6 final route migration: `cd expo; bun run typecheck` passed and `cd expo; bun run lint` passed.
 
 ## Follow-Up After Slice 1
 
-Navigation cleanup is accepted. Forgot-password is wired but still needs human UAT when practical. Slices 2, 3, 4, and 5 are implemented, and Slice 6 has migrated Matches, Inbox, Match Detail, Chat, Discover, Fruit, Edit Profile, Paywall, Report, and Safety & Legal route calls. Next engineering task is the remaining Slice 6 app-shell/Profile/onboarding/bootstrap provider-call migration.
+Navigation cleanup is accepted. Forgot-password is wired but still needs human UAT when practical. Slices 2, 3, 4, 5, and 6 are implemented. App routes/components no longer import `useProfile()` directly; focused hooks own the route/provider boundary. Next engineering task is provider-internal cleanup: shrink `ProfileProvider` ownership of compatibility selectors and move remaining domain state behind clearer stores/services.

@@ -19,7 +19,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Button } from "@/components/ui";
 import { useAuth } from "@/providers/auth-provider";
-import { useProfile } from "@/providers/profile-provider";
+import { useSignInProfileReadModel } from "@/hooks/use-sign-in-profile-read-model";
 import { resetStoredProfileState } from "@/services/local-profile-storage";
 import { clearPendingOnboardingProfile } from "@/services/pending-onboarding-storage";
 
@@ -97,7 +97,7 @@ export default function SignInScreen() {
     updatePassword,
   } = useAuth();
   const { backendMatchesHydrated, backendProfileHydrated, hydrated, profile } =
-    useProfile();
+    useSignInProfileReadModel();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [newPassword, setNewPassword] = useState<string>("");

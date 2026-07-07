@@ -191,15 +191,15 @@ Remaining:
 - [x] [C] Slice 3: extract local preferences such as read watermarks and seen-match ids.
 - [x] [C] Slice 4: extract local/demo interaction state such as likes/passes/super-likes while keeping Supabase active matches backend-driven.
 - [x] [C] Slice 5: introduce query-backed backend server-state hooks for matches, chat threads, and discovery.
-- [ ] [C+U] Slice 6: migrate screens domain-by-domain without changing visible UI.
+- [x] [C] Slice 6: migrate screens domain-by-domain without changing visible UI.
   - [x] [C] Matches read path now uses `useMatchesReadModel`.
   - [x] [C] Inbox read path now uses `useInboxReadModel`.
   - [x] [C] Match Detail read path and seen-state calls now use `useMatchDetailReadModel`.
   - [x] [C] Chat thread/read/send path now uses `useChatThreadReadModel`.
   - [x] [C] Discover/Fruit discovery and local fixture behavior now use focused read-model hooks.
-  - [~] [C] Profile/safety/paywall/onboarding calls.
+  - [x] [C] Profile/safety/paywall/onboarding calls.
     - [x] [C] Edit Profile, Paywall, Report, and Safety & Legal now use focused read-model hooks.
-    - [ ] [C] Profile tab, onboarding photos/sign-in, tab badges, root redirect, and ProtectedRoute/bootstrap gates.
+    - [x] [C] Profile tab, onboarding photos/sign-in, tab badges, root redirect, and ProtectedRoute/bootstrap gates now use focused read-model hooks.
 - [ ] [C] Isolate mock/Fruit behavior from Supabase signed-in runtime state.
 
 Exit criteria:

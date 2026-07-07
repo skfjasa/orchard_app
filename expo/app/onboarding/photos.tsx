@@ -19,7 +19,7 @@ import { Button, SectionLabel } from "@/components/ui";
 import Colors from "@/constants/colors";
 import { useOnboarding } from "@/providers/onboarding-provider";
 import { useAuth } from "@/providers/auth-provider";
-import { useProfile } from "@/providers/profile-provider";
+import { useOnboardingCompletionReadModel } from "@/hooks/use-onboarding-completion-read-model";
 import { savePendingOnboardingProfile } from "@/services/pending-onboarding-storage";
 import {
   AccountCredentials,
@@ -57,7 +57,7 @@ export default function PhotosScreen() {
     signUpWithEmail,
     userId,
   } = useAuth();
-  const { completeOnboarding } = useProfile();
+  const { completeOnboarding } = useOnboardingCompletionReadModel();
   const isCouple = draft.accountType === "couple";
   const [finishing, setFinishing] = React.useState(false);
 
