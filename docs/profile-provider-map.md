@@ -202,6 +202,7 @@ Post-Slice 6 provider-internal cleanup has started.
 Implemented:
 
 - `expo/services/profile-provider-selectors.ts` owns pure compatibility selector calculations for profile conversations, active-match checks, matched profiles, inbox rows, and unread message counts.
+- `expo/services/local-interaction-service.ts` owns pure local/backend conversation merge helpers for backend message hydration and read-through timestamp lookup.
 - `expo/providers/profile-provider.tsx` still owns side-effectful profile lookup/cache repair, transient-empty guards, and the compatibility facade, but no longer embeds the pure matched-profile/inbox/badge calculation bodies inline.
 
 Preserved behavior:
@@ -248,6 +249,8 @@ Not moved:
 - `conversations`
 - Backend chat thread hydration and message merge behavior.
 - Local simulated replies, photo requests, photo approvals, and conversation persistence.
+
+Provider-internal cleanup after this slice keeps conversation state and persistence in `ProfileProvider`, but pure backend conversation merge/read-through helper functions now live in `expo/services/local-interaction-service.ts`.
 
 ## Current Role
 

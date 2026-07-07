@@ -386,4 +386,4 @@ Historical rationale for these removed items is preserved in [Architecture Audit
 
 ## Current Recommended Next Step
 
-Slices 2 through 6 are implemented, and provider-internal cleanup has started with selector, prototype monetization, and chat UI state extraction. Next, continue moving one small state domain at a time out of `ProfileProvider` without changing visible UI or mock/Supabase behavior.
+Slices 2 through 6 are implemented, and provider-internal cleanup has started with selector, prototype monetization, chat UI state, and pure conversation helper extraction. Next, continue moving one small state domain at a time out of `ProfileProvider` without changing visible UI or mock/Supabase behavior.

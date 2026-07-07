@@ -187,6 +187,7 @@ Done:
 - [x] [C] Provider-internal selector cleanup has started with pure selector helpers in `expo/services/profile-provider-selectors.ts`.
 - [x] [C] Prototype monetization state now lives in `expo/store/use-monetization-store.ts` while preserving demo/paywall behavior.
 - [x] [C] Local chat UI state for drafts and simulated typing IDs now lives in `expo/store/use-chat-ui-store.ts`.
+- [x] [C] Pure backend conversation merge/read-through helpers now live in `expo/services/local-interaction-service.ts`.
 
 Remaining:
 

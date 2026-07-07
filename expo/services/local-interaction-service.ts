@@ -202,6 +202,66 @@ export function markConversationRead(
 
   return next;
 }
+
+export function mergeBackendConversation(
+  conversations: Conversation[],
+  profileId: string,
+  backendMessages: Message[],
+  readThrough = 0
+): Conversation[] {
+  if (backendMessages.length === 0) return conversations;
+
+  const existing = conversations.find(
+    (conversation) => conversation.profileId === profileId
+  );
+
+  if (!existing) {
+    return [
+      {
+        id: `c-${profileId}`,
+        profileId,
+        messages: backendMessages,
+        unread: backendMessages.filter(
+          (message) => !message.fromMe && message.at > readThrough
+        ).length,
+      },
+      ...conversations,
+    ];
+  }
+
+  const mergedMessages = mergeMessages(existing.messages, backendMessages);
+  const unread = mergedMessages.filter(
+    (message) => !message.fromMe && message.at > readThrough
+  ).length;
+  const messagesUnchanged =
+    mergedMessages.length === existing.messages.length &&
+    mergedMessages.every((message, index) => message === existing.messages[index]);
+
+  if (messagesUnchanged && existing.unread === unread) return conversations;
+
+  return conversations.map((conversation) =>
+    conversation.profileId === profileId
+      ? {
+          ...conversation,
+          messages: mergedMessages,
+          unread,
+        }
+      : conversation
+  );
+}
+
+export function newestMessageAt(
+  conversations: Conversation[],
+  profileId: string
+): number {
+  const conversation = conversations.find((item) => item.profileId === profileId);
+  if (!conversation) return 0;
+  return conversation.messages.reduce(
+    (latest, message) => Math.max(latest, message.at),
+    0
+  );
+}
+
 function appendOrCreateConversation(
   conversations: Conversation[],
   profileId: string,
@@ -237,4 +297,31 @@ function makeGreetingText(other: Profile, kind: LocalGreetingKind): string {
   return other.accountType === "couple"
     ? `Hey! ${other.people[0]?.name} & ${other.people[1]?.name} here. Loved your profile \u2014 how's your week going?`
     : `Hi! I really liked your profile. What brings you to Orchard?`;
+}
+
+function isLikelyLocalBackendEcho(localMessage: Message, backendMessage: Message) {
+  return (
+    localMessage.id.startsWith("m-") &&
+    localMessage.fromMe === true &&
+    backendMessage.fromMe === true &&
+    localMessage.kind === backendMessage.kind &&
+    localMessage.text === backendMessage.text &&
+    Math.abs(localMessage.at - backendMessage.at) < 15_000
+  );
+}
+
+function mergeMessages(localMessages: Message[], backendMessages: Message[]) {
+  const byId = new Map<string, Message>();
+  for (const message of localMessages) {
+    byId.set(message.id, message);
+  }
+  for (const message of backendMessages) {
+    const duplicateLocalEcho = [...byId.values()].some((existing) =>
+      isLikelyLocalBackendEcho(existing, message)
+    );
+    if (duplicateLocalEcho) continue;
+    byId.set(message.id, message);
+  }
+
+  return [...byId.values()].sort((a, b) => a.at - b.at);
 }
