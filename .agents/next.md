@@ -1,6 +1,6 @@
 # Next Task
 
-Human UAT forgot-password when practical, then start foundation Slice 5 from `docs/repo-audit-and-foundation-plan.md`.
+Human UAT forgot-password when practical, then start foundation Slice 6 from `docs/repo-audit-and-foundation-plan.md`.
 
 ## Canonical Startup Context
 
@@ -32,6 +32,9 @@ Read only if needed:
 - `docs/profile-provider-map.md`: categorized provider fields/actions by extraction domain and identified first migration consumers.
 - `expo/store/use-preferences-store.ts`: extracted local read/seen preference persistence behind a Zustand store while preserving existing AsyncStorage keys.
 - `expo/store/use-interaction-store.ts`: extracted local/demo swipe interaction persistence behind a Zustand store while preserving existing AsyncStorage keys.
+- `expo/hooks/api/`: added query keys and React Query hooks for matches, chat threads, and discovery.
+- `expo/app/(tabs)/discover.tsx` and `expo/app/(tabs)/fruit.tsx`: moved discovery reads to `useDiscoveryProfilesQuery`.
+- `expo/providers/profile-provider.tsx`: moved backend match list reads to `useMatchesQuery().refetch()` while preserving the existing hydration algorithm.
 
 ## Validation
 
@@ -43,7 +46,8 @@ Read only if needed:
 - Foundation Slice 2: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, and `git diff --check` passed.
 - Foundation Slice 3: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, and `git diff --check` passed.
 - Foundation Slice 4: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, and `git diff --check` passed.
+- Foundation Slice 5: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, and `git diff --check` passed.
 
 ## Follow-Up After Slice 1
 
-Navigation cleanup is accepted. Forgot-password is wired but still needs human UAT when practical. Slices 2, 3, and 4 are implemented. Next engineering task is Slice 5: introduce query-backed backend server-state hooks for matches, chat threads, and discovery without moving all provider hydration in one pass.
+Navigation cleanup is accepted. Forgot-password is wired but still needs human UAT when practical. Slices 2, 3, 4, and 5 are implemented. Next engineering task is Slice 6: migrate screens domain-by-domain from `useProfile()` to focused hooks/selectors without changing visible UI.

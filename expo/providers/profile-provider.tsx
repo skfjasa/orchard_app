@@ -10,6 +10,7 @@ import {
   toBackendProfileId,
 } from "@/constants/mock-profile-ids";
 import { MVP_MONETIZATION_ENABLED } from "@/constants/features";
+import { useMatchesQuery } from "@/hooks/api/use-matches";
 import { useTransientEmptyList } from "@/hooks/use-transient-empty-list";
 import { useAuth } from "@/providers/auth-provider";
 import { createAppServices } from "@/services/app-services";
@@ -262,6 +263,12 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     queryKey: ["duet-storage"],
     queryFn: loadStoredProfileState,
   });
+  const backendMatchesQuery = useMatchesQuery({
+    enabled: false,
+    profileId: userId,
+    services: appServices,
+  });
+  const refetchBackendMatchesQuery = backendMatchesQuery.refetch;
 
   useEffect(() => {
     if (loadQuery.data && !hydrated) {
@@ -538,7 +545,16 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     });
 
     try {
-      const matchResult = await appServices.matches.listMatches(userId);
+      const matchQueryResult = await refetchBackendMatchesQuery();
+      const matchResult =
+        matchQueryResult.data ??
+        ({
+          ok: false,
+          error: {
+            code: "matches_query_empty",
+            message: "Backend matches query did not return a result.",
+          },
+        } as const);
 
       if (!matchResult.ok) {
         console.log("[profile-provider] backend match hydration failed", {
@@ -739,6 +755,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     mode,
     profile,
     rememberProfiles,
+    refetchBackendMatchesQuery,
     saveConvosMutation,
     session?.access_token,
     userId,

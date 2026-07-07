@@ -32,8 +32,8 @@ import {
   MVP_SUPER_LIKES_ENABLED,
 } from "@/constants/features";
 import { getPolyFruit } from "@/constants/poly-fruits";
+import { useDiscoveryProfilesQuery } from "@/hooks/api/use-discovery";
 import { useProfile } from "@/providers/profile-provider";
-import { createAppServices } from "@/services/app-services";
 import type { DiscoveryProfile } from "@/services";
 import { Profile } from "@/types";
 
@@ -42,7 +42,6 @@ const SWIPE_THRESHOLD = 120;
 
 export default function DiscoverScreen() {
   const { width: screenWidth } = useWindowDimensions();
-  const appServices = useMemo(() => createAppServices(), []);
   const {
     profile,
     likedIds,
@@ -60,6 +59,21 @@ export default function DiscoverScreen() {
   const [ranked, setRanked] = useState<DiscoveryProfile[]>([]);
   const [matchProfile, setMatchProfile] = useState<Profile | null>(null);
   const cardWidth = Math.min(screenWidth - 40, MAX_CARD_W);
+  const discoveryFilters = useMemo(
+    () =>
+      profile
+        ? {
+            profileId: profile.id,
+            viewerProfile: profile,
+            excludedProfileIds: [...likedIds, ...passedIds],
+          }
+        : null,
+    [likedIds, passedIds, profile]
+  );
+  const discoveryQuery = useDiscoveryProfilesQuery({
+    enabled: !!profile,
+    filters: discoveryFilters,
+  });
 
   useEffect(() => {
     if (!profile) {
@@ -67,31 +81,19 @@ export default function DiscoverScreen() {
       return;
     }
 
-    let cancelled = false;
-    void appServices.discovery
-      .listProfiles({
-        profileId: profile.id,
-        viewerProfile: profile,
-        excludedProfileIds: [...likedIds, ...passedIds],
-      })
-      .then((result) => {
-        if (cancelled) return;
-        if (!result.ok) {
-          console.log("[discover] profile discovery failed", {
-            code: result.error.code,
-            message: result.error.message,
-          });
-          setRanked([]);
-          return;
-        }
-        rememberProfiles(result.value.map((item) => item.profile));
-        setRanked(result.value);
+    const result = discoveryQuery.data;
+    if (!result) return;
+    if (!result.ok) {
+      console.log("[discover] profile discovery failed", {
+        code: result.error.code,
+        message: result.error.message,
       });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [appServices, profile, likedIds, passedIds, rememberProfiles]);
+      setRanked([]);
+      return;
+    }
+    rememberProfiles(result.value.map((item) => item.profile));
+    setRanked(result.value);
+  }, [discoveryQuery.data, profile, rememberProfiles]);
 
   const pan = useRef(new Animated.ValueXY()).current;
   const swipingRef = useRef<boolean>(false);

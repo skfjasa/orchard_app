@@ -243,6 +243,8 @@ Validation:
 
 ### Slice 5: React Query Server-State Hooks
 
+Status: implemented 2026-07-07.
+
 Goal:
 
 Move backend reads out of provider effects and into explicit query hooks.
@@ -384,4 +386,4 @@ Historical rationale for these removed items is preserved in [Architecture Audit
 
 ## Current Recommended Next Step
 
-Slice 4 is implemented. Next, implement Slice 5: introduce query-backed backend server-state hooks for matches, chat threads, and discovery without moving all provider hydration in one pass.
+Slice 5 is implemented. Next, implement Slice 6: migrate screens domain-by-domain from `useProfile()` to focused hooks/selectors without changing visible UI.

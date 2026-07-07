@@ -119,6 +119,29 @@ Not moved in Slice 4:
 - Conversation state or chat send/read behavior.
 - Product decision about long-term backend ownership for any local-only fixture markers.
 
+## Query-Backed Server-State Hooks
+
+Slice 5 introduced query-backed API hooks under `expo/hooks/api/`:
+
+- `query-keys.ts`
+- `use-matches.ts`
+- `use-chat-thread.ts`
+- `use-discovery.ts`
+
+Preserved behavior:
+
+- Hooks wrap existing `appServices` methods instead of calling Supabase directly from screens.
+- Query keys include backend mode and relevant profile/match/filter inputs.
+- `Discover` and `Fruit` use `useDiscoveryProfilesQuery` for discovery reads while preserving local deck/grid state and existing UI behavior.
+- `ProfileProvider.refreshBackendMatches` uses `useMatchesQuery().refetch()` for match listing while keeping the current match/thread merge algorithm, Realtime refresh, and polling fallback intact.
+
+Not moved in Slice 5:
+
+- Per-match chat thread hydration inside the provider loop.
+- Realtime invalidation through query keys.
+- Matches/Inbox/Chat route consumers.
+- Full provider retirement or route migration.
+
 ## Current Role
 
 `ProfileProvider` is the central app-state provider for the prototype. It still owns UI-facing local state and coordinates persistence, but the first service boundaries have been extracted.

@@ -17,15 +17,14 @@ import Colors from "@/constants/colors";
 import { MVP_MONETIZATION_ENABLED } from "@/constants/features";
 import { getPolyFruit } from "@/constants/poly-fruits";
 import { MOCK_PROFILE_BACKEND_IDS } from "@/constants/mock-profile-ids";
+import { useDiscoveryProfilesQuery } from "@/hooks/api/use-discovery";
 import { FRUIT_PROFILES } from "@/mocks/fruit-profiles";
 import { useProfile } from "@/providers/profile-provider";
-import { createAppServices } from "@/services/app-services";
 import { DiscoveryProfile } from "@/services";
 import { scoreMatch } from "@/utils/match";
 import { Profile } from "@/types";
 
 export default function FruitScreen() {
-  const appServices = useMemo(() => createAppServices(), []);
   const {
     profile,
     likedIds,
@@ -37,6 +36,23 @@ export default function FruitScreen() {
   const [backendProfiles, setBackendProfiles] = useState<DiscoveryProfile[]>([]);
   const [matchProfile, setMatchProfile] = useState<Profile | null>(null);
   const [sentProfile, setSentProfile] = useState<Profile | null>(null);
+  const discoveryFilters = useMemo(
+    () =>
+      profile
+        ? {
+            profileId: profile.id,
+            viewerProfile: profile,
+            excludedProfileIds: [],
+            includePassed: true,
+            limit: 20,
+          }
+        : null,
+    [profile]
+  );
+  const discoveryQuery = useDiscoveryProfilesQuery({
+    enabled: !!profile,
+    filters: discoveryFilters,
+  });
 
   useEffect(() => {
     if (!profile) {
@@ -44,33 +60,19 @@ export default function FruitScreen() {
       return;
     }
 
-    let cancelled = false;
-    void appServices.discovery
-      .listProfiles({
-        profileId: profile.id,
-        viewerProfile: profile,
-        excludedProfileIds: [],
-        includePassed: true,
-        limit: 20,
-      })
-      .then((result) => {
-        if (cancelled) return;
-        if (!result.ok) {
-          console.log("[fruit] profile discovery failed", {
-            code: result.error.code,
-            message: result.error.message,
-          });
-          setBackendProfiles([]);
-          return;
-        }
-        rememberProfiles(result.value.map((item) => item.profile));
-        setBackendProfiles(result.value);
+    const result = discoveryQuery.data;
+    if (!result) return;
+    if (!result.ok) {
+      console.log("[fruit] profile discovery failed", {
+        code: result.error.code,
+        message: result.error.message,
       });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [appServices, profile, likedIds, passedIds, rememberProfiles]);
+      setBackendProfiles([]);
+      return;
+    }
+    rememberProfiles(result.value.map((item) => item.profile));
+    setBackendProfiles(result.value);
+  }, [discoveryQuery.data, profile, rememberProfiles]);
 
   const trending = useMemo(() => {
     const backendNonFixtureProfiles = backendProfiles.filter(
