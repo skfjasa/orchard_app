@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-07-06
+Last updated: 2026-07-07
 
 ## Current Repo State
 
@@ -218,7 +218,7 @@ Last updated: 2026-07-06
 - A browser funnel test reached `/onboarding/photos`, sent a Supabase confirmation email, and exposed two hosted auth setup gaps: the redirect URL was still pointing at `http://localhost:3000`, and emails still used default Supabase Auth branding. App-side redirect handling has been patched; hosted Supabase Auth redirect allow-list, Site URL, and email templates/sender still need Dashboard review.
 - User updated Supabase Auth URL Configuration redirect entries for the browser preview. Supabase Dashboard currently requires SMTP configuration before auth email templates can be customized; SMTP fields are still blank except project auth secrets.
 - Project review recommendations remain relevant: avoid a broad `ProfileProvider` rewrite, keep moving behavior behind services, and add CI/database automation after the auth/profile path has a little more coverage. The July 2026 amended plan makes this explicit: keep `ProfileProvider` as a compatibility facade, remove web navigation hacks first, then extract preferences, interactions, and backend server state in separate slices.
-- Session-close handoff records the backend profile display checkpoint. Latest implementation checkpoint: `00df6be` - Support backend profile discovery display. Local `main` should be clean and synced with `origin/main`.
+- Session-close handoff records the UAT tunnel, navigation back, and forgot-password recovery checkpoint. Latest implementation checkpoint: `0eb91af` - Add UAT tunnel and auth recovery fixes.
 
 ## Current Task
 
@@ -226,8 +226,8 @@ Foundation Slice 1 implemented and UAT-accepted for back-navigation stability. M
 
 ## Next Planned Tasks
 
-1. Move to foundation Slice 2: update/freeze the `ProfileProvider` facade contract and responsibility inventory.
-2. Human UAT forgot-password flow on hosted Supabase/ngrok: request reset email, open link, set new password, sign in with the new password, and confirm the old password no longer works.
+1. Human UAT forgot-password flow on hosted Supabase/ngrok: request reset email, open link, set new password, sign in with the new password, and confirm the old password no longer works.
+2. Move to foundation Slice 2: update/freeze the `ProfileProvider` facade contract and responsibility inventory.
 3. Continue Supabase source-of-truth session bootstrap for inner-circle testing: profile, active matches, display profiles/photos, inbox summaries, thread snippets, unread/read state, and block/unmatch visibility should load before tabs render.
 4. Monitor Android Match Detail's brief app-background loading step; optimize only if it is multi-second, frequent after warmup, or loses rows/highlight state.
 5. Decide whether seen-match/highlight state remains local-only for inner-circle testing or moves to backend-backed per-user state.
@@ -235,7 +235,7 @@ Foundation Slice 1 implemented and UAT-accepted for back-navigation stability. M
 7. Keep mock/Fruit behavior as demo/test mode, but isolate it from Supabase signed-in startup state.
 8. Decide whether to ingest fixture profile images into Supabase Storage for backend-backed discovery; the current dev fixtures intentionally omit `profile_photos` because mock image URLs are remote assets, not storage object paths.
 9. Decide whether to make Supabase DB tests automatic for Supabase migration pull requests.
-8. Closer to TestFlight: create Apple Developer Program account and finish release-readiness setup.
+10. Closer to TestFlight: create Apple Developer Program account and finish release-readiness setup.
 
 ## Human Decisions Needed
 

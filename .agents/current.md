@@ -1,6 +1,6 @@
 # Current Agent State
 
-Last updated: 2026-07-06
+Last updated: 2026-07-07
 
 ## Objective
 
@@ -9,8 +9,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 ## Branch And Commit
 
 - Branch: `main`
-- Latest pushed checkpoint: `64ebd44` - Consolidate Orchard planning docs
-- Current working state: foundation Slice 1 navigation cleanup, UAT web-tunnel helper, web canonical-back follow-up, and forgot-password recovery fix are present and uncommitted.
+- Latest implementation checkpoint: `0eb91af` - Add UAT tunnel and auth recovery fixes
+- Current working state: handoff sync updates are pending commit/push.
 
 ## Canonical Docs
 
