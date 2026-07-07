@@ -9,8 +9,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 ## Branch And Commit
 
 - Branch: `main`
-- Latest implementation checkpoint: pending commit - Extract Discover/Fruit read models
-- Current working state: uncommitted Slice 6 Discover/Fruit read-model extraction and status-doc updates.
+- Latest implementation checkpoint: `ce40da5` - Extract discovery route read models
+- Current working state: clean locally, pending push/sync verification.
 
 ## Canonical Docs
 
