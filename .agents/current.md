@@ -10,7 +10,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 
 - Branch: `main`
 - Latest implementation checkpoint: `9eb26e2` - Extract monetization store
-- Current working state: clean after monetization store extraction; pending status refresh commit/push.
+- Current working state: clean after monetization store extraction; verify push status at session close.
 
 ## Canonical Docs
 
