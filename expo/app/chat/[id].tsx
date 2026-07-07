@@ -32,7 +32,7 @@ import {
 import ProtectedRoute from "@/components/navigation/ProtectedRoute";
 import Colors from "@/constants/colors";
 import { useCanonicalBack } from "@/hooks/use-canonical-back";
-import { useProfile } from "@/providers/profile-provider";
+import { useChatThreadReadModel } from "@/hooks/use-chat-thread-read-model";
 import { Message, MessageStatus, Profile } from "@/types";
 
 function formatClock(t: number): string {
@@ -117,29 +117,21 @@ export default function ChatScreen() {
 function ChatScreenContent() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const {
-    profile,
-    getProfileById,
-    getConversation,
-    hasActiveMatch,
-    sendMessage,
-    deleteMessage,
-    sendPhoto,
-    respondToPhoto,
-    markRead,
-    unmatch,
     blockProfile,
-    drafts,
+    conversation: convo,
+    currentProfile: profile,
+    deleteMessage,
+    draftText,
+    hasActiveLocalMatch,
+    isTyping,
+    markRead,
+    otherProfile: other,
+    respondToPhoto,
+    sendMessage,
+    sendPhoto,
     setDraft,
-    typingProfileIds,
-  } = useProfile();
-  const other = useMemo(
-    () => (id ? getProfileById(id) : undefined),
-    [getProfileById, id]
-  );
-  const convo = useMemo(
-    () => (id ? getConversation(id) : undefined),
-    [getConversation, id]
-  );
+    unmatch,
+  } = useChatThreadReadModel(id);
 
   const [text, setText] = useState<string>("");
   const [activePersonIdx, setActivePersonIdx] = useState<number>(0);
@@ -147,8 +139,6 @@ function ChatScreenContent() {
   const listRef = useRef<FlatList<Row>>(null);
   const isCouple = profile?.accountType === "couple";
   const activeName = profile?.people[activePersonIdx]?.name;
-  const isTyping = !!id && typingProfileIds.includes(id);
-  const hasActiveLocalMatch = !!id && hasActiveMatch(id);
   const goBackToInbox = useCanonicalBack("/(tabs)/inbox");
   const messages = useMemo(
     () => normalizeMessages(convo?.messages),
@@ -161,8 +151,8 @@ function ChatScreenContent() {
 
   useEffect(() => {
     if (!id) return;
-    setText(drafts[id] ?? "");
-  }, [id, drafts]);
+    setText(draftText);
+  }, [id, draftText]);
 
   const onChangeText = useCallback(
     (v: string) => {

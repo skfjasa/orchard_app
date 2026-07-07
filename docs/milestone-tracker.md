@@ -1,6 +1,6 @@
 # Orchard Closed-Beta Milestone Tracker
 
-Last updated: 2026-07-06
+Last updated: 2026-07-07
 
 This is the single canonical milestone, roadmap, checklist, blocker, and feedback-loop document for getting Orchard to a closed beta with close friends and inner-circle testers.
 
@@ -195,7 +195,7 @@ Remaining:
   - [x] [C] Matches read path now uses `useMatchesReadModel`.
   - [x] [C] Inbox read path now uses `useInboxReadModel`.
   - [x] [C] Match Detail read path and seen-state calls now use `useMatchDetailReadModel`.
-  - [ ] [C] Chat thread/read/send path.
+  - [x] [C] Chat thread/read/send path now uses `useChatThreadReadModel`.
   - [ ] [C] Discover/Fruit discovery and local fixture behavior.
   - [ ] [C] Profile/safety/paywall/onboarding calls.
 - [ ] [C] Isolate mock/Fruit behavior from Supabase signed-in runtime state.

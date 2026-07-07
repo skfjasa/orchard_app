@@ -144,7 +144,7 @@ Not moved in Slice 5:
 
 ## Screen Migration Progress
 
-Slice 6 has started with route read-model migration for Matches, Inbox, and Match Detail.
+Slice 6 has started with route read-model migration for Matches, Inbox, Match Detail, and Chat.
 
 Implemented:
 
@@ -154,16 +154,19 @@ Implemented:
 - `expo/app/(tabs)/inbox.tsx` consumes `useInboxReadModel` instead of importing `useProfile()` directly.
 - `expo/hooks/use-match-detail-read-model.ts` wraps Match Detail profile lookup, active-match state, super-like state, seen-state calls, and existing action wrappers.
 - `expo/app/match/[id].tsx` consumes `useMatchDetailReadModel` instead of importing `useProfile()` directly.
+- `expo/hooks/use-chat-thread-read-model.ts` wraps Chat profile/thread lookup, active-match guard state, typing/draft state, read marking, local send/delete/photo actions, and safety actions.
+- `expo/app/chat/[id].tsx` consumes `useChatThreadReadModel` instead of importing `useProfile()` directly.
 
 Preserved behavior:
 
 - Existing Matches layout, empty state, card rendering, new-match highlight, focus refresh, transient-empty guard, and `markMatchSeen` before navigation.
 - Existing Inbox layout, empty state, row rendering, typing preview, unread badges, focus refresh, transient-empty guard, profile-link navigation, and `markRead` before Chat navigation.
 - Existing Match Detail layout, canonical back behavior, seen-state effect, profile sections, like/pass/super-like actions, block/report controls, and chat entry behavior.
+- Existing Chat layout, canonical back behavior, active-match guard, read-marking effect, draft restore/update behavior, text/photo send behavior, message long-press actions, photo approval controls, and safety menu behavior.
 
 Not moved yet:
 
-- Chat thread/read/send path.
+- Discover/Fruit discovery and local fixture behavior.
 - Provider ownership of Matches selectors.
 
 ## Current Role

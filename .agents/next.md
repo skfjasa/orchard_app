@@ -1,6 +1,6 @@
 # Next Task
 
-Human UAT forgot-password when practical, then continue foundation Slice 6 with Chat thread/read/send path.
+Human UAT forgot-password when practical, then continue foundation Slice 6 with Discover/Fruit discovery and local fixture behavior.
 
 ## Canonical Startup Context
 
@@ -38,6 +38,7 @@ Read only if needed:
 - `expo/hooks/use-matches-read-model.ts` and `expo/app/(tabs)/matches.tsx`: moved the Matches read path behind a focused read-model hook without changing visible UI.
 - `expo/hooks/use-inbox-read-model.ts` and `expo/app/(tabs)/inbox.tsx`: moved the Inbox read path behind a focused read-model hook without changing visible UI.
 - `expo/hooks/use-match-detail-read-model.ts` and `expo/app/match/[id].tsx`: moved the Match Detail read path and seen-state calls behind a focused read-model hook without changing visible UI or navigation behavior.
+- `expo/hooks/use-chat-thread-read-model.ts` and `expo/app/chat/[id].tsx`: moved the Chat thread/read/send path behind a focused read-model hook without changing visible UI or navigation behavior.
 
 ## Validation
 
@@ -53,7 +54,8 @@ Read only if needed:
 - Foundation Slice 6 Matches read path: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, and `git diff --check` passed.
 - Foundation Slice 6 Inbox read path: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, and `git diff --check` passed.
 - Foundation Slice 6 Match Detail read path: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, and `git diff --check` passed.
+- Foundation Slice 6 Chat thread/read/send path: `cd expo; bun run typecheck` passed and `cd expo; bun run lint` passed.
 
 ## Follow-Up After Slice 1
 
-Navigation cleanup is accepted. Forgot-password is wired but still needs human UAT when practical. Slices 2, 3, 4, and 5 are implemented, and Slice 6 has migrated Matches, Inbox, and Match Detail read paths. Next engineering task is Slice 6 Chat thread/read/send path migration.
+Navigation cleanup is accepted. Forgot-password is wired but still needs human UAT when practical. Slices 2, 3, 4, and 5 are implemented, and Slice 6 has migrated Matches, Inbox, Match Detail, and Chat read paths. Next engineering task is Slice 6 Discover/Fruit discovery and local fixture behavior migration.
