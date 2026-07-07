@@ -1,6 +1,6 @@
 # Next Task
 
-Human UAT forgot-password, then start foundation Slice 2 from `docs/repo-audit-and-foundation-plan.md`.
+Human UAT forgot-password when practical, then start foundation Slice 4 from `docs/repo-audit-and-foundation-plan.md`.
 
 ## Canonical Startup Context
 
@@ -28,6 +28,9 @@ Read only if needed:
 - `expo/scripts/start-uat-web-tunnel.cjs`: added one-command UAT launcher for Expo web plus standalone ngrok v3.
 - `expo/hooks/use-canonical-back.ts`: follow-up restored focused web browser-back handling by replacing to the canonical route instead of using the removed Match-tab hash/history workaround.
 - `expo/providers/auth-provider.tsx` and `expo/app/onboarding/sign-in.tsx`: wired hosted Supabase forgot-password recovery and in-app password update.
+- `expo/providers/profile-provider-contract.ts`: froze the `useProfile()` compatibility facade.
+- `docs/profile-provider-map.md`: categorized provider fields/actions by extraction domain and identified first migration consumers.
+- `expo/store/use-preferences-store.ts`: extracted local read/seen preference persistence behind a Zustand store while preserving existing AsyncStorage keys.
 
 ## Validation
 
@@ -36,7 +39,9 @@ Read only if needed:
 - `git diff --check`: passed.
 - Targeted desktop Chrome and Android Chrome UAT passed for Chat and Match Detail back navigation. Android Match Detail has a brief app-background loader during early repeated backs, then warms up.
 - Forgot-password fix: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, and `git diff --check` passed.
+- Foundation Slice 2: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, and `git diff --check` passed.
+- Foundation Slice 3: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, and `git diff --check` passed.
 
 ## Follow-Up After Slice 1
 
-Navigation cleanup is accepted. Before Slice 2, human UAT the forgot-password flow: request reset email, open link, set a new password, sign in with the new password, and confirm the old password no longer works. Then move to Slice 2: update/freeze the `ProfileProvider` facade contract and responsibility inventory.
+Navigation cleanup is accepted. Forgot-password is wired but still needs human UAT when practical. Slices 2 and 3 are implemented. Next engineering task is Slice 4: extract local/demo interaction state such as likes, passes, super-likes, and local-only fixture match markers while keeping Supabase active matches backend-driven.

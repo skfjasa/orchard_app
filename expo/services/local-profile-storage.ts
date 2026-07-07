@@ -17,8 +17,8 @@ const BOOST_KEY = "duet.boostedUntil.v1";
 const SUPERLIKE_BALANCE_KEY = "duet.superLikeBalance.v1";
 const SUPERLIKE_LAST_USE_KEY = "duet.superLikeLastUse.v1";
 const SUBSCRIPTION_KEY = "duet.subscription.v1";
-const READ_WATERMARKS_KEY = "duet.readWatermarks.v1";
-const SEEN_MATCHES_KEY = "duet.seenMatches.v1";
+export const READ_WATERMARKS_KEY = "duet.readWatermarks.v1";
+export const SEEN_MATCHES_KEY = "duet.seenMatches.v1";
 const KNOWN_PROFILES_KEY = "duet.knownProfiles.v1";
 const STORED_PROFILE_STATE_KEYS = [
   PROFILE_KEY,

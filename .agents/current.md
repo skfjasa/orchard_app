@@ -10,7 +10,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 
 - Branch: `main`
 - Latest implementation checkpoint: `0eb91af` - Add UAT tunnel and auth recovery fixes
-- Current working state: handoff sync updates are pending commit/push.
+- Current working state: foundation Slice 2 and Slice 3 changes are present and uncommitted.
 
 ## Canonical Docs
 
@@ -42,6 +42,8 @@ Old duplicate roadmap/checklist/audit docs were consolidated and deleted from ac
 - Foundation Slice 1 has removed Match Detail web history/hash workarounds, preserves native Android `BackHandler`, and uses focused web browser-back replacement in the shared canonical-back hook.
 - Focused UAT now passes for Android Chat, desktop Chat, desktop Match Detail, and Android Match Detail back navigation. Android Match Detail still shows a brief app-background loader during early repeated backs, then stops after warmup; monitor but do not treat as blocking unless it becomes multi-second, frequent after warmup, or loses rows/highlight state.
 - Forgot-password was reported broken by a real/dev tester because the sign-in screen only had a placeholder alert. It now sends a Supabase reset email, detects recovery callbacks, and lets the user set a new password in app.
+- Foundation Slice 2 is implemented: `expo/providers/profile-provider-contract.ts` freezes the `useProfile()` compatibility facade, `ProfileProvider` is annotated against that contract, and `docs/profile-provider-map.md` categorizes every field/action by extraction domain.
+- Foundation Slice 3 is implemented: local `readWatermarks` and `seenMatchIds` now live behind `expo/store/use-preferences-store.ts` using the existing AsyncStorage keys. Provider wrappers `markRead` and `markMatchSeen` remain intact.
 
 ## Validation State
 
@@ -64,6 +66,8 @@ Foundation Slice 1 validation:
 - `git diff --check`: passed.
 - Human UAT: Android Chat pass, desktop Chat pass, desktop Match Detail pass, Android Match Detail pass with residual brief app-background loader.
 - Forgot-password fix validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
+- Foundation Slice 2 validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
+- Foundation Slice 3 validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
 
 ## Current Docs-Only Changes
 
@@ -76,4 +80,4 @@ Foundation Slice 1 validation:
 
 ## Next Recommended Task
 
-Human UAT forgot-password on hosted Supabase/ngrok, then move to foundation Slice 2: update/freeze the `ProfileProvider` facade contract and responsibility inventory. Keep the Android Match Detail loader as a monitored follow-up, not a blocker unless it worsens.
+Human UAT forgot-password when practical, then move to foundation Slice 4: extract local/demo interaction state such as likes, passes, super-likes, and local-only fixture match markers while keeping Supabase active matches backend-driven. Keep the Android Match Detail loader as a monitored follow-up, not a blocker unless it worsens.

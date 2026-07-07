@@ -207,6 +207,8 @@ Last updated: 2026-07-07
 - Mobile web UAT now launches through `bun run uat-web-tunnel`, which starts Expo web and a standalone ngrok v3 tunnel. Follow-up UAT found browser back from Chat changed the URL to `/inbox` without changing the rendered screen, and Match Detail back changed the URL to `/matches` but showed a white reload/loading gap. The canonical-back hook now handles focused web `popstate` events by replacing to the route's canonical destination instead of relying only on native Android hardware back.
 - Human UAT after the web canonical-back patch: Android Chat and desktop Chat still pass. Desktop Match Detail passes. Android Match Detail no longer shows the white browser reload; it returns through an app-background loading step during early repeated backs and then stops showing that loader after warmup. Treat this as accepted for Slice 1 unless the loader becomes multi-second, frequent after warmup, or loses rows/highlight state.
 - Real/dev tester reported forgot-password did not work. The sign-in screen previously showed only a placeholder alert. Forgot-password now calls Supabase `resetPasswordForEmail` with the same auth redirect URL strategy as signup, the auth provider detects recovery callbacks, and `/onboarding/sign-in` shows an in-app new-password form that calls `supabase.auth.updateUser({ password })`.
+- Foundation Slice 2 freezes the current `useProfile()` compatibility facade in `expo/providers/profile-provider-contract.ts` and annotates `ProfileProvider` against it. `docs/profile-provider-map.md` now categorizes each field/action as auth/profile bootstrap, server state, client preference state, local mock/demo state, prototype monetization state, or UI selector/facade, with first migration consumers identified for Matches/Inbox, Match Detail, and Chat.
+- Foundation Slice 3 moves local read/seen preferences into `expo/store/use-preferences-store.ts` while preserving existing storage keys and provider wrappers. `ProfileProvider.markRead` and `ProfileProvider.markMatchSeen` remain screen-facing compatibility APIs, and Supabase `match_read_states` behavior remains in the provider for now.
 - Profile-tab sign-out now clears profile/auth state before routing to `/onboarding`, preventing the user from landing on Discover with no profile/data loaded.
 - Remaining observed behavior to decide/fix later: after sign-out/sign-in, only hosted messages are restored; local fixture greeting/simulated messages are intentionally not persisted to hosted chat yet.
 - The original generated onboarding background was recovered from the previous remote URL, vendored as `expo/assets/images/welcome-background.png`, and the welcome, sign-in, and pending-confirmation screens now use the local bundled asset instead of the app icon background or a remote Rork URL.
@@ -222,12 +224,12 @@ Last updated: 2026-07-07
 
 ## Current Task
 
-Foundation Slice 1 implemented and UAT-accepted for back-navigation stability. Match Detail web navigation cleanup removes manual Match-tab hash/history handling, and the shared canonical-back hook now handles focused web browser-back events by replacing to the intended tab route while preserving native Android `BackHandler`.
+Foundation Slice 3 implemented: local read/seen preferences now live behind `expo/store/use-preferences-store.ts` using existing AsyncStorage keys, while `ProfileProvider.markRead` and `ProfileProvider.markMatchSeen` remain screen-facing compatibility APIs. Slice 1 navigation cleanup remains UAT-accepted, and Slice 2's facade contract remains the extraction guardrail.
 
 ## Next Planned Tasks
 
-1. Human UAT forgot-password flow on hosted Supabase/ngrok: request reset email, open link, set new password, sign in with the new password, and confirm the old password no longer works.
-2. Move to foundation Slice 2: update/freeze the `ProfileProvider` facade contract and responsibility inventory.
+1. Human UAT forgot-password flow on hosted Supabase/ngrok when practical: request reset email, open link, set new password, sign in with the new password, and confirm the old password no longer works.
+2. Move to foundation Slice 4: extract local/demo interaction state such as likes, passes, super-likes, and local-only fixture match markers while keeping Supabase active matches backend-driven.
 3. Continue Supabase source-of-truth session bootstrap for inner-circle testing: profile, active matches, display profiles/photos, inbox summaries, thread snippets, unread/read state, and block/unmatch visibility should load before tabs render.
 4. Monitor Android Match Detail's brief app-background loading step; optimize only if it is multi-second, frequent after warmup, or loses rows/highlight state.
 5. Decide whether seen-match/highlight state remains local-only for inner-circle testing or moves to backend-backed per-user state.

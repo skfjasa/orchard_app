@@ -1,10 +1,98 @@
 # Profile Provider Responsibility Map
 
-> Current-use note: this map is historical/contextual and should be read with `docs/repo-audit-and-foundation-plan.md`. It remains useful for understanding extraction risks, but several backend and Realtime details below are stale. Do not use this file as an instruction to rewrite or delete `ProfileProvider` in one pass.
+> Current-use note: this map is the Slice 2 contract snapshot for staged provider extraction. Keep it aligned with `expo/providers/profile-provider-contract.ts` and `docs/repo-audit-and-foundation-plan.md`. It is not an instruction to rewrite or delete `ProfileProvider` in one pass.
 
 Source file: `expo/providers/profile-provider.tsx`
+Contract file: `expo/providers/profile-provider-contract.ts`
 
 Purpose: document the current provider before extracting services/adapters. This is a map of existing behavior, not a request to rewrite the provider.
+
+## Frozen Facade Contract
+
+`useProfile()` is now treated as a compatibility facade. Screens may continue to consume this contract while internals are extracted, but new work should prefer focused domain hooks once they exist.
+
+Categories:
+
+- Auth/profile bootstrap: current profile and readiness gates needed before protected app tabs render.
+- Server state: Supabase-backed or backend-derived state that should eventually move to query hooks.
+- Client preference state: per-user local preferences that can move to small persisted stores.
+- Local mock/demo state: prototype state that keeps mock/Fruit/demo behavior available.
+- Prototype monetization state: non-production monetization counters and demo actions.
+- UI selector/facade: read selectors that shield screens from raw provider internals.
+
+| Contract member | Category | Notes / future owner |
+| --- | --- | --- |
+| `profile` | Auth/profile bootstrap | Current user profile facade. Long-term owner: auth/profile bootstrap hook plus profile service/query. |
+| `hydrated` | Auth/profile bootstrap | Local storage hydration gate. Keep until storage is split. |
+| `backendProfileHydrated` | Auth/profile bootstrap | Supabase profile bootstrap gate. |
+| `backendMatchesHydrated` | Auth/profile bootstrap / server state | Initial backend match/thread/profile-display gate. |
+| `isLoading` | Auth/profile bootstrap | Storage query loading facade. |
+| `knownProfiles` | Server state / UI selector | Display-profile cache for backend and mock profiles. Future query/display-profile cache owner. |
+| `conversations` | Local mock/demo state / server state | Mixed local and hydrated backend thread state; should split by mock/backend ownership. |
+| `likedIds` | Local mock/demo state | Compatibility array; not a long-term Supabase active-match source of truth. |
+| `passedIds` | Local mock/demo state | Candidate for local interaction store. |
+| `superLikedIds` | Local mock/demo state / prototype monetization state | Candidate for local interaction store. |
+| `newMatchIds` | Client preference state | Candidate for seen-match/preference store or backend-backed decision. |
+| `matchedProfiles` | UI selector/facade | Selector consumed by Matches; first consumer group to migrate. |
+| `inboxItems` | UI selector/facade | Selector consumed by Inbox; first consumer group to migrate. |
+| `newMatchCount` | UI selector/facade | Tab badge selector. |
+| `unreadMessageCount` | UI selector/facade | Tab badge selector. |
+| `getProfileById` | UI selector/facade | Used by Chat/Match Detail; migrate behind profile lookup hook. |
+| `getConversation` | UI selector/facade | Used by Chat; migrate behind chat-thread hook. |
+| `hasActiveMatch` | UI selector/facade / server state | Compatibility guard; future owner should use active match source of truth. |
+| `refreshBackendMatches` | Server state | Future owner: query invalidation/refetch hooks. |
+| `rememberProfiles` | Server state / UI selector | Display-cache helper; should shrink as backend profile query ownership improves. |
+| `completeOnboarding` | Auth/profile bootstrap | Profile creation facade over local/mock and Supabase profile service. |
+| `updateProfile` | Auth/profile bootstrap | Profile mutation facade. |
+| `signOut` | Auth/profile bootstrap | Clears local provider state and Supabase session via auth provider. |
+| `likeProfile` | Local mock/demo state / server state | Compatibility action; backend reciprocal match must remain service-owned. |
+| `superLikeProfile` | Local mock/demo state / prototype monetization state / server state | Compatibility action with demo semantics. |
+| `passProfile` | Local mock/demo state / server state | Candidate for local interaction store plus swipe service. |
+| `unmatch` | Server state / local mock/demo state | Should become backend-first for Supabase mode while preserving mock behavior. |
+| `reportProfile` | Server state | Safety service facade. |
+| `blockProfile` | Server state | Safety service facade plus local state cleanup. |
+| `requestAccountDeletion` | Server state | Safety service facade plus sign-out. |
+| `sendMessage` | Server state / local mock/demo state | Mixed backend text send and local fixture replies; future chat hook/service owner. |
+| `deleteMessage` | Local mock/demo state | Local-only behavior today. |
+| `sendPhoto` | Local mock/demo state | Local simulated photo request behavior today. |
+| `respondToPhoto` | Local mock/demo state | Local simulated photo approval behavior today. |
+| `markRead` | Client preference state / server state | Candidate for preference store wrapper while preserving Supabase `match_read_states`. |
+| `drafts` / `setDraft` | Client preference state | Candidate for local UI draft store. |
+| `typingProfileIds` | Local mock/demo state | Simulated typing state. |
+| `totalSlots`, `slotsUsed`, `slotsRemaining`, `isAtMatchLimit` | Prototype monetization state | Demo/paywall calculations; disabled for feedback MVP. |
+| `extraSlots`, `boostedUntil`, `isBoosted` | Prototype monetization state | Local demo counters. |
+| `superLikeBalance`, `superLikeLastUseAt`, `superLikeRechargeAt` | Prototype monetization state | Local demo counters. |
+| `subscription` | Prototype monetization state | Local demo subscription state. |
+| `purchase`, `subscribe`, `cancelSubscription` | Prototype monetization state | Local demo actions; no paid service integration. |
+| `invitePartner`, `resendPartnerInvite`, `acceptPartnerLink`, `removePartnerLink` | Local mock/demo state | Local partner-link prototype behavior. |
+
+First consumers to migrate after this contract freeze:
+
+1. Matches and Inbox read selectors: `matchedProfiles`, `inboxItems`, `newMatchCount`, `unreadMessageCount`.
+2. Match Detail profile lookup and seen state: `getProfileById`, `markMatchSeen`, `hasActiveMatch`.
+3. Chat thread/read state: `getConversation`, `sendMessage`, `markRead`, `drafts`, `setDraft`.
+
+## Extracted Preference Store
+
+Slice 3 moved local read/seen preference ownership behind `expo/store/use-preferences-store.ts` while preserving the provider facade.
+
+State now owned by the preference store:
+
+- `readWatermarks`
+- `seenMatchIds`
+
+Preserved behavior:
+
+- Existing AsyncStorage keys are reused: `duet.readWatermarks.v1` and `duet.seenMatches.v1`.
+- `ProfileProvider.markRead` remains the compatibility wrapper for screens and still writes Supabase `match_read_states` when available.
+- `ProfileProvider.markMatchSeen` remains the compatibility wrapper for screens.
+- Provider selectors still expose `newMatchIds`, `matchedProfiles`, `inboxItems`, and badge counts.
+
+Not moved in Slice 3:
+
+- Supabase `match_read_states` behavior.
+- Product decision about whether seen-match/highlight state becomes backend-backed.
+- Chat drafts or typing state.
 
 ## Current Role
 

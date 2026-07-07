@@ -36,8 +36,6 @@ import {
   saveStoredPasses,
   saveStoredProfile,
   saveStoredKnownProfiles,
-  saveStoredReadWatermarks,
-  saveStoredSeenMatchIds,
   saveStoredSubscription,
   saveStoredSuperLikeBalance,
   saveStoredSuperLikeLastUse,
@@ -72,8 +70,20 @@ import {
 } from "@/types";
 import type { ReportReason } from "@/services/safety-service";
 import type { SwipeDecision, SwipeResult } from "@/services/swipe-service";
+import { usePreferencesStore } from "@/store/use-preferences-store";
+import type {
+  MatchActionResult,
+  ProfileInboxItem,
+  ProfileProviderContract,
+} from "./profile-provider-contract";
 
 export type { SubscriptionState } from "@/services/local-profile-storage";
+export type {
+  MatchActionResult,
+  ProfileActionResult,
+  ProfileInboxItem,
+  ProfileProviderContract,
+} from "./profile-provider-contract";
 
 function isLikelyLocalBackendEcho(localMessage: Message, backendMessage: Message) {
   return (
@@ -164,17 +174,7 @@ function newestMessageAt(conversations: Conversation[], profileId: string) {
   );
 }
 
-type MatchActionResult = {
-  ok: boolean;
-  reason?: "limit" | "superlikes";
-  matched?: boolean;
-};
-
-export interface InboxListItem {
-  conversation: Conversation;
-  other: Profile;
-  lastMessage: Message | null;
-}
+export type InboxListItem = ProfileInboxItem;
 
 const BACKEND_MATCH_REFRESH_INTERVAL_MS = 10_000;
 const BACKEND_REALTIME_REFRESH_DELAY_MS = 250;
@@ -214,6 +214,13 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const lastBackendMatchHydrationKey = useRef<string | null>(null);
   const inFlightBackendMatchHydrationKey = useRef<string | null>(null);
   const pendingBackendMatchRefreshRef = useRef<boolean>(false);
+  const {
+    hydratePreferences,
+    readWatermarks,
+    seenMatchIds,
+    setReadWatermarks,
+    setSeenMatchIds,
+  } = usePreferencesStore();
   const knownProfilesRef = useRef<Profile[]>([]);
   const displayProfilesRef = useRef<Record<string, Profile>>({});
   const lastResolvedProfilesRef = useRef<Record<string, Profile>>({});
@@ -225,10 +232,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const [backendActiveMatchIds, setBackendActiveMatchIds] = useState<string[]>(
     []
   );
-  const [readWatermarks, setReadWatermarks] = useState<
-    Record<string, Record<string, number>>
-  >({});
-  const [seenMatchIds, setSeenMatchIds] = useState<Record<string, string[]>>({});
   const readWatermarksRef = useRef<Record<string, Record<string, number>>>({});
   const seenMatchIdsRef = useRef<Record<string, string[]>>({});
   const [passedIds, setPassedIds] = useState<string[]>([]);
@@ -267,8 +270,10 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       setSuperLikeBalance(loadQuery.data.superLikeBalance);
       setSuperLikeLastUseAt(loadQuery.data.superLikeLastUseAt);
       setSubscription(loadQuery.data.subscription);
-      setReadWatermarks(loadQuery.data.readWatermarks);
-      setSeenMatchIds(loadQuery.data.seenMatchIds);
+      hydratePreferences(
+        loadQuery.data.readWatermarks,
+        loadQuery.data.seenMatchIds
+      );
       const completeKnownProfiles = loadQuery.data.knownProfiles.filter(
         (item) => !isIncompleteBackendProfile(item)
       );
@@ -327,10 +332,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
   const saveSubscriptionMutation = useMutation({
     mutationFn: saveStoredSubscription,
-  });
-
-  const saveReadWatermarksMutation = useMutation({
-    mutationFn: saveStoredReadWatermarks,
   });
 
   useEffect(() => {
@@ -998,7 +999,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     };
     seenMatchIdsRef.current = next;
     setSeenMatchIds(next);
-    await saveStoredSeenMatchIds(next);
   }, [profile?.id]);
 
   const persistBackendChatMessage = useCallback(
@@ -1470,20 +1470,19 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       const readThrough = newestMessageAt(conversations, profileId);
       if (profile?.id) {
         if (readThrough > 0) {
-          setReadWatermarks((prev) => {
-            const ownerWatermarks = prev[profile.id] ?? {};
-            if ((ownerWatermarks[profileId] ?? 0) >= readThrough) return prev;
+          const current = readWatermarksRef.current;
+          const ownerWatermarks = current[profile.id] ?? {};
+          if ((ownerWatermarks[profileId] ?? 0) < readThrough) {
             const next = {
-              ...prev,
+              ...current,
               [profile.id]: {
                 ...ownerWatermarks,
                 [profileId]: readThrough,
               },
             };
             readWatermarksRef.current = next;
-            saveReadWatermarksMutation.mutate(next);
-            return next;
-          });
+            setReadWatermarks(next);
+          }
         }
       }
       if (
@@ -1539,7 +1538,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       mode,
       profile?.id,
       saveConvosMutation,
-      saveReadWatermarksMutation,
       userId,
     ]
   );
@@ -1779,7 +1777,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     saveSuperLikeLastUseMutation,
   ]);
 
-  return useMemo(
+  return useMemo<ProfileProviderContract>(
     () => ({
       profile,
       knownProfiles,
