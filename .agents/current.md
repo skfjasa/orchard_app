@@ -9,8 +9,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 ## Branch And Commit
 
 - Branch: `main`
-- Latest implementation checkpoint: pending commit - Complete route read-model migration
-- Current working state: uncommitted final Slice 6 route read-model extraction plus status-doc updates.
+- Latest implementation checkpoint: `29f752e` - Complete route read model migration
+- Current working state: clean locally, pending push/sync verification.
 
 ## Canonical Docs
 
