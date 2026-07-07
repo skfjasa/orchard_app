@@ -223,7 +223,7 @@ Last updated: 2026-07-07
 - A browser funnel test reached `/onboarding/photos`, sent a Supabase confirmation email, and exposed two hosted auth setup gaps: the redirect URL was still pointing at `http://localhost:3000`, and emails still used default Supabase Auth branding. App-side redirect handling has been patched; hosted Supabase Auth redirect allow-list, Site URL, and email templates/sender still need Dashboard review.
 - User updated Supabase Auth URL Configuration redirect entries for the browser preview. Supabase Dashboard currently requires SMTP configuration before auth email templates can be customized; SMTP fields are still blank except project auth secrets.
 - Project review recommendations remain relevant: avoid a broad `ProfileProvider` rewrite, keep moving behavior behind services, and add CI/database automation after the auth/profile path has a little more coverage. The July 2026 amended plan makes this explicit: keep `ProfileProvider` as a compatibility facade, remove web navigation hacks first, then extract preferences, interactions, and backend server state in separate slices.
-- Session-close handoff records the UAT tunnel, navigation back, forgot-password recovery checkpoint, and provider extraction checkpoint. Latest implementation checkpoint: `bfc6b9a` - Refresh status after query hooks.
+- Session-close handoff records the UAT tunnel, navigation back, forgot-password recovery checkpoint, and provider extraction checkpoint. Latest implementation checkpoint: `6cbc2ea` - Extract matches read model.
 
 ## Current Task
 
