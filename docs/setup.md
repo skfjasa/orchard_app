@@ -82,6 +82,20 @@ cd C:\Users\skfja\Projects\orchard_app\expo
 bun run start-web
 ```
 
+Mobile web UAT through ngrok:
+
+```powershell
+cd C:\Users\skfja\Projects\orchard_app\expo
+bun run uat-web-tunnel
+```
+
+This command starts Expo web on `http://localhost:8081` and starts a standalone ngrok tunnel to the same port. It intentionally uses a globally installed ngrok v3.20.0+ agent instead of Expo's bundled `@expo/ngrok` v2 agent, which current ngrok free accounts may reject. If needed, install or update ngrok first:
+
+```powershell
+winget install --id Ngrok.Ngrok -e
+ngrok config add-authtoken "<YOUR_AUTHTOKEN>"
+```
+
 iOS simulator, if available:
 
 ```powershell

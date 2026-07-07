@@ -68,7 +68,7 @@ Current milestone: **M4 - Supabase source-of-truth app session**.
 
 Immediate engineering state:
 
-- Foundation Slice 1 from [Repo Audit & Foundation Refactor Plan](repo-audit-and-foundation-plan.md) is implemented and passed automated checks. Targeted desktop Chrome and Android Chrome UAT is still needed.
+- Foundation Slice 1 from [Repo Audit & Foundation Refactor Plan](repo-audit-and-foundation-plan.md) is implemented and passed automated checks. Targeted desktop Chrome and Android Chrome UAT now passes for Chat and Match Detail back navigation, with one residual Android Match Detail app-background loading step observed during early repeated backs.
 
 Immediate acceptance target:
 
@@ -87,14 +87,15 @@ Primary UAT setup:
 1. Use hosted Supabase mode.
 2. Use test account `t` unless a task specifies another account.
 3. Use `tt` and/or `test2` as reciprocal match/message counterparts when needed.
-4. Start from a fresh Android Chrome incognito tab for mobile web UAT.
+4. Launch mobile web UAT with `bun run uat-web-tunnel` from `expo/` and use the ngrok HTTPS forwarding URL.
+5. Start from a fresh Android Chrome incognito tab for mobile web UAT.
 
 Expected behavior after Slice 1:
 
 - After sign-in, protected tabs wait on loader/finalizing state until backend profile and first match/thread hydration complete.
 - Matches and Inbox do not briefly render true empty states when hosted active rows exist.
 - Match Detail opened from Matches uses Expo Router navigation without a Match-tab hash sentinel.
-- Android device/swipe/browser back returns to Matches with rows visible, no blank white browser window, and no reset of already-cleared match highlights.
+- Android device/swipe/browser back returns to Matches with rows visible, no blank white browser window, and no reset of already-cleared match highlights. A brief app-background loader may appear on early Android Match Detail backs while backend/bootstrap state is warm.
 - Chat opened from Inbox returns to Inbox with rows visible and read state stable.
 
 Primary UAT checklist:
@@ -233,6 +234,7 @@ Status: `[~]`
 Done:
 
 - [x] [C] Email/password signup and sign-in are wired.
+- [x] [C] Forgot-password recovery is wired for hosted Supabase accounts: reset email, recovery callback detection, and in-app password update.
 - [x] [C+U] Hosted email confirmation can resume onboarding/profile persistence.
 - [x] [C] Pending confirmation screen exists.
 - [x] [C] Profile/member rows persist to Supabase.
@@ -266,11 +268,13 @@ Done:
 - [x] [C] `backendMatchesHydrated` bootstrap gate has been added so Supabase tabs wait for initial match/thread hydration after profile hydration.
 - [x] [C] Bootstrap/back instrumentation has been added for Android Chrome UAT diagnostics.
 - [x] [C] Matches cards mark a match as seen before navigating to detail, so immediate back cannot outrun the detail-screen seen effect.
+- [x] [C+U] Focused UAT confirmed Android Chat, desktop Chat, desktop Match Detail, and Android Match Detail back navigation return to canonical views without white browser reload, stale detail screen, hash sentinel, or empty/fixture-only state.
 
 Remaining:
 
 - [x] [C] Implement foundation Slice 1 navigation cleanup and remove Match-tab hash sentinel / Match Detail web `popstate` workaround as active strategy.
-- [ ] [U] UAT Android Chrome order-dependent browser-back behavior: Inbox conversation back first, then Match Detail back in the same session.
+- [x] [U] UAT Android Chrome order-dependent browser-back behavior: Inbox conversation back first, then Match Detail back in the same session.
+- [ ] [C+U] Monitor Android Match Detail's brief app-background loading step; optimize only if it is multi-second, frequent after warmup, or loses rows/highlight state.
 - [ ] [C+U] Ensure first app entry does not render empty Matches/Inbox before backend state is ready.
 - [ ] [C+U] Confirm bootstrap does not deadlock for users with zero matches.
 - [ ] [C+U] Confirm bootstrap does not block mock mode.

@@ -204,6 +204,9 @@ Last updated: 2026-07-06
 - Chat persistence now repairs one likely hosted UAT drift case: if local chat is allowed from `likedIds` but no active Supabase match is found, `ProfileProvider` records the backend like once through the swipe service and uses the returned fixture auto-match id before sending the text message. This preserves mock/local UI behavior and lets stale local fixture matches become backend-backed before message insert.
 - Unmatch now removes the local conversation immediately and also attempts the hosted `unmatch_match` RPC in Supabase mode after resolving the active backend match id.
 - Hosted browser UAT after the backend discovery/match/chat slice passed: fixture discovery loaded, fixture like/match worked, a unique text message persisted to hosted `public.messages`, sign-out/sign-in restored the hosted message through match/thread hydration, and unmatch marked the hosted match inactive.
+- Mobile web UAT now launches through `bun run uat-web-tunnel`, which starts Expo web and a standalone ngrok v3 tunnel. Follow-up UAT found browser back from Chat changed the URL to `/inbox` without changing the rendered screen, and Match Detail back changed the URL to `/matches` but showed a white reload/loading gap. The canonical-back hook now handles focused web `popstate` events by replacing to the route's canonical destination instead of relying only on native Android hardware back.
+- Human UAT after the web canonical-back patch: Android Chat and desktop Chat still pass. Desktop Match Detail passes. Android Match Detail no longer shows the white browser reload; it returns through an app-background loading step during early repeated backs and then stops showing that loader after warmup. Treat this as accepted for Slice 1 unless the loader becomes multi-second, frequent after warmup, or loses rows/highlight state.
+- Real/dev tester reported forgot-password did not work. The sign-in screen previously showed only a placeholder alert. Forgot-password now calls Supabase `resetPasswordForEmail` with the same auth redirect URL strategy as signup, the auth provider detects recovery callbacks, and `/onboarding/sign-in` shows an in-app new-password form that calls `supabase.auth.updateUser({ password })`.
 - Profile-tab sign-out now clears profile/auth state before routing to `/onboarding`, preventing the user from landing on Discover with no profile/data loaded.
 - Remaining observed behavior to decide/fix later: after sign-out/sign-in, only hosted messages are restored; local fixture greeting/simulated messages are intentionally not persisted to hosted chat yet.
 - The original generated onboarding background was recovered from the previous remote URL, vendored as `expo/assets/images/welcome-background.png`, and the welcome, sign-in, and pending-confirmation screens now use the local bundled asset instead of the app icon background or a remote Rork URL.
@@ -219,17 +222,19 @@ Last updated: 2026-07-06
 
 ## Current Task
 
-Foundation Slice 1 implemented: Match Detail web navigation cleanup removes manual Match-tab hash/history handling and removes the custom web `popstate` branch from `useCanonicalBack` while preserving native Android `BackHandler`.
+Foundation Slice 1 implemented and UAT-accepted for back-navigation stability. Match Detail web navigation cleanup removes manual Match-tab hash/history handling, and the shared canonical-back hook now handles focused web browser-back events by replacing to the intended tab route while preserving native Android `BackHandler`.
 
 ## Next Planned Tasks
 
-1. Human UAT: in hosted Supabase mode with `t`, verify the narrowed Android Chrome order: fresh incognito sign-in, Inbox conversation back first, then without resetting the session open Match Detail and swipe/device-back. Matches should return without a blank white browser window, without empty/fixture-only state, and with the opened match highlight/badge cleared.
-2. Finish Supabase source-of-truth session bootstrap for inner-circle testing: profile, active matches, display profiles/photos, inbox summaries, thread snippets, unread/read state, and block/unmatch visibility should load before tabs render.
-3. Decide whether seen-match/highlight state remains local-only for inner-circle testing or moves to backend-backed per-user state.
-4. Continue backend source-of-truth cleanup for actions: like/pass/super-like, match creation, unmatch/block/report, message send/read should either write backend-first or use clearly bounded optimistic updates.
-5. Keep mock/Fruit behavior as demo/test mode, but isolate it from Supabase signed-in startup state.
-6. Decide whether to ingest fixture profile images into Supabase Storage for backend-backed discovery; the current dev fixtures intentionally omit `profile_photos` because mock image URLs are remote assets, not storage object paths.
-7. Decide whether to make Supabase DB tests automatic for Supabase migration pull requests.
+1. Move to foundation Slice 2: update/freeze the `ProfileProvider` facade contract and responsibility inventory.
+2. Human UAT forgot-password flow on hosted Supabase/ngrok: request reset email, open link, set new password, sign in with the new password, and confirm the old password no longer works.
+3. Continue Supabase source-of-truth session bootstrap for inner-circle testing: profile, active matches, display profiles/photos, inbox summaries, thread snippets, unread/read state, and block/unmatch visibility should load before tabs render.
+4. Monitor Android Match Detail's brief app-background loading step; optimize only if it is multi-second, frequent after warmup, or loses rows/highlight state.
+5. Decide whether seen-match/highlight state remains local-only for inner-circle testing or moves to backend-backed per-user state.
+6. Continue backend source-of-truth cleanup for actions: like/pass/super-like, match creation, unmatch/block/report, message send/read should either write backend-first or use clearly bounded optimistic updates.
+7. Keep mock/Fruit behavior as demo/test mode, but isolate it from Supabase signed-in startup state.
+8. Decide whether to ingest fixture profile images into Supabase Storage for backend-backed discovery; the current dev fixtures intentionally omit `profile_photos` because mock image URLs are remote assets, not storage object paths.
+9. Decide whether to make Supabase DB tests automatic for Supabase migration pull requests.
 8. Closer to TestFlight: create Apple Developer Program account and finish release-readiness setup.
 
 ## Human Decisions Needed

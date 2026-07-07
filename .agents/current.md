@@ -10,7 +10,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 
 - Branch: `main`
 - Latest pushed checkpoint: `64ebd44` - Consolidate Orchard planning docs
-- Current working state: foundation Slice 1 runtime changes are present and uncommitted.
+- Current working state: foundation Slice 1 navigation cleanup, UAT web-tunnel helper, web canonical-back follow-up, and forgot-password recovery fix are present and uncommitted.
 
 ## Canonical Docs
 
@@ -39,8 +39,9 @@ Old duplicate roadmap/checklist/audit docs were consolidated and deleted from ac
 - Supabase mode has auth/profile/photo/discovery/match/chat/read-state/Realtime paths in varying degrees.
 - Mock/Fruit/demo mode remains required.
 - `ProfileProvider` remains active and too broad; the accepted direction is staged extraction with a compatibility facade, not one-pass deletion.
-- Foundation Slice 1 has removed Match Detail web history/hash workarounds while preserving native Android `BackHandler`.
-- Remaining immediate validation need is targeted desktop Chrome and Android Chrome UAT for Match Detail back behavior after source-of-truth bootstrap work.
+- Foundation Slice 1 has removed Match Detail web history/hash workarounds, preserves native Android `BackHandler`, and uses focused web browser-back replacement in the shared canonical-back hook.
+- Focused UAT now passes for Android Chat, desktop Chat, desktop Match Detail, and Android Match Detail back navigation. Android Match Detail still shows a brief app-background loader during early repeated backs, then stops after warmup; monitor but do not treat as blocking unless it becomes multi-second, frequent after warmup, or loses rows/highlight state.
+- Forgot-password was reported broken by a real/dev tester because the sign-in screen only had a placeholder alert. It now sends a Supabase reset email, detects recovery callbacks, and lets the user set a new password in app.
 
 ## Validation State
 
@@ -61,6 +62,8 @@ Foundation Slice 1 validation:
 - `cd expo; bun run typecheck`: passed.
 - `cd expo; bun run lint`: passed.
 - `git diff --check`: passed.
+- Human UAT: Android Chat pass, desktop Chat pass, desktop Match Detail pass, Android Match Detail pass with residual brief app-background loader.
+- Forgot-password fix validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
 
 ## Current Docs-Only Changes
 
@@ -73,4 +76,4 @@ Foundation Slice 1 validation:
 
 ## Next Recommended Task
 
-Run targeted desktop Chrome and Android Chrome UAT from `docs/milestone-tracker.md` for foundation Slice 1. If UAT passes, update the tracker and move to foundation Slice 2. If it fails, capture the exact route sequence, URLs before/after back, row/highlight behavior, and visible instrumentation logs.
+Human UAT forgot-password on hosted Supabase/ngrok, then move to foundation Slice 2: update/freeze the `ProfileProvider` facade contract and responsibility inventory. Keep the Android Match Detail loader as a monitored follow-up, not a blocker unless it worsens.

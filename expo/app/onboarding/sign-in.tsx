@@ -89,16 +89,22 @@ export default function SignInScreen() {
     initialized: authInitialized,
     loading: authLoading,
     mode,
+    passwordRecovery,
+    resetPasswordForEmail,
     session,
     signInWithEmail,
     signOut,
+    updatePassword,
   } = useAuth();
   const { backendMatchesHydrated, backendProfileHydrated, hydrated, profile } =
     useProfile();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [newPassword, setNewPassword] = useState<string>("");
+  const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
+  const [resetEmailLoading, setResetEmailLoading] = useState<boolean>(false);
   const [resetting, setResetting] = useState<boolean>(false);
   const showDevReset = process.env.NODE_ENV !== "production";
   const viewportStyle = Platform.OS === "web" ? { minHeight: height } : null;
@@ -106,6 +112,7 @@ export default function SignInScreen() {
   useEffect(() => {
     if (mode !== "supabase") return;
     if (!authInitialized || !session) return;
+    if (passwordRecovery) return;
     if (profile && backendMatchesHydrated) {
       router.replace("/(tabs)/discover");
       return;
@@ -117,6 +124,7 @@ export default function SignInScreen() {
     backendProfileHydrated,
     hydrated,
     mode,
+    passwordRecovery,
     profile,
     session,
   ]);
@@ -125,12 +133,14 @@ export default function SignInScreen() {
     mode === "supabase" &&
     authInitialized &&
     !!session &&
+    !passwordRecovery &&
     (!profile || !backendMatchesHydrated) &&
     (!hydrated || !backendProfileHydrated || !backendMatchesHydrated);
   const signedInWithoutProfile =
     mode === "supabase" &&
     authInitialized &&
     !!session &&
+    !passwordRecovery &&
     !profile &&
     hydrated &&
     backendProfileHydrated;
@@ -189,6 +199,57 @@ export default function SignInScreen() {
         );
       }
     }, 500);
+  };
+
+  const onForgotPassword = async () => {
+    const id = email.trim();
+    if (mode !== "supabase") {
+      Alert.alert(
+        "Reset password",
+        "Password reset is only available for hosted test accounts right now."
+      );
+      return;
+    }
+    if (!id || !id.includes("@")) {
+      Alert.alert("Enter your email", "Add your account email first.");
+      return;
+    }
+
+    setResetEmailLoading(true);
+    try {
+      const result = await resetPasswordForEmail(id);
+      if (!result.ok) {
+        Alert.alert("Reset email failed", result.error);
+        return;
+      }
+      Alert.alert(
+        "Check your email",
+        "We sent a password reset link. Open it on this device/browser, then choose a new password."
+      );
+    } finally {
+      setResetEmailLoading(false);
+    }
+  };
+
+  const onUpdateRecoveredPassword = async () => {
+    if (newPassword.length < 6) {
+      Alert.alert("Password too short", "Use at least 6 characters.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      Alert.alert("Passwords don't match", "Enter the same password twice.");
+      return;
+    }
+
+    const result = await updatePassword(newPassword);
+    if (!result.ok) {
+      Alert.alert("Password update failed", result.error);
+      return;
+    }
+
+    setNewPassword("");
+    setConfirmPassword("");
+    Alert.alert("Password updated", "You can continue to Orchard now.");
   };
 
   const onSocial = (provider: SocialProvider) => {
@@ -279,91 +340,166 @@ export default function SignInScreen() {
                 </View>
               )}
 
-              <Text style={styles.label}>Username or email</Text>
-              <View style={styles.inputWrap}>
-                <Mail size={18} color="#8A7C83" />
-                <TextInput
-                  testID="email-input"
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder="sunny_sam or you@example.com"
-                  placeholderTextColor="#8A7C83"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  style={styles.input}
-                />
-              </View>
+              {passwordRecovery ? (
+                <>
+                  <View style={styles.finalizing} testID="password-recovery">
+                    <Text style={styles.finalizingText}>
+                      Choose a new password for your Orchard account.
+                    </Text>
+                  </View>
 
-              <View style={{ height: 14 }} />
+                  <Text style={styles.label}>New password</Text>
+                  <View style={styles.inputWrap}>
+                    <Lock size={18} color="#8A7C83" />
+                    <TextInput
+                      testID="new-password-input"
+                      value={newPassword}
+                      onChangeText={setNewPassword}
+                      placeholder="At least 6 characters"
+                      placeholderTextColor="#8A7C83"
+                      secureTextEntry={!showPassword}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      style={styles.input}
+                    />
+                  </View>
 
-              <Text style={styles.label}>Password</Text>
-              <View style={styles.inputWrap}>
-                <Lock size={18} color="#8A7C83" />
-                <TextInput
-                  testID="password-input"
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder="Your password"
-                  placeholderTextColor="#8A7C83"
-                  secureTextEntry={!showPassword}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  style={styles.input}
-                />
-                <Pressable
-                  onPress={() => setShowPassword((v) => !v)}
-                  hitSlop={10}
-                  testID="toggle-password"
-                >
-                  {showPassword ? (
-                    <EyeOff size={18} color="#8A7C83" />
-                  ) : (
-                    <Eye size={18} color="#8A7C83" />
-                  )}
-                </Pressable>
-              </View>
+                  <View style={{ height: 14 }} />
 
-              <Pressable
-                onPress={() => Alert.alert("Reset password", "We'll send you a reset link soon.")}
-                style={styles.forgot}
-                testID="forgot-password"
-              >
-                <Text style={styles.forgotText}>Forgot password?</Text>
-              </Pressable>
+                  <Text style={styles.label}>Confirm password</Text>
+                  <View style={styles.inputWrap}>
+                    <Lock size={18} color="#8A7C83" />
+                    <TextInput
+                      testID="confirm-password-input"
+                      value={confirmPassword}
+                      onChangeText={setConfirmPassword}
+                      placeholder="Re-enter password"
+                      placeholderTextColor="#8A7C83"
+                      secureTextEntry={!showPassword}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      style={styles.input}
+                    />
+                    <Pressable
+                      onPress={() => setShowPassword((v) => !v)}
+                      hitSlop={10}
+                      testID="toggle-recovery-password"
+                    >
+                      {showPassword ? (
+                        <EyeOff size={18} color="#8A7C83" />
+                      ) : (
+                        <Eye size={18} color="#8A7C83" />
+                      )}
+                    </Pressable>
+                  </View>
 
-              <View style={{ height: 8 }} />
+                  <View style={{ height: 16 }} />
 
-              <Button
-                label="Sign in"
-                onPress={onEmailSignIn}
-                loading={loading || authLoading}
-                backgroundColor="#FFD36B"
-                textColor="#1F1320"
-                testID="email-sign-in-btn"
-              />
+                  <Button
+                    label="Update password"
+                    onPress={onUpdateRecoveredPassword}
+                    loading={authLoading}
+                    backgroundColor="#FFD36B"
+                    textColor="#1F1320"
+                    testID="update-password-btn"
+                  />
+                </>
+              ) : (
+                <>
+                  <Text style={styles.label}>Username or email</Text>
+                  <View style={styles.inputWrap}>
+                    <Mail size={18} color="#8A7C83" />
+                    <TextInput
+                      testID="email-input"
+                      value={email}
+                      onChangeText={setEmail}
+                      placeholder="sunny_sam or you@example.com"
+                      placeholderTextColor="#8A7C83"
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      style={styles.input}
+                    />
+                  </View>
+
+                  <View style={{ height: 14 }} />
+
+                  <Text style={styles.label}>Password</Text>
+                  <View style={styles.inputWrap}>
+                    <Lock size={18} color="#8A7C83" />
+                    <TextInput
+                      testID="password-input"
+                      value={password}
+                      onChangeText={setPassword}
+                      placeholder="Your password"
+                      placeholderTextColor="#8A7C83"
+                      secureTextEntry={!showPassword}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      style={styles.input}
+                    />
+                    <Pressable
+                      onPress={() => setShowPassword((v) => !v)}
+                      hitSlop={10}
+                      testID="toggle-password"
+                    >
+                      {showPassword ? (
+                        <EyeOff size={18} color="#8A7C83" />
+                      ) : (
+                        <Eye size={18} color="#8A7C83" />
+                      )}
+                    </Pressable>
+                  </View>
+
+                  <Pressable
+                    onPress={onForgotPassword}
+                    disabled={resetEmailLoading || authLoading}
+                    style={styles.forgot}
+                    testID="forgot-password"
+                  >
+                    <Text style={styles.forgotText}>
+                      {resetEmailLoading ? "Sending reset link..." : "Forgot password?"}
+                    </Text>
+                  </Pressable>
+
+                  <View style={{ height: 8 }} />
+
+                  <Button
+                    label="Sign in"
+                    onPress={onEmailSignIn}
+                    loading={loading || authLoading}
+                    backgroundColor="#FFD36B"
+                    textColor="#1F1320"
+                    testID="email-sign-in-btn"
+                  />
+                </>
+              )}
             </View>
 
-            <View style={styles.dividerRow}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or continue with</Text>
-              <View style={styles.dividerLine} />
-            </View>
+            {!passwordRecovery && (
+              <>
+                <View style={styles.dividerRow}>
+                  <View style={styles.dividerLine} />
+                  <Text style={styles.dividerText}>or continue with</Text>
+                  <View style={styles.dividerLine} />
+                </View>
 
-            <View style={styles.socials}>
-              {SOCIALS.map((s) => (
-                <SocialButton key={s.id} provider={s.id} onPress={() => onSocial(s.id)} />
-              ))}
-            </View>
+                <View style={styles.socials}>
+                  {SOCIALS.map((s) => (
+                    <SocialButton key={s.id} provider={s.id} onPress={() => onSocial(s.id)} />
+                  ))}
+                </View>
 
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>New to Orchard? </Text>
-              <Pressable onPress={() => router.push("/onboarding/legal")} testID="create-account-link">
-                <Text style={styles.footerLink}>Create a profile</Text>
-              </Pressable>
-            </View>
+                <View style={styles.footer}>
+                  <Text style={styles.footerText}>New to Orchard? </Text>
+                  <Pressable onPress={() => router.push("/onboarding/legal")} testID="create-account-link">
+                    <Text style={styles.footerLink}>Create a profile</Text>
+                  </Pressable>
+                </View>
+              </>
+            )}
 
-            {showDevReset && (
+            {showDevReset && !passwordRecovery && (
               <Pressable
                 onPress={resetLocalTestState}
                 disabled={resetting}

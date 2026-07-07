@@ -1,6 +1,6 @@
 # Next Task
 
-Run targeted UAT for foundation Slice 1 from `docs/repo-audit-and-foundation-plan.md`.
+Human UAT forgot-password, then start foundation Slice 2 from `docs/repo-audit-and-foundation-plan.md`.
 
 ## Canonical Startup Context
 
@@ -25,16 +25,18 @@ Read only if needed:
 - `expo/hooks/use-canonical-back.ts`: removed web `popstate` behavior and web options; kept Android `BackHandler`.
 - `expo/app/(tabs)/matches.tsx`: removed `window.history.pushState` / hash sentinel before opening Match Detail.
 - `expo/app/match/[id].tsx`: removed web-specific `useCanonicalBack` options.
+- `expo/scripts/start-uat-web-tunnel.cjs`: added one-command UAT launcher for Expo web plus standalone ngrok v3.
+- `expo/hooks/use-canonical-back.ts`: follow-up restored focused web browser-back handling by replacing to the canonical route instead of using the removed Match-tab hash/history workaround.
+- `expo/providers/auth-provider.tsx` and `expo/app/onboarding/sign-in.tsx`: wired hosted Supabase forgot-password recovery and in-app password update.
 
 ## Validation
 
 - `cd expo; bun run typecheck`: passed.
 - `cd expo; bun run lint`: passed.
 - `git diff --check`: passed.
-- Targeted desktop Chrome and Android Chrome UAT from `docs/milestone-tracker.md`.
+- Targeted desktop Chrome and Android Chrome UAT passed for Chat and Match Detail back navigation. Android Match Detail has a brief app-background loader during early repeated backs, then warms up.
+- Forgot-password fix: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, and `git diff --check` passed.
 
 ## Follow-Up After Slice 1
 
-If UAT passes, update `docs/milestone-tracker.md`, `docs/project-status.md`, `.agents/current.md`, and `.agents/next.md` to mark the navigation cleanup accepted and move to foundation Slice 2.
-
-If UAT fails, capture the exact route sequence, URLs before/after back, whether rows disappear or return by themselves, whether the opened match highlight stays cleared, and any visible instrumentation logs.
+Navigation cleanup is accepted. Before Slice 2, human UAT the forgot-password flow: request reset email, open link, set a new password, sign in with the new password, and confirm the old password no longer works. Then move to Slice 2: update/freeze the `ProfileProvider` facade contract and responsibility inventory.

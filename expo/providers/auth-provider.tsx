@@ -78,6 +78,7 @@ function parseAuthCallbackValues(url: string): {
   accessToken?: string;
   code?: string;
   refreshToken?: string;
+  type?: string;
 } {
   try {
     const webOrigin = getWebGlobal().location?.origin ?? "http://localhost";
@@ -100,6 +101,7 @@ function parseAuthCallbackValues(url: string): {
       accessToken: values.get("access_token") ?? undefined,
       code: values.get("code") ?? undefined,
       refreshToken: values.get("refresh_token") ?? undefined,
+      type: values.get("type") ?? undefined,
     };
   } catch {
     return {};
@@ -138,6 +140,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   const [session, setSession] = useState<Session | null>(null);
   const [initialized, setInitialized] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
+  const [passwordRecovery, setPasswordRecovery] = useState<boolean>(false);
   const processedCallbackUrls = useRef<Set<string>>(new Set());
   const mode = getBackendMode();
 
@@ -146,7 +149,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       return false;
     }
 
-    const { accessToken, code, refreshToken } = parseAuthCallbackValues(url);
+    const { accessToken, code, refreshToken, type } = parseAuthCallbackValues(url);
     if (!code && (!accessToken || !refreshToken)) return false;
 
     processedCallbackUrls.current.add(url);
@@ -165,8 +168,10 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
 
       if (result.error) throw result.error;
       setSession(result.data.session ?? null);
+      setPasswordRecovery(type === "recovery");
       console.log("[auth-provider] auth callback session restored", {
         hasSession: !!result.data.session,
+        isRecovery: type === "recovery",
         userId: result.data.session?.user.id,
       });
       clearAuthCallbackValuesFromWebUrl();
@@ -214,9 +219,15 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       web.addEventListener?.("popstate", onWebUrlChange);
     }
 
-    const { data } = client.auth.onAuthStateChange((_event, nextSession) => {
+    const { data } = client.auth.onAuthStateChange((event, nextSession) => {
       if (!mounted) return;
       setSession(nextSession);
+      if (event === "PASSWORD_RECOVERY") {
+        setPasswordRecovery(true);
+      }
+      if (event === "SIGNED_OUT") {
+        setPasswordRecovery(false);
+      }
       setInitialized(true);
     });
 
@@ -243,6 +254,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       });
       if (error) throw error;
       setSession(data.session ?? null);
+      setPasswordRecovery(false);
       return {
         ok: true as const,
         session: data.session ?? null,
@@ -272,6 +284,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       });
       if (error) throw error;
       setSession(data.session ?? null);
+      setPasswordRecovery(false);
       return {
         ok: true as const,
         session: data.session ?? null,
@@ -281,6 +294,48 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       const message =
         error instanceof Error ? error.message : "Unable to create account.";
       console.log("[auth-provider] signUp error", message);
+      return { ok: false as const, error: formatAuthErrorMessage(message) };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const resetPasswordForEmail = useCallback(async (email: string) => {
+    if (!supabase) {
+      return { ok: true as const };
+    }
+    setLoading(true);
+    try {
+      const emailRedirectTo = getAuthRedirectUrl();
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: emailRedirectTo,
+      });
+      if (error) throw error;
+      return { ok: true as const };
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Unable to send reset email.";
+      console.log("[auth-provider] resetPassword error", message);
+      return { ok: false as const, error: formatAuthErrorMessage(message) };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const updatePassword = useCallback(async (password: string) => {
+    if (!supabase) {
+      return { ok: true as const };
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) throw error;
+      setPasswordRecovery(false);
+      return { ok: true as const };
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Unable to update password.";
+      console.log("[auth-provider] updatePassword error", message);
       return { ok: false as const, error: formatAuthErrorMessage(message) };
     } finally {
       setLoading(false);
@@ -297,6 +352,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       setSession(null);
+      setPasswordRecovery(false);
       return { ok: true as const };
     } catch (error) {
       const message =
@@ -315,18 +371,24 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       userId: session?.user.id ?? null,
       initialized,
       loading,
+      passwordRecovery,
+      resetPasswordForEmail,
       signInWithEmail,
       signUpWithEmail,
       signOut,
+      updatePassword,
     }),
     [
       mode,
       session,
       initialized,
       loading,
+      passwordRecovery,
+      resetPasswordForEmail,
       signInWithEmail,
       signUpWithEmail,
       signOut,
+      updatePassword,
     ]
   );
 });

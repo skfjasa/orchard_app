@@ -58,6 +58,7 @@ cd expo
 bun install
 bun run start
 bun run start-web
+bun run uat-web-tunnel
 bun run lint
 ```
 
@@ -66,6 +67,7 @@ Existing scripts:
 - `start`: `expo start`
 - `start-web`: `expo start --web`
 - `start-web-dev`: `DEBUG=expo* expo start --web`
+- `uat-web-tunnel`: starts Expo web on port 8081 and a standalone ngrok v3 tunnel for UAT
 - `lint`: `expo lint`
 - `typecheck`: `tsc --noEmit`
 
