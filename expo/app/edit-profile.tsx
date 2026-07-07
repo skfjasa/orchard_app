@@ -40,7 +40,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import ProtectedRoute from "@/components/navigation/ProtectedRoute";
 import { searchCities } from "@/constants/cities";
 import Colors from "@/constants/colors";
-import { useProfile } from "@/providers/profile-provider";
+import { useEditProfileReadModel } from "@/hooks/use-edit-profile-read-model";
 import {
   Gender,
   GENDER_OPTIONS,
@@ -67,7 +67,7 @@ export default function EditProfileScreen() {
 }
 
 function EditProfileContent() {
-  const { profile, updateProfile } = useProfile();
+  const { profile, updateProfile } = useEditProfileReadModel();
 
   const [people, setPeople] = useState<PersonProfile[]>(profile?.people ?? []);
   const [bio, setBio] = useState<string>(profile?.bio ?? "");

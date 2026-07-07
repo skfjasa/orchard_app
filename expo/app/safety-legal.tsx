@@ -23,7 +23,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import ProtectedRoute from "@/components/navigation/ProtectedRoute";
 import Colors from "@/constants/colors";
 import { LEGAL_CONFIG } from "@/constants/legal";
-import { useProfile } from "@/providers/profile-provider";
+import { useSafetyLegalReadModel } from "@/hooks/use-safety-legal-read-model";
 
 export default function SafetyLegalScreen() {
   return (
@@ -34,7 +34,7 @@ export default function SafetyLegalScreen() {
 }
 
 function SafetyLegalContent() {
-  const { requestAccountDeletion } = useProfile();
+  const { requestAccountDeletion } = useSafetyLegalReadModel();
   const [isDeleting, setIsDeleting] = React.useState(false);
 
   const openSupport = React.useCallback(() => {

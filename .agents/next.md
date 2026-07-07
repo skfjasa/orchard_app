@@ -1,6 +1,6 @@
 # Next Task
 
-Human UAT forgot-password when practical, then continue foundation Slice 6 with Profile/safety/paywall/onboarding provider calls.
+Human UAT forgot-password when practical, then continue foundation Slice 6 with Profile tab, onboarding photos/sign-in, tab badges, root redirect, and ProtectedRoute/bootstrap gates.
 
 ## Canonical Startup Context
 
@@ -41,6 +41,10 @@ Read only if needed:
 - `expo/hooks/use-chat-thread-read-model.ts` and `expo/app/chat/[id].tsx`: moved the Chat thread/read/send path behind a focused read-model hook without changing visible UI or navigation behavior.
 - `expo/hooks/use-discover-read-model.ts` and `expo/app/(tabs)/discover.tsx`: moved the Discover discovery query, remembered profiles, exclusion inputs, monetization counters, and swipe actions behind a focused read-model hook without changing visible UI.
 - `expo/hooks/use-fruit-read-model.ts` and `expo/app/(tabs)/fruit.tsx`: moved Fruit backend non-fixture discovery, local fixture pool/scoring behavior, remembered profiles, and like/boost actions behind a focused read-model hook without changing visible UI.
+- `expo/hooks/use-edit-profile-read-model.ts` and `expo/app/edit-profile.tsx`: moved Edit Profile route provider calls behind a focused hook without changing save behavior.
+- `expo/hooks/use-paywall-read-model.ts` and `expo/app/paywall.tsx`: moved Paywall route provider calls behind a focused hook without changing demo purchase/subscription behavior.
+- `expo/hooks/use-report-read-model.ts` and `expo/app/report.tsx`: moved Report route provider calls behind a focused hook without changing report submission behavior.
+- `expo/hooks/use-safety-legal-read-model.ts` and `expo/app/safety-legal.tsx`: moved Safety & Legal route provider calls behind a focused hook without changing account-deletion request behavior.
 
 ## Validation
 
@@ -58,7 +62,8 @@ Read only if needed:
 - Foundation Slice 6 Match Detail read path: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, and `git diff --check` passed.
 - Foundation Slice 6 Chat thread/read/send path: `cd expo; bun run typecheck` passed and `cd expo; bun run lint` passed.
 - Foundation Slice 6 Discover/Fruit read path: `cd expo; bun run typecheck` passed and `cd expo; bun run lint` passed.
+- Foundation Slice 6 profile/safety/paywall route facades: `cd expo; bun run typecheck` passed and `cd expo; bun run lint` passed.
 
 ## Follow-Up After Slice 1
 
-Navigation cleanup is accepted. Forgot-password is wired but still needs human UAT when practical. Slices 2, 3, 4, and 5 are implemented, and Slice 6 has migrated Matches, Inbox, Match Detail, Chat, Discover, and Fruit read paths. Next engineering task is Slice 6 Profile/safety/paywall/onboarding provider-call migration.
+Navigation cleanup is accepted. Forgot-password is wired but still needs human UAT when practical. Slices 2, 3, 4, and 5 are implemented, and Slice 6 has migrated Matches, Inbox, Match Detail, Chat, Discover, Fruit, Edit Profile, Paywall, Report, and Safety & Legal route calls. Next engineering task is the remaining Slice 6 app-shell/Profile/onboarding/bootstrap provider-call migration.

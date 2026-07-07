@@ -197,7 +197,9 @@ Remaining:
   - [x] [C] Match Detail read path and seen-state calls now use `useMatchDetailReadModel`.
   - [x] [C] Chat thread/read/send path now uses `useChatThreadReadModel`.
   - [x] [C] Discover/Fruit discovery and local fixture behavior now use focused read-model hooks.
-  - [ ] [C] Profile/safety/paywall/onboarding calls.
+  - [~] [C] Profile/safety/paywall/onboarding calls.
+    - [x] [C] Edit Profile, Paywall, Report, and Safety & Legal now use focused read-model hooks.
+    - [ ] [C] Profile tab, onboarding photos/sign-in, tab badges, root redirect, and ProtectedRoute/bootstrap gates.
 - [ ] [C] Isolate mock/Fruit behavior from Supabase signed-in runtime state.
 
 Exit criteria:

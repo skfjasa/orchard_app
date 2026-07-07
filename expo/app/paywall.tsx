@@ -23,7 +23,7 @@ import ProtectedRoute from "@/components/navigation/ProtectedRoute";
 import SuperLikeIcon from "@/components/SuperLikeIcon";
 import { Button } from "@/components/ui";
 import Colors from "@/constants/colors";
-import { useProfile } from "@/providers/profile-provider";
+import { usePaywallReadModel } from "@/hooks/use-paywall-read-model";
 import {
   BOOST_DURATION_MS,
   DEFAULT_SUPER_LIKES,
@@ -57,7 +57,7 @@ function PaywallContent() {
     slotsUsed,
     superLikeBalance,
     subscription,
-  } = useProfile();
+  } = usePaywallReadModel();
 
   const isSuperReason = reason === "superlikes";
   const isBoostReason = reason === "boost";

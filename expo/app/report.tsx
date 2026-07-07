@@ -17,7 +17,7 @@ import ProtectedRoute from "@/components/navigation/ProtectedRoute";
 import { Button } from "@/components/ui";
 import Colors from "@/constants/colors";
 import { MOCK_PROFILES } from "@/mocks/profiles";
-import { useProfile } from "@/providers/profile-provider";
+import { useReportReadModel } from "@/hooks/use-report-read-model";
 import type { ReportReason } from "@/services/safety-service";
 
 const REASONS: { value: ReportReason; label: string }[] = [
@@ -42,7 +42,7 @@ function ReportContent() {
     profileId?: string;
     messageId?: string;
   }>();
-  const { reportProfile } = useProfile();
+  const { reportProfile } = useReportReadModel();
   const [reason, setReason] = React.useState<ReportReason>("unsafe_behavior");
   const [details, setDetails] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);

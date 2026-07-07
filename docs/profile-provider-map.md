@@ -144,7 +144,7 @@ Not moved in Slice 5:
 
 ## Screen Migration Progress
 
-Slice 6 has started with route read-model migration for Matches, Inbox, Match Detail, Chat, Discover, and Fruit.
+Slice 6 has started with route read-model migration for Matches, Inbox, Match Detail, Chat, Discover, Fruit, Edit Profile, Paywall, Report, and Safety & Legal.
 
 Implemented:
 
@@ -160,6 +160,14 @@ Implemented:
 - `expo/app/(tabs)/discover.tsx` consumes `useDiscoverReadModel` instead of importing `useProfile()` or `useDiscoveryProfilesQuery` directly.
 - `expo/hooks/use-fruit-read-model.ts` wraps Fruit's backend non-fixture discovery, local fixture pool, scoring, remembered display profiles, and like/boost actions.
 - `expo/app/(tabs)/fruit.tsx` consumes `useFruitReadModel` instead of importing `useProfile()` or `useDiscoveryProfilesQuery` directly.
+- `expo/hooks/use-edit-profile-read-model.ts` wraps Edit Profile's current profile and update action.
+- `expo/app/edit-profile.tsx` consumes `useEditProfileReadModel` instead of importing `useProfile()` directly.
+- `expo/hooks/use-paywall-read-model.ts` wraps Paywall demo purchase/subscription counters and actions.
+- `expo/app/paywall.tsx` consumes `usePaywallReadModel` instead of importing `useProfile()` directly.
+- `expo/hooks/use-report-read-model.ts` wraps Report submission.
+- `expo/app/report.tsx` consumes `useReportReadModel` instead of importing `useProfile()` directly.
+- `expo/hooks/use-safety-legal-read-model.ts` wraps account deletion request submission.
+- `expo/app/safety-legal.tsx` consumes `useSafetyLegalReadModel` instead of importing `useProfile()` directly.
 
 Preserved behavior:
 
@@ -169,10 +177,14 @@ Preserved behavior:
 - Existing Chat layout, canonical back behavior, active-match guard, read-marking effect, draft restore/update behavior, text/photo send behavior, message long-press actions, photo approval controls, and safety menu behavior.
 - Existing Discover deck layout, swipe animations, haptics, match confirmation, paywall routing, super-like burst, profile-detail navigation, and discovered-profile remembering.
 - Existing Fruit grid layout, backend non-fixture priority, local fixture availability, fixture exclusion rules, like-sent/match overlays, boost action, and profile-detail navigation.
+- Existing Edit Profile save behavior, Paywall demo purchase/subscription behavior, Report submission behavior, and Safety & Legal account-deletion request behavior.
 
 Not moved yet:
 
-- Profile/safety/paywall/onboarding calls.
+- Profile tab calls.
+- Onboarding photos/sign-in calls.
+- Tab badge calls.
+- Root redirect and ProtectedRoute/bootstrap gates.
 - Provider ownership of Matches selectors.
 
 ## Current Role
