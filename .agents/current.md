@@ -49,6 +49,7 @@ Old duplicate roadmap/checklist/audit docs were consolidated and deleted from ac
 - Foundation Slice 6 route read-model migration is implemented: app routes/components no longer import `useProfile()` directly. Provider access is confined to focused hooks under `expo/hooks/`.
 - Provider-internal selector cleanup is implemented: pure compatibility selectors now live in `expo/services/profile-provider-selectors.ts`.
 - Prototype monetization state now lives behind `expo/store/use-monetization-store.ts` while preserving existing AsyncStorage keys and provider compatibility wrappers.
+- Local chat UI state for drafts and simulated typing IDs now lives behind `expo/store/use-chat-ui-store.ts`.
 
 ## Validation State
 
@@ -84,6 +85,7 @@ Foundation Slice 1 validation:
 - Foundation Slice 6 final route migration validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed.
 - Provider selector extraction validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed.
 - Monetization store extraction validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
+- Chat UI store extraction validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
 
 ## Recent Docs Consolidation
 
@@ -96,4 +98,4 @@ Foundation Slice 1 validation:
 
 ## Next Recommended Task
 
-Human UAT forgot-password when practical, then continue provider-internal cleanup after Slice 6 by moving the next small state domain out of `ProfileProvider` behind clearer stores/services. The likely next PR-sized slice is local chat/conversation state. Keep the Android Match Detail loader as a monitored follow-up, not a blocker unless it worsens.
+Human UAT forgot-password when practical, then continue provider-internal cleanup after Slice 6 by moving the next small state domain out of `ProfileProvider` behind clearer stores/services. The likely next PR-sized slice is conversation/message mutation helpers. Keep the Android Match Detail loader as a monitored follow-up, not a blocker unless it worsens.

@@ -1,6 +1,6 @@
 # Next Task
 
-Human UAT forgot-password when practical, then continue provider-internal cleanup after Slice 6, likely with local chat/conversation state next.
+Human UAT forgot-password when practical, then continue provider-internal cleanup after Slice 6, likely with conversation/message mutation helpers next.
 
 ## Canonical Startup Context
 
@@ -52,6 +52,7 @@ Read only if needed:
 - `expo/hooks/use-app-bootstrap-read-model.ts`, `expo/app/index.tsx`, and `expo/components/navigation/ProtectedRoute.tsx`: moved root/protected-route bootstrap reads behind a focused hook without changing redirect or loader behavior.
 - `expo/services/profile-provider-selectors.ts`: moved pure compatibility selector calculations out of `ProfileProvider` without changing facade behavior.
 - `expo/store/use-monetization-store.ts`: moved prototype monetization state out of `ProfileProvider` while preserving existing AsyncStorage keys, provider wrappers, and demo behavior.
+- `expo/store/use-chat-ui-store.ts`: moved local chat UI state for drafts and simulated typing IDs out of `ProfileProvider` without changing Chat or Inbox behavior.
 
 ## Validation
 
@@ -73,7 +74,8 @@ Read only if needed:
 - Foundation Slice 6 final route migration: `cd expo; bun run typecheck` passed and `cd expo; bun run lint` passed.
 - Provider selector extraction: `cd expo; bun run typecheck` passed and `cd expo; bun run lint` passed.
 - Monetization store extraction: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, and `git diff --check` passed.
+- Chat UI store extraction: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, and `git diff --check` passed.
 
 ## Follow-Up After Slice 1
 
-Navigation cleanup is accepted. Forgot-password is wired but still needs human UAT when practical. Slices 2, 3, 4, 5, and 6 are implemented. App routes/components no longer import `useProfile()` directly; focused hooks own the route/provider boundary. Provider-internal selector and monetization cleanup are implemented. Next engineering task is moving the next small state domain, likely local chat/conversation state, out of `ProfileProvider` behind clearer stores/services.
+Navigation cleanup is accepted. Forgot-password is wired but still needs human UAT when practical. Slices 2, 3, 4, 5, and 6 are implemented. App routes/components no longer import `useProfile()` directly; focused hooks own the route/provider boundary. Provider-internal selector, monetization, and chat UI cleanup are implemented. Next engineering task is moving the next small state domain, likely conversation/message mutation helpers, out of `ProfileProvider` behind clearer stores/services.

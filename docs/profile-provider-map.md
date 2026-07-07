@@ -57,8 +57,8 @@ Categories:
 | `sendPhoto` | Local mock/demo state | Local simulated photo request behavior today. |
 | `respondToPhoto` | Local mock/demo state | Local simulated photo approval behavior today. |
 | `markRead` | Client preference state / server state | Candidate for preference store wrapper while preserving Supabase `match_read_states`. |
-| `drafts` / `setDraft` | Client preference state | Candidate for local UI draft store. |
-| `typingProfileIds` | Local mock/demo state | Simulated typing state. |
+| `drafts` / `setDraft` | Client preference state | Owned by the chat UI store. |
+| `typingProfileIds` | Local mock/demo state | Owned by the chat UI store; currently empty unless future simulated typing behavior sets it. |
 | `totalSlots`, `slotsUsed`, `slotsRemaining`, `isAtMatchLimit` | Prototype monetization facade | Demo/paywall calculations; disabled for feedback MVP. |
 | `extraSlots`, `boostedUntil`, `isBoosted` | Prototype monetization facade | Store-backed local demo counters. |
 | `superLikeBalance`, `superLikeLastUseAt`, `superLikeRechargeAt` | Prototype monetization facade | Store-backed local demo counters. |
@@ -192,7 +192,7 @@ Preserved behavior:
 
 Not moved yet:
 
-- Provider ownership of conversation/chat state.
+- Provider ownership of conversation arrays, message mutation helpers, backend chat hydration, and simulated replies/photo approvals.
 - Provider ownership of profile bootstrap and backend match/thread hydration coordination.
 
 ## Provider Selector Extraction
@@ -228,6 +228,27 @@ Preserved behavior:
 - `ProfileProvider.purchase`, `subscribe`, and `cancelSubscription` remain compatibility wrappers.
 - Demo paywall, boost, match-slot, super-like refill, subscription, and auto-recharge behavior is unchanged.
 
+## Extracted Chat UI Store
+
+Post-Slice 6 provider-internal cleanup moved local chat UI state behind `expo/store/use-chat-ui-store.ts`.
+
+State now owned by the chat UI store:
+
+- `drafts`
+- `typingProfileIds`
+
+Preserved behavior:
+
+- `ProfileProvider.setDraft` remains the compatibility wrapper exposed to focused chat read-model hooks.
+- Chat draft text remains in memory only, matching the prior provider `useState` behavior.
+- `typingProfileIds` remains available through the provider facade for Inbox and Chat read models, but no runtime code currently sets simulated typing IDs.
+
+Not moved:
+
+- `conversations`
+- Backend chat thread hydration and message merge behavior.
+- Local simulated replies, photo requests, photo approvals, and conversation persistence.
+
 ## Current Role
 
 `ProfileProvider` is the central app-state provider for the prototype. It still owns UI-facing local state and coordinates persistence, but the first service and store boundaries have been extracted.
@@ -252,10 +273,8 @@ Current persistence is local through `AsyncStorage` via `expo/services/local-pro
 - `profile`
 - `conversations`
 - `hydrated`
-- `drafts`
-- `typingProfileIds`
 
-The provider still owns React state for these values. Storage and several local mutation helpers now live in service modules and focused stores. `likedIds`, `passedIds`, and `superLikedIds` are owned by `use-interaction-store.ts`; `readWatermarks` and `seenMatchIds` are owned by `use-preferences-store.ts`; `extraSlots`, `boostedUntil`, `superLikeBalance`, `superLikeLastUseAt`, and `subscription` are owned by `use-monetization-store.ts`.
+The provider still owns React state for these values. Storage and several local mutation helpers now live in service modules and focused stores. `likedIds`, `passedIds`, and `superLikedIds` are owned by `use-interaction-store.ts`; `readWatermarks` and `seenMatchIds` are owned by `use-preferences-store.ts`; `extraSlots`, `boostedUntil`, `superLikeBalance`, `superLikeLastUseAt`, and `subscription` are owned by `use-monetization-store.ts`; `drafts` and `typingProfileIds` are owned by `use-chat-ui-store.ts`.
 
 ## Derived State
 
@@ -391,6 +410,7 @@ Runtime local helper modules now exist:
 - `expo/store/use-interaction-store.ts`
 - `expo/store/use-monetization-store.ts`
 - `expo/store/use-preferences-store.ts`
+- `expo/store/use-chat-ui-store.ts`
 
 - `ProfileService`: profile lifecycle and settings.
 - `AuthProvider`: auth/session state and future Supabase auth operations.

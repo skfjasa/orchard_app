@@ -69,6 +69,7 @@ import {
 } from "@/types";
 import type { ReportReason } from "@/services/safety-service";
 import type { SwipeDecision, SwipeResult } from "@/services/swipe-service";
+import { useChatUiStore } from "@/store/use-chat-ui-store";
 import { useInteractionStore } from "@/store/use-interaction-store";
 import { useMonetizationStore } from "@/store/use-monetization-store";
 import { usePreferencesStore } from "@/store/use-preferences-store";
@@ -243,6 +244,9 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     superLikeBalance,
     superLikeLastUseAt,
   } = useMonetizationStore();
+  const drafts = useChatUiStore((state) => state.drafts);
+  const setDraft = useChatUiStore((state) => state.setDraft);
+  const typingProfileIds = useChatUiStore((state) => state.typingProfileIds);
   const knownProfilesRef = useRef<Profile[]>([]);
   const displayProfilesRef = useRef<Record<string, Profile>>({});
   const lastResolvedProfilesRef = useRef<Record<string, Profile>>({});
@@ -1374,16 +1378,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     },
     [saveConvosMutation]
   );
-
-  const [drafts, setDrafts] = useState<Record<string, string>>({});
-  const [typingProfileIds, setTypingProfileIds] = useState<string[]>([]);
-
-  const setDraft = useCallback((profileId: string, text: string) => {
-    setDrafts((prev) => {
-      if ((prev[profileId] ?? "") === text) return prev;
-      return { ...prev, [profileId]: text };
-    });
-  }, []);
 
   const sendPhoto = useCallback(
     (profileId: string, photoUri: string, authorName?: string) => {

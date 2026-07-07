@@ -214,6 +214,7 @@ Last updated: 2026-07-07
 - Foundation Slice 6 route read-model migration is implemented. `expo/hooks/use-matches-read-model.ts`, `use-inbox-read-model.ts`, `use-match-detail-read-model.ts`, `use-chat-thread-read-model.ts`, `use-discover-read-model.ts`, `use-fruit-read-model.ts`, `use-edit-profile-read-model.ts`, `use-paywall-read-model.ts`, `use-report-read-model.ts`, `use-safety-legal-read-model.ts`, `use-tab-badge-read-model.ts`, `use-profile-tab-read-model.ts`, `use-onboarding-completion-read-model.ts`, `use-sign-in-profile-read-model.ts`, and `use-app-bootstrap-read-model.ts` now wrap route/provider reads and actions. App routes/components no longer import `useProfile()` directly; provider access is confined to focused hooks.
 - Provider-internal cleanup has started after Slice 6. `expo/services/profile-provider-selectors.ts` now owns pure compatibility selector calculations for conversation lookup, active-match checks, matched profiles, inbox rows, and unread message counts. `ProfileProvider` still owns side-effectful profile lookup/cache repair, transient-empty guards, and the compatibility facade.
 - Prototype monetization state now lives behind `expo/store/use-monetization-store.ts` while preserving existing AsyncStorage keys and compatibility wrappers. `ProfileProvider` still exposes `purchase`, `subscribe`, `cancelSubscription`, boost state, match-slot counts, super-like balance/recharge, and subscription state.
+- Local chat UI state now lives behind `expo/store/use-chat-ui-store.ts`. `ProfileProvider` still exposes `drafts`, `setDraft`, and `typingProfileIds`, while the conversation array, backend chat hydration, simulated replies/photo approvals, and conversation persistence remain provider-owned for now.
 - Profile-tab sign-out now clears profile/auth state before routing to `/onboarding`, preventing the user from landing on Discover with no profile/data loaded.
 - Remaining observed behavior to decide/fix later: after sign-out/sign-in, only hosted messages are restored; local fixture greeting/simulated messages are intentionally not persisted to hosted chat yet.
 - The original generated onboarding background was recovered from the previous remote URL, vendored as `expo/assets/images/welcome-background.png`, and the welcome, sign-in, and pending-confirmation screens now use the local bundled asset instead of the app icon background or a remote Rork URL.
@@ -229,12 +230,12 @@ Last updated: 2026-07-07
 
 ## Current Task
 
-Provider-internal cleanup after Slice 6 has moved pure compatibility selectors and prototype monetization state out of `ProfileProvider` while preserving route hooks, facade members, storage keys, and visible demo behavior.
+Provider-internal cleanup after Slice 6 has moved pure compatibility selectors, prototype monetization state, and local chat UI state out of `ProfileProvider` while preserving route hooks, facade members, storage keys, and visible behavior.
 
 ## Next Planned Tasks
 
 1. Human UAT forgot-password flow on hosted Supabase/ngrok when practical: request reset email, open link, set new password, sign in with the new password, and confirm the old password no longer works.
-2. Continue provider-internal cleanup after Slice 6: move the next small state domain, likely local chat/conversation state, out of `ProfileProvider` behind clearer stores/services without changing visible UI.
+2. Continue provider-internal cleanup after Slice 6: move the next small state domain, likely conversation/message mutation helpers, out of `ProfileProvider` behind clearer stores/services without changing visible UI.
 3. Continue Supabase source-of-truth session bootstrap for inner-circle testing: profile, active matches, display profiles/photos, inbox summaries, thread snippets, unread/read state, and block/unmatch visibility should load before tabs render.
 4. Monitor Android Match Detail's brief app-background loading step; optimize only if it is multi-second, frequent after warmup, or loses rows/highlight state.
 5. Decide whether seen-match/highlight state remains local-only for inner-circle testing or moves to backend-backed per-user state.
