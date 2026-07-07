@@ -9,8 +9,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 ## Branch And Commit
 
 - Branch: `main`
-- Latest implementation checkpoint: `e2935ba` - Extract inbox read model
-- Current working state: foundation Slice 6 Match Detail read-path changes are present and uncommitted.
+- Latest implementation checkpoint: `742269e` - Extract match detail read model
+- Current working state: clean and synced with `origin/main`.
 
 ## Canonical Docs
 
