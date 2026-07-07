@@ -192,7 +192,24 @@ Preserved behavior:
 
 Not moved yet:
 
-- Provider ownership of Matches selectors.
+- Provider ownership of conversation/chat state.
+- Provider ownership of prototype monetization state.
+- Provider ownership of profile bootstrap and backend match/thread hydration coordination.
+
+## Provider Selector Extraction
+
+Post-Slice 6 provider-internal cleanup has started.
+
+Implemented:
+
+- `expo/services/profile-provider-selectors.ts` owns pure compatibility selector calculations for profile conversations, active-match checks, matched profiles, inbox rows, and unread message counts.
+- `expo/providers/profile-provider.tsx` still owns side-effectful profile lookup/cache repair, transient-empty guards, and the compatibility facade, but no longer embeds the pure matched-profile/inbox/badge calculation bodies inline.
+
+Preserved behavior:
+
+- Existing `getProfileById`, `getConversation`, `hasActiveMatch`, `matchedProfiles`, `inboxItems`, `newMatchCount`, and `unreadMessageCount` facade members.
+- Existing incomplete-backend-profile filtering and last-resolved profile caching.
+- Existing `useTransientEmptyList` protection for Matches and Inbox.
 
 ## Current Role
 

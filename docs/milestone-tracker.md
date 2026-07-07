@@ -183,6 +183,8 @@ Done:
 - [x] [C] Backend/mock service factory exists.
 - [x] [C] Read-path selectors exist for matched profiles, inbox rows, profile lookup, conversations, active-match checks, and tab badges.
 - [x] [C] Amended foundation refactor plan exists and avoids one-pass `ProfileProvider` deletion.
+- [x] [C] Route/provider boundary migration is complete: app routes/components consume focused hooks instead of importing `useProfile()` directly.
+- [x] [C] Provider-internal selector cleanup has started with pure selector helpers in `expo/services/profile-provider-selectors.ts`.
 
 Remaining:
 

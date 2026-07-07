@@ -386,4 +386,4 @@ Historical rationale for these removed items is preserved in [Architecture Audit
 
 ## Current Recommended Next Step
 
-Slice 5 is implemented. Next, implement Slice 6: migrate screens domain-by-domain from `useProfile()` to focused hooks/selectors without changing visible UI.
+Slices 2 through 6 are implemented. Next, continue provider-internal cleanup by shrinking `ProfileProvider` compatibility-selector and domain-state ownership in PR-sized slices without changing visible UI or mock/Supabase behavior.

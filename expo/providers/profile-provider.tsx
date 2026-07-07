@@ -53,6 +53,13 @@ import {
   resendPartnerInvite as resendLocalPartnerInvite,
 } from "@/services/local-profile-mutation-service";
 import {
+  buildInboxItems,
+  buildMatchedProfiles,
+  countUnreadMessages,
+  findConversationByProfileId,
+  hasActiveProfileMatch,
+} from "@/services/profile-provider-selectors";
+import {
   clearPendingOnboardingProfile,
   loadPendingOnboardingProfile,
 } from "@/services/pending-onboarding-storage";
@@ -72,7 +79,6 @@ import { useInteractionStore } from "@/store/use-interaction-store";
 import { usePreferencesStore } from "@/store/use-preferences-store";
 import type {
   MatchActionResult,
-  ProfileInboxItem,
   ProfileProviderContract,
 } from "./profile-provider-contract";
 
@@ -172,8 +178,6 @@ function newestMessageAt(conversations: Conversation[], profileId: string) {
     0
   );
 }
-
-export type InboxListItem = ProfileInboxItem;
 
 const BACKEND_MATCH_REFRESH_INTERVAL_MS = 10_000;
 const BACKEND_REALTIME_REFRESH_DELAY_MS = 250;
@@ -1698,46 +1702,23 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
   const getConversation = useCallback(
     (profileId: string) =>
-      conversations.find((conversation) => conversation.profileId === profileId),
+      findConversationByProfileId(conversations, profileId),
     [conversations]
   );
 
   const hasActiveMatch = useCallback(
-    (profileId: string) => likedIds.includes(profileId),
+    (profileId: string) => hasActiveProfileMatch(likedIds, profileId),
     [likedIds]
   );
 
   const rawMatchedProfiles = useMemo(
-    () =>
-      likedIds
-        .map((profileId) => getProfileById(profileId))
-        .filter((item): item is Profile => !!item),
+    () => buildMatchedProfiles(likedIds, getProfileById),
     [getProfileById, likedIds]
   );
   const matchedProfiles = useTransientEmptyList(rawMatchedProfiles, !!profile);
 
   const rawInboxItems = useMemo(
-    () =>
-      conversations
-        .map<InboxListItem | null>((conversation) => {
-          const other = getProfileById(conversation.profileId);
-          if (!other) return null;
-          const messages = Array.isArray(conversation.messages)
-            ? conversation.messages
-            : [];
-          const lastMessage = messages[messages.length - 1] ?? null;
-          return {
-            conversation: { ...conversation, messages },
-            other,
-            lastMessage,
-          };
-        })
-        .filter((item): item is InboxListItem => !!item)
-        .sort((a, b) => {
-          const aTime = a.lastMessage?.at ?? 0;
-          const bTime = b.lastMessage?.at ?? 0;
-          return bTime - aTime;
-        }),
+    () => buildInboxItems(conversations, getProfileById),
     [conversations, getProfileById]
   );
   const inboxItems = useTransientEmptyList(rawInboxItems, !!profile);
@@ -1745,11 +1726,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const newMatchCount = useMemo(() => newMatchIds.length, [newMatchIds]);
 
   const unreadMessageCount = useMemo(
-    () =>
-      conversations.reduce(
-        (total, conversation) => total + Math.max(0, conversation.unread),
-        0
-      ),
+    () => countUnreadMessages(conversations),
     [conversations]
   );
 

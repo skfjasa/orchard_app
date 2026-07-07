@@ -50,6 +50,7 @@ Read only if needed:
 - `expo/hooks/use-onboarding-completion-read-model.ts` and `expo/app/onboarding/photos.tsx`: moved final onboarding completion behind a focused hook without changing auth/profile completion behavior.
 - `expo/hooks/use-sign-in-profile-read-model.ts` and `expo/app/onboarding/sign-in.tsx`: moved sign-in profile readiness reads behind a focused hook without changing forgot-password or bootstrap behavior.
 - `expo/hooks/use-app-bootstrap-read-model.ts`, `expo/app/index.tsx`, and `expo/components/navigation/ProtectedRoute.tsx`: moved root/protected-route bootstrap reads behind a focused hook without changing redirect or loader behavior.
+- `expo/services/profile-provider-selectors.ts`: moved pure compatibility selector calculations out of `ProfileProvider` without changing facade behavior.
 
 ## Validation
 
@@ -69,7 +70,8 @@ Read only if needed:
 - Foundation Slice 6 Discover/Fruit read path: `cd expo; bun run typecheck` passed and `cd expo; bun run lint` passed.
 - Foundation Slice 6 profile/safety/paywall route facades: `cd expo; bun run typecheck` passed and `cd expo; bun run lint` passed.
 - Foundation Slice 6 final route migration: `cd expo; bun run typecheck` passed and `cd expo; bun run lint` passed.
+- Provider selector extraction: `cd expo; bun run typecheck` passed and `cd expo; bun run lint` passed.
 
 ## Follow-Up After Slice 1
 
-Navigation cleanup is accepted. Forgot-password is wired but still needs human UAT when practical. Slices 2, 3, 4, 5, and 6 are implemented. App routes/components no longer import `useProfile()` directly; focused hooks own the route/provider boundary. Next engineering task is provider-internal cleanup: shrink `ProfileProvider` ownership of compatibility selectors and move remaining domain state behind clearer stores/services.
+Navigation cleanup is accepted. Forgot-password is wired but still needs human UAT when practical. Slices 2, 3, 4, 5, and 6 are implemented. App routes/components no longer import `useProfile()` directly; focused hooks own the route/provider boundary. Provider-internal selector cleanup has started. Next engineering task is moving the next small state domain out of `ProfileProvider` behind clearer stores/services.

@@ -80,6 +80,7 @@ Foundation Slice 1 validation:
 - Foundation Slice 6 Discover/Fruit read-path validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed.
 - Foundation Slice 6 profile/safety/paywall route facade validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed.
 - Foundation Slice 6 final route migration validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed.
+- Provider selector extraction validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed.
 
 ## Current Docs-Only Changes
 
@@ -92,4 +93,4 @@ Foundation Slice 1 validation:
 
 ## Next Recommended Task
 
-Human UAT forgot-password when practical, then continue provider-internal cleanup after Slice 6 by shrinking `ProfileProvider` ownership of compatibility selectors and moving remaining domain state behind clearer stores/services. Keep the Android Match Detail loader as a monitored follow-up, not a blocker unless it worsens.
+Human UAT forgot-password when practical, then continue provider-internal cleanup after Slice 6 by moving the next small state domain out of `ProfileProvider` behind clearer stores/services. Keep the Android Match Detail loader as a monitored follow-up, not a blocker unless it worsens.
