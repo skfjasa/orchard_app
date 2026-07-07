@@ -30,16 +30,10 @@ import {
 } from "@/services/local-interaction-service";
 import {
   loadStoredProfileState,
-  saveStoredBoost,
   saveStoredConversations,
-  saveStoredExtraSlots,
   saveStoredProfile,
   saveStoredKnownProfiles,
-  saveStoredSubscription,
-  saveStoredSuperLikeBalance,
-  saveStoredSuperLikeLastUse,
 } from "@/services/local-profile-storage";
-import type { SubscriptionState } from "@/services/local-profile-storage";
 import {
   applyLocalPurchase,
   createLocalSubscription,
@@ -76,6 +70,7 @@ import {
 import type { ReportReason } from "@/services/safety-service";
 import type { SwipeDecision, SwipeResult } from "@/services/swipe-service";
 import { useInteractionStore } from "@/store/use-interaction-store";
+import { useMonetizationStore } from "@/store/use-monetization-store";
 import { usePreferencesStore } from "@/store/use-preferences-store";
 import type {
   MatchActionResult,
@@ -234,6 +229,20 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     setSuperLikedIds,
     superLikedIds,
   } = useInteractionStore();
+  const {
+    boostedUntil,
+    extraSlots,
+    hydrateMonetization,
+    resetMonetization,
+    setBoostedUntil,
+    setExtraSlots,
+    setSubscription,
+    setSuperLikeBalance,
+    setSuperLikeLastUseAt,
+    subscription,
+    superLikeBalance,
+    superLikeLastUseAt,
+  } = useMonetizationStore();
   const knownProfilesRef = useRef<Profile[]>([]);
   const displayProfilesRef = useRef<Record<string, Profile>>({});
   const lastResolvedProfilesRef = useRef<Record<string, Profile>>({});
@@ -246,17 +255,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   );
   const readWatermarksRef = useRef<Record<string, Record<string, number>>>({});
   const seenMatchIdsRef = useRef<Record<string, string[]>>({});
-  const [extraSlots, setExtraSlots] = useState<number>(0);
-  const [boostedUntil, setBoostedUntil] = useState<number | null>(null);
-  const [superLikeBalance, setSuperLikeBalance] = useState<number>(
-    DEFAULT_SUPER_LIKES
-  );
-  const [superLikeLastUseAt, setSuperLikeLastUseAt] = useState<number | null>(
-    null
-  );
-  const [subscription, setSubscription] = useState<SubscriptionState | null>(
-    null
-  );
   const [hydrated, setHydrated] = useState<boolean>(false);
   const [backendProfileHydrated, setBackendProfileHydrated] =
     useState<boolean>(false);
@@ -283,11 +281,13 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         loadQuery.data.passedIds,
         loadQuery.data.superLikedIds
       );
-      setExtraSlots(loadQuery.data.extraSlots);
-      setBoostedUntil(loadQuery.data.boostedUntil);
-      setSuperLikeBalance(loadQuery.data.superLikeBalance);
-      setSuperLikeLastUseAt(loadQuery.data.superLikeLastUseAt);
-      setSubscription(loadQuery.data.subscription);
+      hydrateMonetization(
+        loadQuery.data.extraSlots,
+        loadQuery.data.boostedUntil,
+        loadQuery.data.superLikeBalance,
+        loadQuery.data.superLikeLastUseAt,
+        loadQuery.data.subscription
+      );
       hydratePreferences(
         loadQuery.data.readWatermarks,
         loadQuery.data.seenMatchIds
@@ -318,26 +318,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
   const saveConvosMutation = useMutation({
     mutationFn: saveStoredConversations,
-  });
-
-  const saveExtraSlotsMutation = useMutation({
-    mutationFn: saveStoredExtraSlots,
-  });
-
-  const saveBoostMutation = useMutation({
-    mutationFn: saveStoredBoost,
-  });
-
-  const saveSuperLikeBalanceMutation = useMutation({
-    mutationFn: saveStoredSuperLikeBalance,
-  });
-
-  const saveSuperLikeLastUseMutation = useMutation({
-    mutationFn: saveStoredSuperLikeLastUse,
-  });
-
-  const saveSubscriptionMutation = useMutation({
-    mutationFn: saveStoredSubscription,
   });
 
   useEffect(() => {
@@ -903,11 +883,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     setConversations([]);
     setNewMatchIds([]);
     resetInteractions();
-    setExtraSlots(0);
-    setBoostedUntil(null);
-    setSuperLikeBalance(DEFAULT_SUPER_LIKES);
-    setSuperLikeLastUseAt(null);
-    setSubscription(null);
+    resetMonetization();
     setBackendProfileHydrated(false);
     setBackendMatchesHydrated(false);
     lastBackendProfileSessionKey.current = null;
@@ -916,11 +892,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     pendingBackendMatchRefreshRef.current = false;
     saveProfileMutation.mutate(null);
     saveConvosMutation.mutate([]);
-    saveExtraSlotsMutation.mutate(0);
-    saveBoostMutation.mutate(null);
-    saveSuperLikeBalanceMutation.mutate(DEFAULT_SUPER_LIKES);
-    saveSuperLikeLastUseMutation.mutate(null);
-    saveSubscriptionMutation.mutate(null);
     return result ?? { ok: true as const };
   }, [
     mode,
@@ -928,11 +899,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     saveProfileMutation,
     saveConvosMutation,
     resetInteractions,
-    saveExtraSlotsMutation,
-    saveBoostMutation,
-    saveSuperLikeBalanceMutation,
-    saveSuperLikeLastUseMutation,
-    saveSubscriptionMutation,
+    resetMonetization,
   ]);
 
   const totalSlots = MVP_MONETIZATION_ENABLED
@@ -1299,10 +1266,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       if (MVP_MONETIZATION_ENABLED) {
         const nextBalance = superLikeBalance - 1;
         setSuperLikeBalance(nextBalance);
-        saveSuperLikeBalanceMutation.mutate(nextBalance);
         const now = Date.now();
         setSuperLikeLastUseAt(now);
-        saveSuperLikeLastUseMutation.mutate(now);
       }
 
       setSuperLikedIds((prev) => {
@@ -1335,8 +1300,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       slotsUsed,
       totalSlots,
       superLikeBalance,
-      saveSuperLikeBalanceMutation,
-      saveSuperLikeLastUseMutation,
+      setSuperLikeBalance,
+      setSuperLikeLastUseAt,
       setSuperLikedIds,
     ]
   );
@@ -1550,38 +1515,31 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       if (typeof result.extraSlotsDelta === "number") {
         const delta = result.extraSlotsDelta;
         setExtraSlots((v) => {
-          const n = v + delta;
-          saveExtraSlotsMutation.mutate(n);
-          return n;
+          return v + delta;
         });
       }
       if (typeof result.boostedUntil === "number") {
         setBoostedUntil(result.boostedUntil);
-        saveBoostMutation.mutate(result.boostedUntil);
       }
       if (typeof result.superLikeBalance === "number") {
         setSuperLikeBalance(result.superLikeBalance);
-        saveSuperLikeBalanceMutation.mutate(result.superLikeBalance);
       }
       if (typeof result.superLikeBalanceDelta === "number") {
         const delta = result.superLikeBalanceDelta;
         setSuperLikeBalance((v) => {
-          const n = v + delta;
-          saveSuperLikeBalanceMutation.mutate(n);
-          return n;
+          return v + delta;
         });
       }
       if ("superLikeLastUseAt" in result) {
         setSuperLikeLastUseAt(result.superLikeLastUseAt ?? null);
-        saveSuperLikeLastUseMutation.mutate(result.superLikeLastUseAt ?? null);
       }
     },
     [
       superLikeBalance,
-      saveExtraSlotsMutation,
-      saveBoostMutation,
-      saveSuperLikeBalanceMutation,
-      saveSuperLikeLastUseMutation,
+      setBoostedUntil,
+      setExtraSlots,
+      setSuperLikeBalance,
+      setSuperLikeLastUseAt,
     ]
   );
 
@@ -1591,36 +1549,29 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       const result = createLocalSubscription(id);
       if (!result) return;
       setSubscription(result.subscription);
-      saveSubscriptionMutation.mutate(result.subscription);
 
       setExtraSlots((v) => {
-        const n = v + result.extraSlotsDelta;
-        saveExtraSlotsMutation.mutate(n);
-        return n;
+        return v + result.extraSlotsDelta;
       });
       setSuperLikeBalance((v) => {
-        const n = v + result.superLikeBalanceDelta;
-        saveSuperLikeBalanceMutation.mutate(n);
-        return n;
+        return v + result.superLikeBalanceDelta;
       });
       if (typeof result.boostedUntil === "number") {
         setBoostedUntil(result.boostedUntil);
-        saveBoostMutation.mutate(result.boostedUntil);
       }
     },
     [
-      saveSubscriptionMutation,
-      saveExtraSlotsMutation,
-      saveSuperLikeBalanceMutation,
-      saveBoostMutation,
+      setBoostedUntil,
+      setExtraSlots,
+      setSubscription,
+      setSuperLikeBalance,
     ]
   );
 
   const cancelSubscription = useCallback(() => {
     console.log("[profile-provider] cancel subscription");
     setSubscription(null);
-    saveSubscriptionMutation.mutate(null);
-  }, [saveSubscriptionMutation]);
+  }, [setSubscription]);
 
   const invitePartner = useCallback(
     (email: string, displayName?: string) => {
@@ -1738,16 +1689,14 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     if (Date.now() >= due) {
       console.log("[profile-provider] super like auto-recharge");
       setSuperLikeBalance(DEFAULT_SUPER_LIKES);
-      saveSuperLikeBalanceMutation.mutate(DEFAULT_SUPER_LIKES);
       setSuperLikeLastUseAt(null);
-      saveSuperLikeLastUseMutation.mutate(null);
     }
   }, [
     hydrated,
     superLikeBalance,
     superLikeLastUseAt,
-    saveSuperLikeBalanceMutation,
-    saveSuperLikeLastUseMutation,
+    setSuperLikeBalance,
+    setSuperLikeLastUseAt,
   ]);
 
   return useMemo<ProfileProviderContract>(

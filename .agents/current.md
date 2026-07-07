@@ -9,8 +9,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 ## Branch And Commit
 
 - Branch: `main`
-- Latest implementation checkpoint: `0558d5f` - Extract provider selector helpers
-- Current working state: clean locally, pending push/sync verification.
+- Latest implementation checkpoint: pending commit - Extract monetization store
+- Current working state: uncommitted monetization store extraction plus doc/handoff alignment.
 
 ## Canonical Docs
 
@@ -47,6 +47,8 @@ Old duplicate roadmap/checklist/audit docs were consolidated and deleted from ac
 - Foundation Slice 4 is implemented: local/demo `likedIds`, `passedIds`, and `superLikedIds` now live behind `expo/store/use-interaction-store.ts` using the existing AsyncStorage keys. Provider wrappers remain intact and Supabase reciprocal-match decisions remain service-owned.
 - Foundation Slice 5 is implemented: `expo/hooks/api/` now contains query keys and query hooks for matches, chat threads, and discovery. Discover/Fruit consume discovery through `useDiscoveryProfilesQuery`, and provider match bootstrap uses `useMatchesQuery().refetch()` without moving the whole hydration algorithm.
 - Foundation Slice 6 route read-model migration is implemented: app routes/components no longer import `useProfile()` directly. Provider access is confined to focused hooks under `expo/hooks/`.
+- Provider-internal selector cleanup is implemented: pure compatibility selectors now live in `expo/services/profile-provider-selectors.ts`.
+- Prototype monetization state now lives behind `expo/store/use-monetization-store.ts` while preserving existing AsyncStorage keys and provider compatibility wrappers.
 
 ## Validation State
 
@@ -81,8 +83,9 @@ Foundation Slice 1 validation:
 - Foundation Slice 6 profile/safety/paywall route facade validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed.
 - Foundation Slice 6 final route migration validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed.
 - Provider selector extraction validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed.
+- Monetization store extraction validation: pending final rerun in current working tree.
 
-## Current Docs-Only Changes
+## Recent Docs Consolidation
 
 - Rewrote `docs/milestone-tracker.md` as the canonical closed-beta roadmap/checklist/feedback-loop doc.
 - Rewrote `docs/repo-audit-and-foundation-plan.md` to make Option 3 PR-sized and safe.
@@ -93,4 +96,4 @@ Foundation Slice 1 validation:
 
 ## Next Recommended Task
 
-Human UAT forgot-password when practical, then continue provider-internal cleanup after Slice 6 by moving the next small state domain out of `ProfileProvider` behind clearer stores/services. Keep the Android Match Detail loader as a monitored follow-up, not a blocker unless it worsens.
+Human UAT forgot-password when practical, then continue provider-internal cleanup after Slice 6 by moving the next small state domain out of `ProfileProvider` behind clearer stores/services. The likely next PR-sized slice is local chat/conversation state. Keep the Android Match Detail loader as a monitored follow-up, not a blocker unless it worsens.

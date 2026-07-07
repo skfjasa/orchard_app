@@ -386,4 +386,4 @@ Historical rationale for these removed items is preserved in [Architecture Audit
 
 ## Current Recommended Next Step
 
-Slices 2 through 6 are implemented. Next, continue provider-internal cleanup by shrinking `ProfileProvider` compatibility-selector and domain-state ownership in PR-sized slices without changing visible UI or mock/Supabase behavior.
+Slices 2 through 6 are implemented, and provider-internal cleanup has started with selector and prototype monetization extraction. Next, continue moving one small state domain at a time out of `ProfileProvider` without changing visible UI or mock/Supabase behavior.

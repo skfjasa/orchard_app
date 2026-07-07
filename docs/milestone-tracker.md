@@ -185,6 +185,7 @@ Done:
 - [x] [C] Amended foundation refactor plan exists and avoids one-pass `ProfileProvider` deletion.
 - [x] [C] Route/provider boundary migration is complete: app routes/components consume focused hooks instead of importing `useProfile()` directly.
 - [x] [C] Provider-internal selector cleanup has started with pure selector helpers in `expo/services/profile-provider-selectors.ts`.
+- [x] [C] Prototype monetization state now lives in `expo/store/use-monetization-store.ts` while preserving demo/paywall behavior.
 
 Remaining:
 

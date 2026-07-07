@@ -17,7 +17,7 @@ Categories:
 - Server state: Supabase-backed or backend-derived state that should eventually move to query hooks.
 - Client preference state: per-user local preferences that can move to small persisted stores.
 - Local mock/demo state: prototype state that keeps mock/Fruit/demo behavior available.
-- Prototype monetization state: non-production monetization counters and demo actions.
+- Prototype monetization facade: non-production monetization counters and demo actions now backed by a focused store.
 - UI selector/facade: read selectors that shield screens from raw provider internals.
 
 | Contract member | Category | Notes / future owner |
@@ -31,7 +31,7 @@ Categories:
 | `conversations` | Local mock/demo state / server state | Mixed local and hydrated backend thread state; should split by mock/backend ownership. |
 | `likedIds` | Local mock/demo state | Compatibility array; not a long-term Supabase active-match source of truth. |
 | `passedIds` | Local mock/demo state | Candidate for local interaction store. |
-| `superLikedIds` | Local mock/demo state / prototype monetization state | Candidate for local interaction store. |
+| `superLikedIds` | Local mock/demo state / prototype monetization facade | Owned by the local interaction store; still participates in demo Super Like behavior. |
 | `newMatchIds` | Client preference state | Candidate for seen-match/preference store or backend-backed decision. |
 | `matchedProfiles` | UI selector/facade | Selector consumed by Matches; first consumer group to migrate. |
 | `inboxItems` | UI selector/facade | Selector consumed by Inbox; first consumer group to migrate. |
@@ -59,11 +59,11 @@ Categories:
 | `markRead` | Client preference state / server state | Candidate for preference store wrapper while preserving Supabase `match_read_states`. |
 | `drafts` / `setDraft` | Client preference state | Candidate for local UI draft store. |
 | `typingProfileIds` | Local mock/demo state | Simulated typing state. |
-| `totalSlots`, `slotsUsed`, `slotsRemaining`, `isAtMatchLimit` | Prototype monetization state | Demo/paywall calculations; disabled for feedback MVP. |
-| `extraSlots`, `boostedUntil`, `isBoosted` | Prototype monetization state | Local demo counters. |
-| `superLikeBalance`, `superLikeLastUseAt`, `superLikeRechargeAt` | Prototype monetization state | Local demo counters. |
-| `subscription` | Prototype monetization state | Local demo subscription state. |
-| `purchase`, `subscribe`, `cancelSubscription` | Prototype monetization state | Local demo actions; no paid service integration. |
+| `totalSlots`, `slotsUsed`, `slotsRemaining`, `isAtMatchLimit` | Prototype monetization facade | Demo/paywall calculations; disabled for feedback MVP. |
+| `extraSlots`, `boostedUntil`, `isBoosted` | Prototype monetization facade | Store-backed local demo counters. |
+| `superLikeBalance`, `superLikeLastUseAt`, `superLikeRechargeAt` | Prototype monetization facade | Store-backed local demo counters. |
+| `subscription` | Prototype monetization facade | Store-backed local demo subscription state. |
+| `purchase`, `subscribe`, `cancelSubscription` | Prototype monetization facade | Local demo actions; no paid service integration. |
 | `invitePartner`, `resendPartnerInvite`, `acceptPartnerLink`, `removePartnerLink` | Local mock/demo state | Local partner-link prototype behavior. |
 
 First consumers to migrate after this contract freeze:
@@ -193,7 +193,6 @@ Preserved behavior:
 Not moved yet:
 
 - Provider ownership of conversation/chat state.
-- Provider ownership of prototype monetization state.
 - Provider ownership of profile bootstrap and backend match/thread hydration coordination.
 
 ## Provider Selector Extraction
@@ -211,9 +210,27 @@ Preserved behavior:
 - Existing incomplete-backend-profile filtering and last-resolved profile caching.
 - Existing `useTransientEmptyList` protection for Matches and Inbox.
 
+## Extracted Monetization Store
+
+Post-Slice 6 provider-internal cleanup moved prototype monetization state behind `expo/store/use-monetization-store.ts`.
+
+State now owned by the monetization store:
+
+- `extraSlots`
+- `boostedUntil`
+- `superLikeBalance`
+- `superLikeLastUseAt`
+- `subscription`
+
+Preserved behavior:
+
+- Existing AsyncStorage keys are reused: `duet.extraSlots.v1`, `duet.boostedUntil.v1`, `duet.superLikeBalance.v1`, `duet.superLikeLastUse.v1`, and `duet.subscription.v1`.
+- `ProfileProvider.purchase`, `subscribe`, and `cancelSubscription` remain compatibility wrappers.
+- Demo paywall, boost, match-slot, super-like refill, subscription, and auto-recharge behavior is unchanged.
+
 ## Current Role
 
-`ProfileProvider` is the central app-state provider for the prototype. It still owns UI-facing local state and coordinates persistence, but the first service boundaries have been extracted.
+`ProfileProvider` is the central app-state provider for the prototype. It still owns UI-facing local state and coordinates persistence, but the first service and store boundaries have been extracted.
 
 Current persistence is local through `AsyncStorage` via `expo/services/local-profile-storage.ts`, focused Zustand stores, and remaining React Query mutations. Supabase swipe persistence can run as a gated, non-blocking hook when Supabase mode has a matching authenticated profile id, but backend data is not yet fully query-owned.
 
@@ -234,16 +251,11 @@ Current persistence is local through `AsyncStorage` via `expo/services/local-pro
 
 - `profile`
 - `conversations`
-- `extraSlots`
-- `boostedUntil`
-- `superLikeBalance`
-- `superLikeLastUseAt`
-- `subscription`
 - `hydrated`
 - `drafts`
 - `typingProfileIds`
 
-The provider still owns React state for these values. Storage and several local mutation helpers now live in service modules and focused stores. `likedIds`, `passedIds`, and `superLikedIds` are owned by `use-interaction-store.ts`; `readWatermarks` and `seenMatchIds` are owned by `use-preferences-store.ts`.
+The provider still owns React state for these values. Storage and several local mutation helpers now live in service modules and focused stores. `likedIds`, `passedIds`, and `superLikedIds` are owned by `use-interaction-store.ts`; `readWatermarks` and `seenMatchIds` are owned by `use-preferences-store.ts`; `extraSlots`, `boostedUntil`, `superLikeBalance`, `superLikeLastUseAt`, and `subscription` are owned by `use-monetization-store.ts`.
 
 ## Derived State
 
@@ -376,6 +388,9 @@ Runtime local helper modules now exist:
 - `expo/services/local-interaction-service.ts`
 - `expo/services/local-monetization-service.ts`
 - `expo/services/local-profile-mutation-service.ts`
+- `expo/store/use-interaction-store.ts`
+- `expo/store/use-monetization-store.ts`
+- `expo/store/use-preferences-store.ts`
 
 - `ProfileService`: profile lifecycle and settings.
 - `AuthProvider`: auth/session state and future Supabase auth operations.
