@@ -189,7 +189,7 @@ Remaining:
 - [x] [C] Slice 1: remove Match Detail web history/hash hacks while preserving native Android `BackHandler`.
 - [x] [C] Slice 2: update/freeze the `ProfileProvider` facade contract and responsibility inventory.
 - [x] [C] Slice 3: extract local preferences such as read watermarks and seen-match ids.
-- [ ] [C] Slice 4: extract local/demo interaction state such as likes/passes/super-likes while keeping Supabase active matches backend-driven.
+- [x] [C] Slice 4: extract local/demo interaction state such as likes/passes/super-likes while keeping Supabase active matches backend-driven.
 - [ ] [C] Slice 5: introduce query-backed backend server-state hooks for matches, chat threads, and discovery.
 - [ ] [C+U] Migrate screens domain-by-domain without changing visible UI.
 - [ ] [C] Isolate mock/Fruit behavior from Supabase signed-in runtime state.

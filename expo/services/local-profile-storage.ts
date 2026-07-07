@@ -9,9 +9,9 @@ import {
 
 const PROFILE_KEY = "duet.profile.v1";
 const CONVOS_KEY = "duet.conversations.v1";
-const LIKES_KEY = "duet.likes.v1";
-const PASSES_KEY = "duet.passes.v1";
-const SUPERLIKES_KEY = "duet.superLikes.v1";
+export const LIKES_KEY = "duet.likes.v1";
+export const PASSES_KEY = "duet.passes.v1";
+export const SUPERLIKES_KEY = "duet.superLikes.v1";
 const EXTRA_SLOTS_KEY = "duet.extraSlots.v1";
 const BOOST_KEY = "duet.boostedUntil.v1";
 const SUPERLIKE_BALANCE_KEY = "duet.superLikeBalance.v1";

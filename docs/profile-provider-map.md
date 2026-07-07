@@ -94,11 +94,36 @@ Not moved in Slice 3:
 - Product decision about whether seen-match/highlight state becomes backend-backed.
 - Chat drafts or typing state.
 
+## Extracted Interaction Store
+
+Slice 4 moved local/demo swipe interaction arrays behind `expo/store/use-interaction-store.ts` while preserving the provider facade.
+
+State now owned by the interaction store:
+
+- `likedIds`
+- `passedIds`
+- `superLikedIds`
+
+Preserved behavior:
+
+- Existing AsyncStorage keys are reused: `duet.likes.v1`, `duet.passes.v1`, and `duet.superLikes.v1`.
+- `ProfileProvider` still exposes the arrays and wrapper actions consumed by Discover, Fruit, Match Detail, Chat, Matches, and Inbox.
+- Mock/Fruit fixture likes and super-likes can still activate local matches.
+- Supabase-mode real/backend likes and super-likes still require the existing swipe service to return `matched: true` before local active match UI is activated.
+- Backend match hydration can still merge active backend match IDs into the compatibility `likedIds` facade.
+
+Not moved in Slice 4:
+
+- Backend match hydration and Realtime/polling refresh behavior.
+- Swipe/match service ownership of reciprocal-match decisions.
+- Conversation state or chat send/read behavior.
+- Product decision about long-term backend ownership for any local-only fixture markers.
+
 ## Current Role
 
 `ProfileProvider` is the central app-state provider for the prototype. It still owns UI-facing local state and coordinates persistence, but the first service boundaries have been extracted.
 
-Current persistence is local through `AsyncStorage` via `expo/services/local-profile-storage.ts` and React Query mutations. Supabase swipe persistence can run as a gated, non-blocking hook when Supabase mode has a matching authenticated profile id, but backend data is not the UI source of truth.
+Current persistence is local through `AsyncStorage` via `expo/services/local-profile-storage.ts`, focused Zustand stores, and remaining React Query mutations. Supabase swipe persistence can run as a gated, non-blocking hook when Supabase mode has a matching authenticated profile id, but backend data is not yet fully query-owned.
 
 ## Storage Keys
 
@@ -117,9 +142,6 @@ Current persistence is local through `AsyncStorage` via `expo/services/local-pro
 
 - `profile`
 - `conversations`
-- `likedIds`
-- `passedIds`
-- `superLikedIds`
 - `extraSlots`
 - `boostedUntil`
 - `superLikeBalance`
@@ -129,7 +151,7 @@ Current persistence is local through `AsyncStorage` via `expo/services/local-pro
 - `drafts`
 - `typingProfileIds`
 
-The provider still owns React state for these values. Storage and several local mutation helpers now live in service modules.
+The provider still owns React state for these values. Storage and several local mutation helpers now live in service modules and focused stores. `likedIds`, `passedIds`, and `superLikedIds` are owned by `use-interaction-store.ts`; `readWatermarks` and `seenMatchIds` are owned by `use-preferences-store.ts`.
 
 ## Derived State
 

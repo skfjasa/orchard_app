@@ -209,6 +209,7 @@ Last updated: 2026-07-07
 - Real/dev tester reported forgot-password did not work. The sign-in screen previously showed only a placeholder alert. Forgot-password now calls Supabase `resetPasswordForEmail` with the same auth redirect URL strategy as signup, the auth provider detects recovery callbacks, and `/onboarding/sign-in` shows an in-app new-password form that calls `supabase.auth.updateUser({ password })`.
 - Foundation Slice 2 freezes the current `useProfile()` compatibility facade in `expo/providers/profile-provider-contract.ts` and annotates `ProfileProvider` against it. `docs/profile-provider-map.md` now categorizes each field/action as auth/profile bootstrap, server state, client preference state, local mock/demo state, prototype monetization state, or UI selector/facade, with first migration consumers identified for Matches/Inbox, Match Detail, and Chat.
 - Foundation Slice 3 moves local read/seen preferences into `expo/store/use-preferences-store.ts` while preserving existing storage keys and provider wrappers. `ProfileProvider.markRead` and `ProfileProvider.markMatchSeen` remain screen-facing compatibility APIs, and Supabase `match_read_states` behavior remains in the provider for now.
+- Foundation Slice 4 moves local/demo swipe interaction arrays into `expo/store/use-interaction-store.ts` while preserving existing storage keys. `ProfileProvider` still exposes `likedIds`, `passedIds`, `superLikedIds`, and wrapper actions, and Supabase reciprocal-match decisions remain behind the existing swipe/match services.
 - Profile-tab sign-out now clears profile/auth state before routing to `/onboarding`, preventing the user from landing on Discover with no profile/data loaded.
 - Remaining observed behavior to decide/fix later: after sign-out/sign-in, only hosted messages are restored; local fixture greeting/simulated messages are intentionally not persisted to hosted chat yet.
 - The original generated onboarding background was recovered from the previous remote URL, vendored as `expo/assets/images/welcome-background.png`, and the welcome, sign-in, and pending-confirmation screens now use the local bundled asset instead of the app icon background or a remote Rork URL.
@@ -220,16 +221,16 @@ Last updated: 2026-07-07
 - A browser funnel test reached `/onboarding/photos`, sent a Supabase confirmation email, and exposed two hosted auth setup gaps: the redirect URL was still pointing at `http://localhost:3000`, and emails still used default Supabase Auth branding. App-side redirect handling has been patched; hosted Supabase Auth redirect allow-list, Site URL, and email templates/sender still need Dashboard review.
 - User updated Supabase Auth URL Configuration redirect entries for the browser preview. Supabase Dashboard currently requires SMTP configuration before auth email templates can be customized; SMTP fields are still blank except project auth secrets.
 - Project review recommendations remain relevant: avoid a broad `ProfileProvider` rewrite, keep moving behavior behind services, and add CI/database automation after the auth/profile path has a little more coverage. The July 2026 amended plan makes this explicit: keep `ProfileProvider` as a compatibility facade, remove web navigation hacks first, then extract preferences, interactions, and backend server state in separate slices.
-- Session-close handoff records the UAT tunnel, navigation back, and forgot-password recovery checkpoint. Latest implementation checkpoint: `0eb91af` - Add UAT tunnel and auth recovery fixes.
+- Session-close handoff records the UAT tunnel, navigation back, forgot-password recovery checkpoint, and provider extraction checkpoint. Latest pushed implementation checkpoint: `453a154` - Extract profile provider preferences.
 
 ## Current Task
 
-Foundation Slice 3 implemented: local read/seen preferences now live behind `expo/store/use-preferences-store.ts` using existing AsyncStorage keys, while `ProfileProvider.markRead` and `ProfileProvider.markMatchSeen` remain screen-facing compatibility APIs. Slice 1 navigation cleanup remains UAT-accepted, and Slice 2's facade contract remains the extraction guardrail.
+Foundation Slice 4 implemented: local/demo swipe interaction arrays now live behind `expo/store/use-interaction-store.ts` using existing AsyncStorage keys, while `ProfileProvider` remains the compatibility facade and Supabase reciprocal-match decisions stay service-owned.
 
 ## Next Planned Tasks
 
 1. Human UAT forgot-password flow on hosted Supabase/ngrok when practical: request reset email, open link, set new password, sign in with the new password, and confirm the old password no longer works.
-2. Move to foundation Slice 4: extract local/demo interaction state such as likes, passes, super-likes, and local-only fixture match markers while keeping Supabase active matches backend-driven.
+2. Move to foundation Slice 5: introduce query-backed backend server-state hooks for matches, chat threads, and discovery without moving all provider hydration in one pass.
 3. Continue Supabase source-of-truth session bootstrap for inner-circle testing: profile, active matches, display profiles/photos, inbox summaries, thread snippets, unread/read state, and block/unmatch visibility should load before tabs render.
 4. Monitor Android Match Detail's brief app-background loading step; optimize only if it is multi-second, frequent after warmup, or loses rows/highlight state.
 5. Decide whether seen-match/highlight state remains local-only for inner-circle testing or moves to backend-backed per-user state.

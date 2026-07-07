@@ -32,14 +32,11 @@ import {
   saveStoredBoost,
   saveStoredConversations,
   saveStoredExtraSlots,
-  saveStoredLikes,
-  saveStoredPasses,
   saveStoredProfile,
   saveStoredKnownProfiles,
   saveStoredSubscription,
   saveStoredSuperLikeBalance,
   saveStoredSuperLikeLastUse,
-  saveStoredSuperLikes,
 } from "@/services/local-profile-storage";
 import type { SubscriptionState } from "@/services/local-profile-storage";
 import {
@@ -70,6 +67,7 @@ import {
 } from "@/types";
 import type { ReportReason } from "@/services/safety-service";
 import type { SwipeDecision, SwipeResult } from "@/services/swipe-service";
+import { useInteractionStore } from "@/store/use-interaction-store";
 import { usePreferencesStore } from "@/store/use-preferences-store";
 import type {
   MatchActionResult,
@@ -221,21 +219,28 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     setReadWatermarks,
     setSeenMatchIds,
   } = usePreferencesStore();
+  const {
+    hydrateInteractions,
+    likedIds,
+    passedIds,
+    resetInteractions,
+    setLikedIds,
+    setPassedIds,
+    setSuperLikedIds,
+    superLikedIds,
+  } = useInteractionStore();
   const knownProfilesRef = useRef<Profile[]>([]);
   const displayProfilesRef = useRef<Record<string, Profile>>({});
   const lastResolvedProfilesRef = useRef<Record<string, Profile>>({});
   const [profile, setProfile] = useState<Profile | null>(null);
   const [knownProfiles, setKnownProfiles] = useState<Profile[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [likedIds, setLikedIds] = useState<string[]>([]);
   const [newMatchIds, setNewMatchIds] = useState<string[]>([]);
   const [backendActiveMatchIds, setBackendActiveMatchIds] = useState<string[]>(
     []
   );
   const readWatermarksRef = useRef<Record<string, Record<string, number>>>({});
   const seenMatchIdsRef = useRef<Record<string, string[]>>({});
-  const [passedIds, setPassedIds] = useState<string[]>([]);
-  const [superLikedIds, setSuperLikedIds] = useState<string[]>([]);
   const [extraSlots, setExtraSlots] = useState<number>(0);
   const [boostedUntil, setBoostedUntil] = useState<number | null>(null);
   const [superLikeBalance, setSuperLikeBalance] = useState<number>(
@@ -262,9 +267,11 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     if (loadQuery.data && !hydrated) {
       setProfile(loadQuery.data.profile);
       setConversations(loadQuery.data.conversations);
-      setLikedIds(loadQuery.data.likedIds);
-      setPassedIds(loadQuery.data.passedIds);
-      setSuperLikedIds(loadQuery.data.superLikedIds);
+      hydrateInteractions(
+        loadQuery.data.likedIds,
+        loadQuery.data.passedIds,
+        loadQuery.data.superLikedIds
+      );
       setExtraSlots(loadQuery.data.extraSlots);
       setBoostedUntil(loadQuery.data.boostedUntil);
       setSuperLikeBalance(loadQuery.data.superLikeBalance);
@@ -300,18 +307,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
   const saveConvosMutation = useMutation({
     mutationFn: saveStoredConversations,
-  });
-
-  const saveLikesMutation = useMutation({
-    mutationFn: saveStoredLikes,
-  });
-
-  const savePassesMutation = useMutation({
-    mutationFn: saveStoredPasses,
-  });
-
-  const saveSuperLikesMutation = useMutation({
-    mutationFn: saveStoredSuperLikes,
   });
 
   const saveExtraSlotsMutation = useMutation({
@@ -665,7 +660,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         const localOnlyLikedIds = prev.filter((id) => !isBackendProfileId(id));
         const next = [...matchedLocalProfileIds, ...localOnlyLikedIds];
         if (sameStringSet(prev, next)) return prev;
-        saveLikesMutation.mutate(next);
         return next;
       });
 
@@ -746,7 +740,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     profile,
     rememberProfiles,
     saveConvosMutation,
-    saveLikesMutation,
     session?.access_token,
     userId,
   ]);
@@ -887,10 +880,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     }
     setProfile(null);
     setConversations([]);
-    setLikedIds([]);
     setNewMatchIds([]);
-    setPassedIds([]);
-    setSuperLikedIds([]);
+    resetInteractions();
     setExtraSlots(0);
     setBoostedUntil(null);
     setSuperLikeBalance(DEFAULT_SUPER_LIKES);
@@ -904,9 +895,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     pendingBackendMatchRefreshRef.current = false;
     saveProfileMutation.mutate(null);
     saveConvosMutation.mutate([]);
-    saveLikesMutation.mutate([]);
-    savePassesMutation.mutate([]);
-    saveSuperLikesMutation.mutate([]);
     saveExtraSlotsMutation.mutate(0);
     saveBoostMutation.mutate(null);
     saveSuperLikeBalanceMutation.mutate(DEFAULT_SUPER_LIKES);
@@ -918,9 +906,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     signOutAuth,
     saveProfileMutation,
     saveConvosMutation,
-    saveLikesMutation,
-    savePassesMutation,
-    saveSuperLikesMutation,
+    resetInteractions,
     saveExtraSlotsMutation,
     saveBoostMutation,
     saveSuperLikeBalanceMutation,
@@ -970,7 +956,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       setLikedIds((prev) => {
         const next = addUniqueId(prev, id);
         if (next === prev) return prev;
-        saveLikesMutation.mutate(next);
         return next;
       });
 
@@ -982,7 +967,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         return next;
       });
     },
-    [saveConvosMutation, saveLikesMutation]
+    [saveConvosMutation, setLikedIds]
   );
 
   const markMatchSeen = useCallback(async (profileId: string) => {
@@ -1058,7 +1043,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         setLikedIds((prev) => {
           const next = removeId(prev, targetId);
           if (next === prev) return prev;
-          saveLikesMutation.mutate(next);
           return next;
         });
         setConversations((prev) => {
@@ -1094,7 +1078,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
           });
         });
     },
-    [appServices, mode, profile, saveConvosMutation, userId]
+    [appServices, mode, profile, saveConvosMutation, setLikedIds, userId]
   );
 
   const likeProfile = useCallback(
@@ -1134,7 +1118,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     (id: string) => {
       setLikedIds((prev) => {
         const next = removeId(prev, id);
-        saveLikesMutation.mutate(next);
         return next;
       });
       setConversations((prev) => {
@@ -1182,7 +1165,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         }
       }
     },
-    [appServices, mode, profile, saveLikesMutation, saveConvosMutation, userId]
+    [appServices, mode, profile, saveConvosMutation, setLikedIds, userId]
   );
 
   const reportProfile = useCallback(
@@ -1230,12 +1213,10 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
       setLikedIds((prev) => {
         const next = removeId(prev, blockedProfileId);
-        saveLikesMutation.mutate(next);
         return next;
       });
       setPassedIds((prev) => {
         const next = addUniqueId(prev, blockedProfileId);
-        savePassesMutation.mutate(next);
         return next;
       });
       setConversations((prev) => {
@@ -1250,8 +1231,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       appServices,
       profile,
       saveConvosMutation,
-      saveLikesMutation,
-      savePassesMutation,
+      setLikedIds,
+      setPassedIds,
     ]
   );
 
@@ -1306,7 +1287,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       setSuperLikedIds((prev) => {
         const next = addUniqueId(prev, id);
         if (next === prev) return prev;
-        saveSuperLikesMutation.mutate(next);
         return next;
       });
 
@@ -1334,9 +1314,9 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       slotsUsed,
       totalSlots,
       superLikeBalance,
-      saveSuperLikesMutation,
       saveSuperLikeBalanceMutation,
       saveSuperLikeLastUseMutation,
+      setSuperLikedIds,
     ]
   );
 
@@ -1345,12 +1325,11 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       setPassedIds((prev) => {
         const next = addUniqueId(prev, id);
         if (next === prev) return prev;
-        savePassesMutation.mutate(next);
         return next;
       });
       void recordBackendSwipe(id, "pass");
     },
-    [savePassesMutation, recordBackendSwipe]
+    [recordBackendSwipe, setPassedIds]
   );
 
   const sendMessage = useCallback(

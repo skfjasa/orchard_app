@@ -1,6 +1,6 @@
 # Orchard Repo Audit & Foundation Refactor Plan
 
-Last updated: 2026-07-06
+Last updated: 2026-07-07
 
 This is the active execution plan for the July 2026 repository audit. It supersedes older one-pass refactor recommendations while preserving their useful findings in [Architecture Audit History](architecture-history.md).
 
@@ -205,6 +205,8 @@ Validation:
 
 ### Slice 4: Interaction Store For Local-Only Swipe State
 
+Status: implemented 2026-07-07.
+
 Goal:
 
 Separate local/demo interaction arrays from backend match source-of-truth state.
@@ -382,4 +384,4 @@ Historical rationale for these removed items is preserved in [Architecture Audit
 
 ## Current Recommended Next Step
 
-After this docs-only alignment is accepted, implement Slice 1: Web Navigation Cleanup.
+Slice 4 is implemented. Next, implement Slice 5: introduce query-backed backend server-state hooks for matches, chat threads, and discovery without moving all provider hydration in one pass.
