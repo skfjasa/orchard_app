@@ -9,8 +9,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 ## Branch And Commit
 
 - Branch: `main`
-- Latest implementation checkpoint: `453a154` - Extract profile provider preferences
-- Current working state: foundation Slice 4 changes are present and uncommitted.
+- Latest implementation checkpoint: `b4de823` - Extract local interaction store
+- Current working state: clean and synced with `origin/main`.
 
 ## Canonical Docs
 
