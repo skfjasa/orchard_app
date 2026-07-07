@@ -196,7 +196,7 @@ Remaining:
   - [x] [C] Inbox read path now uses `useInboxReadModel`.
   - [x] [C] Match Detail read path and seen-state calls now use `useMatchDetailReadModel`.
   - [x] [C] Chat thread/read/send path now uses `useChatThreadReadModel`.
-  - [ ] [C] Discover/Fruit discovery and local fixture behavior.
+  - [x] [C] Discover/Fruit discovery and local fixture behavior now use focused read-model hooks.
   - [ ] [C] Profile/safety/paywall/onboarding calls.
 - [ ] [C] Isolate mock/Fruit behavior from Supabase signed-in runtime state.
 

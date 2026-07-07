@@ -32,8 +32,7 @@ import {
   MVP_SUPER_LIKES_ENABLED,
 } from "@/constants/features";
 import { getPolyFruit } from "@/constants/poly-fruits";
-import { useDiscoveryProfilesQuery } from "@/hooks/api/use-discovery";
-import { useProfile } from "@/providers/profile-provider";
+import { useDiscoverReadModel } from "@/hooks/use-discover-read-model";
 import type { DiscoveryProfile } from "@/services";
 import { Profile } from "@/types";
 
@@ -45,35 +44,19 @@ export default function DiscoverScreen() {
   const {
     profile,
     likedIds,
-    passedIds,
     likeProfile,
     passProfile,
-    rememberProfiles,
     totalSlots,
     slotsRemaining,
     isAtMatchLimit,
     isBoosted,
     superLikeProfile,
     superLikeBalance,
-  } = useProfile();
+    discoveryProfiles,
+  } = useDiscoverReadModel();
   const [ranked, setRanked] = useState<DiscoveryProfile[]>([]);
   const [matchProfile, setMatchProfile] = useState<Profile | null>(null);
   const cardWidth = Math.min(screenWidth - 40, MAX_CARD_W);
-  const discoveryFilters = useMemo(
-    () =>
-      profile
-        ? {
-            profileId: profile.id,
-            viewerProfile: profile,
-            excludedProfileIds: [...likedIds, ...passedIds],
-          }
-        : null,
-    [likedIds, passedIds, profile]
-  );
-  const discoveryQuery = useDiscoveryProfilesQuery({
-    enabled: !!profile,
-    filters: discoveryFilters,
-  });
 
   useEffect(() => {
     if (!profile) {
@@ -81,19 +64,8 @@ export default function DiscoverScreen() {
       return;
     }
 
-    const result = discoveryQuery.data;
-    if (!result) return;
-    if (!result.ok) {
-      console.log("[discover] profile discovery failed", {
-        code: result.error.code,
-        message: result.error.message,
-      });
-      setRanked([]);
-      return;
-    }
-    rememberProfiles(result.value.map((item) => item.profile));
-    setRanked(result.value);
-  }, [discoveryQuery.data, profile, rememberProfiles]);
+    setRanked(discoveryProfiles);
+  }, [discoveryProfiles, profile]);
 
   const pan = useRef(new Animated.ValueXY()).current;
   const swipingRef = useRef<boolean>(false);

@@ -144,7 +144,7 @@ Not moved in Slice 5:
 
 ## Screen Migration Progress
 
-Slice 6 has started with route read-model migration for Matches, Inbox, Match Detail, and Chat.
+Slice 6 has started with route read-model migration for Matches, Inbox, Match Detail, Chat, Discover, and Fruit.
 
 Implemented:
 
@@ -156,6 +156,10 @@ Implemented:
 - `expo/app/match/[id].tsx` consumes `useMatchDetailReadModel` instead of importing `useProfile()` directly.
 - `expo/hooks/use-chat-thread-read-model.ts` wraps Chat profile/thread lookup, active-match guard state, typing/draft state, read marking, local send/delete/photo actions, and safety actions.
 - `expo/app/chat/[id].tsx` consumes `useChatThreadReadModel` instead of importing `useProfile()` directly.
+- `expo/hooks/use-discover-read-model.ts` wraps the Discover deck's discovery query, remembered display profiles, exclusion inputs, monetization counters, and swipe actions.
+- `expo/app/(tabs)/discover.tsx` consumes `useDiscoverReadModel` instead of importing `useProfile()` or `useDiscoveryProfilesQuery` directly.
+- `expo/hooks/use-fruit-read-model.ts` wraps Fruit's backend non-fixture discovery, local fixture pool, scoring, remembered display profiles, and like/boost actions.
+- `expo/app/(tabs)/fruit.tsx` consumes `useFruitReadModel` instead of importing `useProfile()` or `useDiscoveryProfilesQuery` directly.
 
 Preserved behavior:
 
@@ -163,10 +167,12 @@ Preserved behavior:
 - Existing Inbox layout, empty state, row rendering, typing preview, unread badges, focus refresh, transient-empty guard, profile-link navigation, and `markRead` before Chat navigation.
 - Existing Match Detail layout, canonical back behavior, seen-state effect, profile sections, like/pass/super-like actions, block/report controls, and chat entry behavior.
 - Existing Chat layout, canonical back behavior, active-match guard, read-marking effect, draft restore/update behavior, text/photo send behavior, message long-press actions, photo approval controls, and safety menu behavior.
+- Existing Discover deck layout, swipe animations, haptics, match confirmation, paywall routing, super-like burst, profile-detail navigation, and discovered-profile remembering.
+- Existing Fruit grid layout, backend non-fixture priority, local fixture availability, fixture exclusion rules, like-sent/match overlays, boost action, and profile-detail navigation.
 
 Not moved yet:
 
-- Discover/Fruit discovery and local fixture behavior.
+- Profile/safety/paywall/onboarding calls.
 - Provider ownership of Matches selectors.
 
 ## Current Role

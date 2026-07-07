@@ -9,8 +9,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 ## Branch And Commit
 
 - Branch: `main`
-- Latest implementation checkpoint: `1701281` - Extract chat thread read model
-- Current working state: clean locally, pending push/sync verification.
+- Latest implementation checkpoint: pending commit - Extract Discover/Fruit read models
+- Current working state: uncommitted Slice 6 Discover/Fruit read-model extraction and status-doc updates.
 
 ## Canonical Docs
 
@@ -46,7 +46,7 @@ Old duplicate roadmap/checklist/audit docs were consolidated and deleted from ac
 - Foundation Slice 3 is implemented: local `readWatermarks` and `seenMatchIds` now live behind `expo/store/use-preferences-store.ts` using the existing AsyncStorage keys. Provider wrappers `markRead` and `markMatchSeen` remain intact.
 - Foundation Slice 4 is implemented: local/demo `likedIds`, `passedIds`, and `superLikedIds` now live behind `expo/store/use-interaction-store.ts` using the existing AsyncStorage keys. Provider wrappers remain intact and Supabase reciprocal-match decisions remain service-owned.
 - Foundation Slice 5 is implemented: `expo/hooks/api/` now contains query keys and query hooks for matches, chat threads, and discovery. Discover/Fruit consume discovery through `useDiscoveryProfilesQuery`, and provider match bootstrap uses `useMatchesQuery().refetch()` without moving the whole hydration algorithm.
-- Foundation Slice 6 has started: Matches read path now uses `expo/hooks/use-matches-read-model.ts`, Inbox read path now uses `expo/hooks/use-inbox-read-model.ts`, Match Detail now uses `expo/hooks/use-match-detail-read-model.ts`, Chat now uses `expo/hooks/use-chat-thread-read-model.ts`, and those screens no longer import `useProfile()` directly.
+- Foundation Slice 6 has started: Matches read path now uses `expo/hooks/use-matches-read-model.ts`, Inbox read path now uses `expo/hooks/use-inbox-read-model.ts`, Match Detail now uses `expo/hooks/use-match-detail-read-model.ts`, Chat now uses `expo/hooks/use-chat-thread-read-model.ts`, Discover now uses `expo/hooks/use-discover-read-model.ts`, Fruit now uses `expo/hooks/use-fruit-read-model.ts`, and those screens no longer import `useProfile()` directly.
 
 ## Validation State
 
@@ -77,6 +77,7 @@ Foundation Slice 1 validation:
 - Foundation Slice 6 Inbox read-path validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
 - Foundation Slice 6 Match Detail read-path validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
 - Foundation Slice 6 Chat read-path validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed.
+- Foundation Slice 6 Discover/Fruit read-path validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed.
 
 ## Current Docs-Only Changes
 
@@ -89,4 +90,4 @@ Foundation Slice 1 validation:
 
 ## Next Recommended Task
 
-Human UAT forgot-password when practical, then continue foundation Slice 6 with Discover/Fruit discovery and local fixture behavior. Keep the Android Match Detail loader as a monitored follow-up, not a blocker unless it worsens.
+Human UAT forgot-password when practical, then continue foundation Slice 6 with Profile/safety/paywall/onboarding provider calls. Keep the Android Match Detail loader as a monitored follow-up, not a blocker unless it worsens.

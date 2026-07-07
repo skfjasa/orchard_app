@@ -2,7 +2,7 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Citrus, Flame, Heart, MapPin, MessageCircle, Sparkles, Zap } from "lucide-react-native";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useState } from "react";
 import {
   GestureResponderEvent,
   Pressable,
@@ -16,105 +16,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "@/constants/colors";
 import { MVP_MONETIZATION_ENABLED } from "@/constants/features";
 import { getPolyFruit } from "@/constants/poly-fruits";
-import { MOCK_PROFILE_BACKEND_IDS } from "@/constants/mock-profile-ids";
-import { useDiscoveryProfilesQuery } from "@/hooks/api/use-discovery";
-import { FRUIT_PROFILES } from "@/mocks/fruit-profiles";
-import { useProfile } from "@/providers/profile-provider";
-import { DiscoveryProfile } from "@/services";
-import { scoreMatch } from "@/utils/match";
+import { useFruitReadModel } from "@/hooks/use-fruit-read-model";
 import { Profile } from "@/types";
 
 export default function FruitScreen() {
-  const {
-    profile,
-    likedIds,
-    passedIds,
-    likeProfile,
-    purchase,
-    rememberProfiles,
-  } = useProfile();
-  const [backendProfiles, setBackendProfiles] = useState<DiscoveryProfile[]>([]);
+  const { likeProfile, purchase, trending } = useFruitReadModel();
   const [matchProfile, setMatchProfile] = useState<Profile | null>(null);
   const [sentProfile, setSentProfile] = useState<Profile | null>(null);
-  const discoveryFilters = useMemo(
-    () =>
-      profile
-        ? {
-            profileId: profile.id,
-            viewerProfile: profile,
-            excludedProfileIds: [],
-            includePassed: true,
-            limit: 20,
-          }
-        : null,
-    [profile]
-  );
-  const discoveryQuery = useDiscoveryProfilesQuery({
-    enabled: !!profile,
-    filters: discoveryFilters,
-  });
-
-  useEffect(() => {
-    if (!profile) {
-      setBackendProfiles([]);
-      return;
-    }
-
-    const result = discoveryQuery.data;
-    if (!result) return;
-    if (!result.ok) {
-      console.log("[fruit] profile discovery failed", {
-        code: result.error.code,
-        message: result.error.message,
-      });
-      setBackendProfiles([]);
-      return;
-    }
-    rememberProfiles(result.value.map((item) => item.profile));
-    setBackendProfiles(result.value);
-  }, [discoveryQuery.data, profile, rememberProfiles]);
-
-  const trending = useMemo(() => {
-    const backendNonFixtureProfiles = backendProfiles.filter(
-      (item) => !(item.profile.id in MOCK_PROFILE_BACKEND_IDS)
-    );
-    const byId = new Map<string, Profile>();
-    for (const item of FRUIT_PROFILES) byId.set(item.id, item);
-    for (const item of backendNonFixtureProfiles) {
-      byId.set(item.profile.id, item.profile);
-    }
-    const backendProfileIds = new Set(
-      backendNonFixtureProfiles.map((item) => item.profile.id)
-    );
-    const pool = [...byId.values()].filter((p) => {
-      if (backendProfileIds.has(p.id)) {
-        return p.id !== profile?.id && !likedIds.includes(p.id);
-      }
-      return !likedIds.includes(p.id) && !passedIds.includes(p.id);
-    });
-    return pool
-      .map((p) => {
-        const s = profile
-          ? scoreMatch(profile, p)
-          : { distanceScore: 0.5, distanceKm: 0 };
-        const t = p.trendingScore ?? 0.5;
-        const isBoostedProfile =
-          MVP_MONETIZATION_ENABLED && p.boostedUntil && p.boostedUntil > Date.now()
-            ? 1
-            : 0;
-        const combined =
-          t * 0.7 + s.distanceScore * 0.3 + isBoostedProfile * 0.2;
-        return { profile: p, combined, distanceKm: s.distanceKm };
-      })
-      .sort((a, b) => b.combined - a.combined)
-      .sort((a, b) => {
-        const aBackend = backendProfileIds.has(a.profile.id);
-        const bBackend = backendProfileIds.has(b.profile.id);
-        if (aBackend === bBackend) return 0;
-        return aBackend ? -1 : 1;
-      })
-      .slice(0, 12);
-  }, [backendProfiles, profile, likedIds, passedIds]);
 
   const handleLike = (candidate: Profile) => {
     void likeProfile(candidate.id).then((result) => {
