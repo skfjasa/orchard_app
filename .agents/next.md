@@ -1,6 +1,6 @@
 # Next Task
 
-Human UAT forgot-password when practical, then continue foundation Slice 6 with the Inbox read path.
+Human UAT forgot-password when practical, then continue foundation Slice 6 with Match Detail read path and seen-state calls.
 
 ## Canonical Startup Context
 
@@ -36,6 +36,7 @@ Read only if needed:
 - `expo/app/(tabs)/discover.tsx` and `expo/app/(tabs)/fruit.tsx`: moved discovery reads to `useDiscoveryProfilesQuery`.
 - `expo/providers/profile-provider.tsx`: moved backend match list reads to `useMatchesQuery().refetch()` while preserving the existing hydration algorithm.
 - `expo/hooks/use-matches-read-model.ts` and `expo/app/(tabs)/matches.tsx`: moved the Matches read path behind a focused read-model hook without changing visible UI.
+- `expo/hooks/use-inbox-read-model.ts` and `expo/app/(tabs)/inbox.tsx`: moved the Inbox read path behind a focused read-model hook without changing visible UI.
 
 ## Validation
 
@@ -49,7 +50,8 @@ Read only if needed:
 - Foundation Slice 4: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, and `git diff --check` passed.
 - Foundation Slice 5: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, and `git diff --check` passed.
 - Foundation Slice 6 Matches read path: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, and `git diff --check` passed.
+- Foundation Slice 6 Inbox read path: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, and `git diff --check` passed.
 
 ## Follow-Up After Slice 1
 
-Navigation cleanup is accepted. Forgot-password is wired but still needs human UAT when practical. Slices 2, 3, 4, and 5 are implemented, and Slice 6 has started with the Matches read path. Next engineering task is Slice 6 Inbox read path migration.
+Navigation cleanup is accepted. Forgot-password is wired but still needs human UAT when practical. Slices 2, 3, 4, and 5 are implemented, and Slice 6 has migrated Matches and Inbox read paths. Next engineering task is Slice 6 Match Detail read path and seen-state calls.

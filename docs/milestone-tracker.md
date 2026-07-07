@@ -193,7 +193,7 @@ Remaining:
 - [x] [C] Slice 5: introduce query-backed backend server-state hooks for matches, chat threads, and discovery.
 - [ ] [C+U] Slice 6: migrate screens domain-by-domain without changing visible UI.
   - [x] [C] Matches read path now uses `useMatchesReadModel`.
-  - [ ] [C] Inbox read path.
+  - [x] [C] Inbox read path now uses `useInboxReadModel`.
   - [ ] [C] Match Detail read path and seen-state calls.
   - [ ] [C] Chat thread/read/send path.
   - [ ] [C] Discover/Fruit discovery and local fixture behavior.

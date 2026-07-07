@@ -1,13 +1,12 @@
 import { Image } from "expo-image";
-import { router, useFocusEffect } from "expo-router";
+import { router } from "expo-router";
 import { Heart, MessageCircle, Users } from "lucide-react-native";
-import React, { useCallback } from "react";
+import React from "react";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Colors from "@/constants/colors";
-import { useTransientEmptyList } from "@/hooks/use-transient-empty-list";
-import { useProfile } from "@/providers/profile-provider";
+import { useInboxReadModel } from "@/hooks/use-inbox-read-model";
 
 function formatTime(t: number): string {
   const diff = Date.now() - t;
@@ -22,20 +21,12 @@ function formatTime(t: number): string {
 
 export default function InboxScreen() {
   const {
-    profile,
-    inboxItems: items,
+    isCouple,
+    isTyping,
     markRead,
-    refreshBackendMatches,
-    typingProfileIds,
-  } = useProfile();
-  const isCouple = profile?.accountType === "couple";
-  const visibleItems = useTransientEmptyList(items);
-
-  useFocusEffect(
-    useCallback(() => {
-      void refreshBackendMatches();
-    }, [refreshBackendMatches])
-  );
+    mirrorPartnerName,
+    visibleItems,
+  } = useInboxReadModel();
 
   return (
     <View style={styles.root}>
@@ -45,7 +36,7 @@ export default function InboxScreen() {
           {isCouple && (
             <View style={styles.mirrorPill}>
               <Users size={12} color={Colors.light.accent} />
-              <Text style={styles.mirrorText}>Shared with {profile?.people[1]?.name ?? "partner"}</Text>
+              <Text style={styles.mirrorText}>Shared with {mirrorPartnerName}</Text>
             </View>
           )}
         </View>
@@ -137,7 +128,7 @@ export default function InboxScreen() {
                       </Text>
                     </View>
                     <View style={styles.rowBottom}>
-                      {typingProfileIds.includes(item.other.id) ? (
+                      {isTyping(item.other.id) ? (
                         <Text
                           style={[styles.rowPreview, styles.rowTyping]}
                           numberOfLines={1}
