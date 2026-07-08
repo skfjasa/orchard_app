@@ -50,6 +50,7 @@ import {
 } from "@/services/local-match-action-service";
 import {
   addUniqueId,
+  applyReadWatermark,
   markConversationRead,
   mergeBackendConversation,
   newestMessageAt,
@@ -937,22 +938,15 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const markRead = useCallback(
     (profileId: string) => {
       const readThrough = newestMessageAt(conversations, profileId);
-      if (profile?.id) {
-        if (readThrough > 0) {
-          const current = readWatermarksRef.current;
-          const ownerWatermarks = current[profile.id] ?? {};
-          if ((ownerWatermarks[profileId] ?? 0) < readThrough) {
-            const next = {
-              ...current,
-              [profile.id]: {
-                ...ownerWatermarks,
-                [profileId]: readThrough,
-              },
-            };
-            readWatermarksRef.current = next;
-            setReadWatermarks(next);
-          }
-        }
+      const nextReadWatermarks = applyReadWatermark(
+        readWatermarksRef.current,
+        profile?.id,
+        profileId,
+        readThrough
+      );
+      if (nextReadWatermarks !== readWatermarksRef.current) {
+        readWatermarksRef.current = nextReadWatermarks;
+        setReadWatermarks(nextReadWatermarks);
       }
       void markBackendConversationRead({
         currentProfileId: profile?.id,

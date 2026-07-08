@@ -262,6 +262,28 @@ export function newestMessageAt(
   );
 }
 
+export function applyReadWatermark(
+  readWatermarks: Record<string, Record<string, number>>,
+  ownerProfileId: string | undefined,
+  profileId: string,
+  readThrough: number
+): Record<string, Record<string, number>> {
+  if (!ownerProfileId || readThrough <= 0) return readWatermarks;
+
+  const ownerWatermarks = readWatermarks[ownerProfileId] ?? {};
+  if ((ownerWatermarks[profileId] ?? 0) >= readThrough) {
+    return readWatermarks;
+  }
+
+  return {
+    ...readWatermarks,
+    [ownerProfileId]: {
+      ...ownerWatermarks,
+      [profileId]: readThrough,
+    },
+  };
+}
+
 function appendOrCreateConversation(
   conversations: Conversation[],
   profileId: string,

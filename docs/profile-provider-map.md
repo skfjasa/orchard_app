@@ -56,7 +56,7 @@ Categories:
 | `deleteMessage` | Local mock/demo state | Local-only behavior today. |
 | `sendPhoto` | Local mock/demo state | Local simulated photo request behavior today. |
 | `respondToPhoto` | Local mock/demo state | Local simulated photo approval behavior today. |
-| `markRead` | Client preference state / server state | Candidate for preference store wrapper while preserving Supabase `match_read_states`. |
+| `markRead` | Client preference state / server state | Compatibility wrapper; local watermark calculation is service-owned while Supabase `match_read_states` writes remain coordinated through the backend chat boundary. |
 | `drafts` / `setDraft` | Client preference state | Owned by the chat UI store. |
 | `typingProfileIds` | Local mock/demo state | Owned by the chat UI store; currently empty unless future simulated typing behavior sets it. |
 | `totalSlots`, `slotsUsed`, `slotsRemaining`, `isAtMatchLimit` | Prototype monetization facade | Demo/paywall calculations; disabled for feedback MVP. |
@@ -202,7 +202,7 @@ Post-Slice 6 provider-internal cleanup has started.
 Implemented:
 
 - `expo/services/profile-provider-selectors.ts` owns pure compatibility selector calculations for profile conversations, active-match checks, matched profiles, inbox rows, and unread message counts.
-- `expo/services/local-interaction-service.ts` owns pure local/backend conversation merge helpers for backend message hydration and read-through timestamp lookup.
+- `expo/services/local-interaction-service.ts` owns pure local/backend conversation merge helpers for backend message hydration, read-through timestamp lookup, and local read-watermark application.
 - `expo/providers/profile-provider.tsx` still owns side-effectful profile lookup/cache repair, transient-empty guards, and the compatibility facade, but no longer embeds the pure matched-profile/inbox/badge calculation bodies inline.
 
 Preserved behavior:
@@ -249,7 +249,7 @@ Not moved:
 - Backend chat thread hydration and message merge behavior.
 - Local simulated replies, photo requests, and photo approvals.
 
-Provider-internal cleanup after this slice keeps backend chat orchestration in `ProfileProvider`, but pure backend conversation merge/read-through helper functions now live in `expo/services/local-interaction-service.ts`.
+Provider-internal cleanup after this slice keeps backend chat orchestration in `ProfileProvider`, but pure backend conversation merge/read-through and local read-watermark helper functions now live in `expo/services/local-interaction-service.ts`.
 
 ## Extracted Persisted Conversations Hook
 
