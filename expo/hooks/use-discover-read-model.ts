@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { useDiscoveryProfilesQuery } from "@/hooks/api/use-discovery";
 import { useProfile } from "@/providers/profile-provider";
+import { createAppServices } from "@/services/app-services";
 import type { DiscoveryProfile } from "@/services";
 
 export function useDiscoverReadModel() {
@@ -22,21 +23,29 @@ export function useDiscoverReadModel() {
   const [discoveryProfiles, setDiscoveryProfiles] = useState<DiscoveryProfile[]>(
     []
   );
+  const appServices = useMemo(() => createAppServices(), []);
+  const discoveryUsesBackend =
+    appServices.capabilities.discovery === "supabase";
+  const excludedProfileIds = useMemo(
+    () => (discoveryUsesBackend ? [] : [...likedIds, ...passedIds]),
+    [discoveryUsesBackend, likedIds, passedIds]
+  );
   const discoveryFilters = useMemo(
     () =>
       profile
         ? {
             profileId: profile.id,
             viewerProfile: profile,
-            excludedProfileIds: [...likedIds, ...passedIds],
+            excludedProfileIds,
             includeTestFixtures: false,
           }
         : null,
-    [likedIds, passedIds, profile]
+    [excludedProfileIds, profile]
   );
   const discoveryQuery = useDiscoveryProfilesQuery({
     enabled: !!profile,
     filters: discoveryFilters,
+    services: appServices,
   });
 
   useEffect(() => {

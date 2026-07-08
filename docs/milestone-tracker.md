@@ -409,10 +409,11 @@ Done:
 - [x] [C+U] Reciprocal backend matches hydrate after sign-out/sign-in.
 - [x] [C+U] Already matched backend real/dev profiles are excluded from Fruit.
 - [x] [C] RLS/tests cover blocked, invisible, suspended, incomplete, and unverified profile exclusion from discovery reads; hosted UAT still needs to accept the real-app behavior.
+- [x] [C] Supabase-mode Discover now relies on the backend discovery service/swipe table for query exclusions instead of sending local liked/passed ids as source-of-truth filters. Mock mode still uses local exclusions.
 
 Remaining:
 
-- [ ] [C] Make backend discovery the clear source of truth for Supabase mode.
+- [x] [C] Make backend discovery the clear source of truth for Supabase mode.
 - [ ] [U] Confirm blocked/invisible/suspended users are excluded in hosted UAT.
 - [ ] [C+U] Confirm pass/like/super-like state persists and affects discovery consistently.
 - [ ] [H] Decide whether fixture profile images should be ingested into Supabase Storage.
