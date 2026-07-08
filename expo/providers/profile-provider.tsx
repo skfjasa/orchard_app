@@ -45,6 +45,7 @@ import {
 } from "@/services/local-chat-action-service";
 import {
   activateLocalMatchState,
+  passLocalProfile,
   removeLocalMatchState,
 } from "@/services/local-match-action-service";
 import {
@@ -858,10 +859,9 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
   const passProfile = useCallback(
     (id: string) => {
-      setPassedIds((prev) => {
-        const next = addUniqueId(prev, id);
-        if (next === prev) return prev;
-        return next;
+      passLocalProfile({
+        profileId: id,
+        setPassedIds,
       });
       void recordBackendSwipe(id, "pass");
     },

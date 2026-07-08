@@ -26,6 +26,11 @@ interface RemoveLocalMatchInput {
   updateConversations: ConversationUpdate;
 }
 
+interface PassLocalProfileInput {
+  profileId: string;
+  setPassedIds: IdListUpdate;
+}
+
 export function activateLocalMatchState({
   kind,
   mockProfiles,
@@ -57,4 +62,15 @@ export function removeLocalMatchState({
 }: RemoveLocalMatchInput) {
   setLikedIds((prev) => removeId(prev, profileId));
   updateConversations((prev) => removeConversation(prev, profileId));
+}
+
+export function passLocalProfile({
+  profileId,
+  setPassedIds,
+}: PassLocalProfileInput) {
+  setPassedIds((prev) => {
+    const next = addUniqueId(prev, profileId);
+    if (next === prev) return prev;
+    return next;
+  });
 }

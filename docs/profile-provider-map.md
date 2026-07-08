@@ -306,12 +306,13 @@ Not moved:
 
 ## Extracted Local Match Actions
 
-Post-Slice 6 provider-internal cleanup moved fixture/demo local match activation and stale-match cleanup behind `expo/services/local-match-action-service.ts`.
+Post-Slice 6 provider-internal cleanup moved fixture/demo local match activation, pass-state mutation, and stale-match cleanup behind `expo/services/local-match-action-service.ts`.
 
 Preserved behavior:
 
 - Local fixture/demo likes and super-likes still add the profile to local liked/new-match state.
 - Local fixture/demo likes and super-likes still ensure the synthetic greeting conversation exists.
+- Local passes still add the profile to local passed state before any backend pass persistence is attempted.
 - Local unmatch and backend chat `match_not_found` cleanup still remove local liked/conversation state.
 - `ProfileProvider` still decides when Supabase swipe results are allowed to activate visible local match state.
 

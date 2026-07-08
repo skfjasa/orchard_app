@@ -201,6 +201,7 @@ export {
 
 export {
   activateLocalMatchState,
+  passLocalProfile,
   removeLocalMatchState,
 } from "./local-match-action-service";
 
