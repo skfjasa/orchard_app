@@ -70,6 +70,13 @@ export { unmatchBackendProfile } from "./backend-match-action-service";
 
 export type { BackendUnmatchResult } from "./backend-match-action-service";
 
+export { buildBackendMatchHydrationPlan } from "./backend-match-hydration-service";
+
+export type {
+  BackendConversationHydration,
+  BackendMatchHydrationPlan,
+} from "./backend-match-hydration-service";
+
 export type {
   AccountDeletionRequestInput,
   BlockInput,

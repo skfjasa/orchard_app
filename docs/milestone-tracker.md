@@ -195,6 +195,7 @@ Done:
 - [x] [C] Repeated backend match-pair lookup now lives in `expo/services/match-record-utils.ts`.
 - [x] [C] Backend chat send/read action orchestration now lives in `expo/services/backend-chat-action-service.ts`.
 - [x] [C] Backend unmatch action orchestration now lives in `expo/services/backend-match-action-service.ts`.
+- [x] [C] Backend match/thread hydration planning now lives in `expo/services/backend-match-hydration-service.ts`.
 - [x] [C] Supabase discovery now excludes hosted test fixture rows by default; Fruit keeps its local fixture pool explicit instead of mixing hosted mock rows into backend discovery.
 
 Remaining:
@@ -214,7 +215,7 @@ Remaining:
     - [x] [C] Edit Profile, Paywall, Report, and Safety & Legal now use focused read-model hooks.
     - [x] [C] Profile tab, onboarding photos/sign-in, tab badges, root redirect, and ProtectedRoute/bootstrap gates now use focused read-model hooks.
 - [x] [C] Slice 5b: Hand over background polling and cache invalidation to React Query (remove manual setInterval/AppState from ProfileProvider and extract Realtime invalidation).
-- [ ] [C] Continue isolating remaining mock/local fixture behavior inside `ProfileProvider`, especially fixture match repair paths.
+- [ ] [C] Continue isolating remaining provider-owned application paths, especially backend match/thread hydration application and local safety cleanup.
 
 Exit criteria:
 

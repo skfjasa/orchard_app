@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { MOCK_PROFILES } from "@/mocks/profiles";
 import {
-  fromBackendProfileId,
   isBackendProfileId,
 } from "@/constants/mock-profile-ids";
 import { MVP_MONETIZATION_ENABLED } from "@/constants/features";
@@ -19,6 +18,7 @@ import {
   sendBackendChatMessage,
 } from "@/services/backend-chat-action-service";
 import { unmatchBackendProfile } from "@/services/backend-match-action-service";
+import { buildBackendMatchHydrationPlan } from "@/services/backend-match-hydration-service";
 import {
   deleteLocalMessage,
   respondToLocalPhoto,
@@ -66,7 +66,6 @@ import {
 import {
   DEFAULT_MATCH_SLOTS,
   DEFAULT_SUPER_LIKES,
-  Message,
   Profile,
   PurchaseId,
   SUPER_LIKE_RECHARGE_MS,
@@ -111,21 +110,6 @@ function isIncompleteBackendProfile(profile: Profile | undefined): boolean {
     (person) =>
       person.name.trim().toLowerCase() === INCOMPLETE_BACKEND_PROFILE_NAME
   );
-}
-
-function chooseDisplayProfile(
-  backendProfile: Profile | undefined,
-  rememberedProfile: Profile | undefined
-): Profile | undefined {
-  if (backendProfile && !isIncompleteBackendProfile(backendProfile)) {
-    return backendProfile;
-  }
-
-  if (rememberedProfile && !isIncompleteBackendProfile(rememberedProfile)) {
-    return rememberedProfile;
-  }
-
-  return undefined;
 }
 
 export const [ProfileProvider, useProfile] = createContextHook(() => {
@@ -477,112 +461,30 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         return;
       }
 
-      const matchedLocalProfileIds = new Set<string>();
-      const activeBackendMatchIds = matchResult.value.map((match) => match.id);
       console.log("[profile-provider] backend match bootstrap loaded matches", {
         count: matchResult.value.length,
         userId,
       });
-      const discoveryProfilesById = new Map<string, Profile>();
-      const missingRealProfileIds = matchResult.value
-        .map((match) =>
-          fromBackendProfileId(match.userA === userId ? match.userB : match.userA)
-        )
-        .filter((profileId, index, allIds) => {
-          if (allIds.indexOf(profileId) !== index) return false;
-          if (MOCK_PROFILES.some((item) => item.id === profileId)) return false;
-          const rememberedProfile =
-            knownProfilesRef.current.find((item) => item.id === profileId) ??
-            displayProfilesRef.current[profileId];
-          return !chooseDisplayProfile(undefined, rememberedProfile);
-        });
 
-      if (
-        missingRealProfileIds.length > 0 &&
-        appServices.capabilities.discovery === "supabase"
-      ) {
-        const discoveryResult = await appServices.discovery.listProfiles({
-          profileId: userId,
-          viewerProfile: profile,
-          excludedProfileIds: [],
-          includePassed: true,
-          limit: 100,
-        });
+      const hydrationPlan = await buildBackendMatchHydrationPlan({
+        displayProfiles: displayProfilesRef.current,
+        knownProfiles: knownProfilesRef.current,
+        matches: matchResult.value,
+        profile,
+        services: appServices,
+        userId,
+      });
 
-        if (discoveryResult.ok) {
-          const completeProfiles = discoveryResult.value
-            .map((item) => item.profile)
-            .filter((item) => !isIncompleteBackendProfile(item));
-          rememberProfiles(completeProfiles);
-          for (const item of completeProfiles) {
-            discoveryProfilesById.set(item.id, item);
-          }
-        } else {
-          console.log("[profile-provider] backend match profile repair failed", {
-            code: discoveryResult.error.code,
-            message: discoveryResult.error.message,
-          });
-        }
-      }
+      if (hydrationPlan.status === "partial") return;
 
-      const backendConversations: {
-        profileId: string;
-        messages: Message[];
-        readThrough?: number;
-        isFixture: boolean;
-      }[] = [];
-      const matchedProfilesToRemember: Profile[] = [];
-
-      for (const match of matchResult.value) {
-        const otherBackendProfileId =
-          match.userA === userId ? match.userB : match.userA;
-        const otherLocalProfileId = fromBackendProfileId(otherBackendProfileId);
-        const mockProfile = MOCK_PROFILES.find(
-          (item) => item.id === otherLocalProfileId
-        );
-        const rememberedProfile = knownProfilesRef.current.find(
-          (item) => item.id === otherLocalProfileId
-        ) ?? displayProfilesRef.current[otherLocalProfileId] ??
-          discoveryProfilesById.get(otherLocalProfileId);
-        const otherProfile =
-          mockProfile ??
-          chooseDisplayProfile(match.otherProfile, rememberedProfile);
-
-        if (!mockProfile && !otherProfile) {
-          console.log("[profile-provider] skipping partial match hydration", {
-            profileId: otherLocalProfileId,
-            matchId: match.id,
-          });
-          return;
-        }
-
-        matchedLocalProfileIds.add(otherProfile?.id ?? otherLocalProfileId);
-        if (!mockProfile && otherProfile) {
-          matchedProfilesToRemember.push(otherProfile);
-        }
-
-        const threadResult = await appServices.chat.getThread(match.id);
-        if (!threadResult.ok) {
-          console.log("[profile-provider] backend thread hydration failed", {
-            code: threadResult.error.code,
-            message: threadResult.error.message,
-            matchId: match.id,
-            profileId: otherLocalProfileId,
-          });
-          continue;
-        }
-
-        backendConversations.push({
-          profileId: otherProfile?.id ?? otherLocalProfileId,
-          messages: threadResult.value.messages,
-          readThrough: threadResult.value.readThrough,
-          isFixture: !!mockProfile,
-        });
-      }
-
-      rememberProfiles(matchedProfilesToRemember);
+      const matchedLocalProfileIds = new Set(
+        hydrationPlan.matchedLocalProfileIds
+      );
+      rememberProfiles(hydrationPlan.profilesToRemember);
       setBackendActiveMatchIds((prev) =>
-        sameStringSet(prev, activeBackendMatchIds) ? prev : activeBackendMatchIds
+        sameStringSet(prev, hydrationPlan.activeBackendMatchIds)
+          ? prev
+          : hydrationPlan.activeBackendMatchIds
       );
       setLikedIds((prev) => {
         const localOnlyLikedIds = prev.filter((id) => !isBackendProfileId(id));
@@ -613,7 +515,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
             !isBackendProfileId(conversation.profileId)
         );
         let next = filtered.length === prev.length ? prev : filtered;
-        for (const backendConversation of backendConversations) {
+        for (const backendConversation of hydrationPlan.backendConversations) {
           const hostedReadThrough = backendConversation.readThrough ?? 0;
           const localReadThrough =
             readWatermarksRef.current[userId]?.[
@@ -638,7 +540,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       });
       lastBackendMatchHydrationKey.current = hydrationKey;
       console.log("[profile-provider] backend match bootstrap applied", {
-        backendConversations: backendConversations.length,
+        backendConversations: hydrationPlan.backendConversations.length,
         matchedLocalProfileIds: [...matchedLocalProfileIds],
         userId,
       });

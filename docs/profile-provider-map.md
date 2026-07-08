@@ -337,6 +337,16 @@ Preserved behavior:
 - Supabase mode still attempts to resolve the active hosted match and call the existing backend unmatch RPC after local cleanup.
 - Mock/local unmatch behavior is unchanged.
 
+## Extracted Backend Match Hydration Planning
+
+Post-Slice 6 provider-internal cleanup moved backend match/thread hydration planning behind `expo/services/backend-match-hydration-service.ts`.
+
+Preserved behavior:
+
+- Backend match hydration still loads active match IDs, repairs missing real/dev display profiles through discovery, loads each backend thread, and skips applying partial real/dev match hydration.
+- `ProfileProvider` still applies the returned plan into local compatibility state: active backend match IDs, local liked/new-match state, remembered profiles, and merged conversations.
+- Mock/Fruit fixture behavior during backend hydration is unchanged.
+
 ## Current Role
 
 `ProfileProvider` is the central app-state provider for the prototype. It still owns UI-facing local state and coordinates persistence, but the first service and store boundaries have been extracted.
@@ -496,6 +506,7 @@ Runtime local helper modules now exist:
 - `expo/services/local-chat-action-service.ts`
 - `expo/services/local-match-action-service.ts`
 - `expo/services/backend-match-action-service.ts`
+- `expo/services/backend-match-hydration-service.ts`
 - `expo/services/match-record-utils.ts`
 - `expo/services/local-monetization-service.ts`
 - `expo/services/local-profile-mutation-service.ts`
