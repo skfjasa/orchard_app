@@ -396,8 +396,8 @@ Post-Slice 6 provider-internal cleanup moved backend match/thread hydration appl
 
 Preserved behavior:
 
-- `ProfileProvider` still owns the React state setters and hydration readiness flags.
-- Backend hydration still merges backend matches into local liked IDs, new-match IDs, and conversations with local read watermarks.
+- `ProfileProvider` still owns hydration run timing, logging, in-flight guards, and hydration readiness flags.
+- Backend hydration still applies active backend match IDs, local liked IDs, new-match IDs, and conversations with local read watermarks.
 - Fixture backend conversations still preserve synthetic greeting behavior.
 
 ## Extracted Backend Profile Bootstrap

@@ -18,14 +18,16 @@ export interface BackendConversationHydration {
   isFixture: boolean;
 }
 
+export interface BackendMatchHydrationReadyPlan {
+  status: "ready";
+  activeBackendMatchIds: string[];
+  backendConversations: BackendConversationHydration[];
+  matchedLocalProfileIds: string[];
+  profilesToRemember: Profile[];
+}
+
 export type BackendMatchHydrationPlan =
-  | {
-      status: "ready";
-      activeBackendMatchIds: string[];
-      backendConversations: BackendConversationHydration[];
-      matchedLocalProfileIds: string[];
-      profilesToRemember: Profile[];
-    }
+  | BackendMatchHydrationReadyPlan
   | { status: "partial" };
 
 interface BuildBackendMatchHydrationPlanInput {

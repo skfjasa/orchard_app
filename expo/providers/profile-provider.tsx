@@ -31,9 +31,7 @@ import {
   recordBackendSwipe as recordBackendSwipeAction,
 } from "@/services/backend-swipe-action-service";
 import {
-  mergeBackendHydratedConversations,
-  mergeBackendLikedIds,
-  mergeBackendNewMatchIds,
+  applyBackendMatchHydrationPlan,
 } from "@/services/backend-match-hydration-application-service";
 import { buildBackendMatchHydrationPlan } from "@/services/backend-match-hydration-service";
 import {
@@ -117,12 +115,6 @@ export type {
   ProfileInboxItem,
   ProfileProviderContract,
 } from "./profile-provider-contract";
-
-function sameStringSet(a: string[], b: string[]) {
-  if (a.length !== b.length) return false;
-  const values = new Set(a);
-  return b.every((item) => values.has(item));
-}
 
 type BackendMatchListResult = ServiceResponse<MatchRecord[]>;
 
@@ -464,34 +456,18 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
       if (hydrationPlan.status === "partial") return;
 
-      rememberProfiles(hydrationPlan.profilesToRemember);
-      setBackendActiveMatchIds((prev) =>
-        sameStringSet(prev, hydrationPlan.activeBackendMatchIds)
-          ? prev
-          : hydrationPlan.activeBackendMatchIds
-      );
-      setLikedIds((prev) =>
-        mergeBackendLikedIds(prev, hydrationPlan.matchedLocalProfileIds)
-      );
-
-      setNewMatchIds((prev) =>
-        mergeBackendNewMatchIds({
-          matchedLocalProfileIds: hydrationPlan.matchedLocalProfileIds,
-          previousIds: prev,
-          seenMatchIds: seenMatchIdsRef.current[userId] ?? [],
-        })
-      );
-
-      updateConversations((prev) =>
-        mergeBackendHydratedConversations({
-          backendConversations: hydrationPlan.backendConversations,
-          matchedLocalProfileIds: hydrationPlan.matchedLocalProfileIds,
-          mockProfiles: MOCK_PROFILES,
-          previousConversations: prev,
-          readWatermarks: readWatermarksRef.current,
-          userId,
-        })
-      );
+      applyBackendMatchHydrationPlan({
+        hydrationPlan,
+        mockProfiles: MOCK_PROFILES,
+        readWatermarks: readWatermarksRef.current,
+        rememberProfiles,
+        seenMatchIds: seenMatchIdsRef.current[userId] ?? [],
+        setBackendActiveMatchIds,
+        setLikedIds,
+        setNewMatchIds,
+        updateConversations,
+        userId,
+      });
       lastBackendMatchHydrationKey.current = hydrationKey;
       console.log("[profile-provider] backend match bootstrap applied", {
         backendConversations: hydrationPlan.backendConversations.length,

@@ -97,9 +97,11 @@ export { buildBackendMatchHydrationPlan } from "./backend-match-hydration-servic
 export type {
   BackendConversationHydration,
   BackendMatchHydrationPlan,
+  BackendMatchHydrationReadyPlan,
 } from "./backend-match-hydration-service";
 
 export {
+  applyBackendMatchHydrationPlan,
   mergeBackendHydratedConversations,
   mergeBackendLikedIds,
   mergeBackendNewMatchIds,

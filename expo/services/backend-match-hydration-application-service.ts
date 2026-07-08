@@ -1,11 +1,73 @@
 import { isBackendProfileId } from "@/constants/mock-profile-ids";
 import type { Conversation, Profile } from "@/types";
 
-import type { BackendConversationHydration } from "./backend-match-hydration-service";
+import type {
+  BackendConversationHydration,
+  BackendMatchHydrationReadyPlan,
+} from "./backend-match-hydration-service";
 import {
   ensureGreetingConversation,
   mergeBackendConversation,
 } from "./local-interaction-service";
+
+interface ApplyBackendMatchHydrationPlanInput {
+  hydrationPlan: BackendMatchHydrationReadyPlan;
+  mockProfiles: Profile[];
+  readWatermarks: Record<string, Record<string, number>>;
+  rememberProfiles(profiles: Profile[]): void;
+  seenMatchIds: string[];
+  setBackendActiveMatchIds(
+    next:
+      | string[]
+      | ((previousIds: string[]) => string[])
+  ): void;
+  setLikedIds(next: string[] | ((previousIds: string[]) => string[])): void;
+  setNewMatchIds(next: string[] | ((previousIds: string[]) => string[])): void;
+  updateConversations(
+    updater: (previousConversations: Conversation[]) => Conversation[]
+  ): void;
+  userId: string;
+}
+
+export function applyBackendMatchHydrationPlan({
+  hydrationPlan,
+  mockProfiles,
+  readWatermarks,
+  rememberProfiles,
+  seenMatchIds,
+  setBackendActiveMatchIds,
+  setLikedIds,
+  setNewMatchIds,
+  updateConversations,
+  userId,
+}: ApplyBackendMatchHydrationPlanInput) {
+  rememberProfiles(hydrationPlan.profilesToRemember);
+  setBackendActiveMatchIds((prev) =>
+    sameStringSet(prev, hydrationPlan.activeBackendMatchIds)
+      ? prev
+      : hydrationPlan.activeBackendMatchIds
+  );
+  setLikedIds((prev) =>
+    mergeBackendLikedIds(prev, hydrationPlan.matchedLocalProfileIds)
+  );
+  setNewMatchIds((prev) =>
+    mergeBackendNewMatchIds({
+      matchedLocalProfileIds: hydrationPlan.matchedLocalProfileIds,
+      previousIds: prev,
+      seenMatchIds,
+    })
+  );
+  updateConversations((prev) =>
+    mergeBackendHydratedConversations({
+      backendConversations: hydrationPlan.backendConversations,
+      matchedLocalProfileIds: hydrationPlan.matchedLocalProfileIds,
+      mockProfiles,
+      previousConversations: prev,
+      readWatermarks,
+      userId,
+    })
+  );
+}
 
 export function mergeBackendLikedIds(
   previousIds: string[],
