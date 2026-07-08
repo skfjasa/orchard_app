@@ -74,7 +74,12 @@ import {
   findConversationByProfileId,
   hasActiveProfileMatch,
 } from "@/services/profile-provider-selectors";
-import { applyProfileProviderSignOutReset } from "@/services/profile-provider-reset-service";
+import {
+  applyMissingUserBackendBootstrapReset,
+  applyMockModeBackendBootstrapReset,
+  applyProfileProviderSignOutReset,
+  applyUserChangedBackendBootstrapReset,
+} from "@/services/profile-provider-reset-service";
 import {
   blockProfileThroughSafetyService,
   reportProfileThroughSafetyService,
@@ -267,31 +272,35 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   useEffect(() => {
     if (mode !== "supabase") {
       console.log("[profile-provider] backend bootstrap reset: mock mode");
-      lastBackendProfileSessionKey.current = null;
-      lastBackendProfileUserId.current = null;
-      lastBackendMatchHydrationKey.current = null;
-      inFlightBackendMatchHydrationKey.current = null;
-      pendingBackendMatchRefreshRef.current = false;
-      knownProfilesRef.current = [];
-      displayProfilesRef.current = {};
-      lastResolvedProfilesRef.current = {};
-      void saveStoredKnownProfiles([]);
-      setBackendActiveMatchIds([]);
-      setKnownProfiles([]);
-      setBackendProfileHydrated(false);
-      setBackendMatchesHydrated(false);
+      applyMockModeBackendBootstrapReset({
+        displayProfilesRef,
+        inFlightBackendMatchHydrationKey,
+        knownProfilesRef,
+        lastBackendMatchHydrationKey,
+        lastBackendProfileSessionKey,
+        lastBackendProfileUserId,
+        lastResolvedProfilesRef,
+        pendingBackendMatchRefreshRef,
+        saveKnownProfiles: saveStoredKnownProfiles,
+        setBackendActiveMatchIds,
+        setBackendMatchesHydrated,
+        setBackendProfileHydrated,
+        setKnownProfiles,
+      });
       return;
     }
 
     if (!userId) {
       console.log("[profile-provider] backend bootstrap reset: no user");
-      lastBackendProfileSessionKey.current = null;
-      lastBackendMatchHydrationKey.current = null;
-      inFlightBackendMatchHydrationKey.current = null;
-      pendingBackendMatchRefreshRef.current = false;
-      setBackendActiveMatchIds([]);
-      setBackendProfileHydrated(false);
-      setBackendMatchesHydrated(false);
+      applyMissingUserBackendBootstrapReset({
+        inFlightBackendMatchHydrationKey,
+        lastBackendMatchHydrationKey,
+        lastBackendProfileSessionKey,
+        pendingBackendMatchRefreshRef,
+        setBackendActiveMatchIds,
+        setBackendMatchesHydrated,
+        setBackendProfileHydrated,
+      });
       return;
     }
 
@@ -308,20 +317,24 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       return;
     }
 
-    lastBackendProfileSessionKey.current = sessionKey;
-    lastBackendProfileUserId.current = userId;
-    pendingBackendMatchRefreshRef.current = false;
     console.log("[profile-provider] backend bootstrap reset: user changed", {
       userId,
     });
-    knownProfilesRef.current = [];
-    displayProfilesRef.current = {};
-    lastResolvedProfilesRef.current = {};
-    void saveStoredKnownProfiles([]);
-    setBackendActiveMatchIds([]);
-    setKnownProfiles([]);
-    setBackendProfileHydrated(false);
-    setBackendMatchesHydrated(false);
+    applyUserChangedBackendBootstrapReset({
+      displayProfilesRef,
+      knownProfilesRef,
+      lastBackendProfileSessionKey,
+      lastBackendProfileUserId,
+      lastResolvedProfilesRef,
+      pendingBackendMatchRefreshRef,
+      saveKnownProfiles: saveStoredKnownProfiles,
+      sessionKey,
+      setBackendActiveMatchIds,
+      setBackendMatchesHydrated,
+      setBackendProfileHydrated,
+      setKnownProfiles,
+      userId,
+    });
   }, [mode, session?.access_token, userId]);
 
   useEffect(() => {

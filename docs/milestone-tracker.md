@@ -203,6 +203,7 @@ Done:
 - [x] [C] Backend swipe persistence calls now live in `expo/services/backend-swipe-action-service.ts`.
 - [x] [C] Report, block, and account-deletion safety service calls now live in `expo/services/safety-action-service.ts`.
 - [x] [C] Profile provider sign-out reset bookkeeping now lives in `expo/services/profile-provider-reset-service.ts`.
+- [x] [C] Backend bootstrap reset bookkeeping now lives in `expo/services/profile-provider-reset-service.ts`.
 - [x] [C] Supabase discovery now excludes hosted test fixture rows by default; Fruit keeps its local fixture pool explicit instead of mixing hosted mock rows into backend discovery.
 
 Remaining:

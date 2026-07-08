@@ -337,13 +337,15 @@ Preserved behavior:
 
 ## Extracted Profile Provider Reset Helpers
 
-Post-Slice 6 provider-internal cleanup moved sign-out reset bookkeeping behind `expo/services/profile-provider-reset-service.ts`.
+Post-Slice 6 provider-internal cleanup moved sign-out and backend-bootstrap reset bookkeeping behind `expo/services/profile-provider-reset-service.ts`.
 
 Preserved behavior:
 
 - Supabase auth sign-out still completes before local provider state is reset.
 - Sign-out still clears the local profile, conversations, new-match ids, interaction state, monetization state, backend hydration flags, in-flight hydration keys, and pending backend match refresh state.
 - `ProfileProvider` still owns the saved-profile mutation that removes the local profile from storage.
+- Mock-mode, missing-user, and account-switch backend bootstrap resets still clear the same refs/cache/state as before.
+- `ProfileProvider` still decides which backend bootstrap reset path applies from auth mode, user id, and session key.
 
 ## Extracted Match Record Helpers
 
