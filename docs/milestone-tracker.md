@@ -188,6 +188,7 @@ Done:
 - [x] [C] Prototype monetization state now lives in `expo/store/use-monetization-store.ts` while preserving demo/paywall behavior.
 - [x] [C] Local chat UI state for drafts and simulated typing IDs now lives in `expo/store/use-chat-ui-store.ts`.
 - [x] [C] Pure backend conversation merge/read-through helpers now live in `expo/services/local-interaction-service.ts`.
+- [x] [C] Local conversation state and AsyncStorage persistence now live in `expo/hooks/use-persisted-conversations.ts`.
 
 Remaining:
 

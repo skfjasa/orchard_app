@@ -28,7 +28,7 @@ Categories:
 | `backendMatchesHydrated` | Auth/profile bootstrap / server state | Initial backend match/thread/profile-display gate. |
 | `isLoading` | Auth/profile bootstrap | Storage query loading facade. |
 | `knownProfiles` | Server state / UI selector | Display-profile cache for backend and mock profiles. Future query/display-profile cache owner. |
-| `conversations` | Local mock/demo state / server state | Mixed local and hydrated backend thread state; should split by mock/backend ownership. |
+| `conversations` | Local mock/demo state / server state | Owned by the persisted conversations hook; backend/thread orchestration still runs through the provider. |
 | `likedIds` | Local mock/demo state | Compatibility array; not a long-term Supabase active-match source of truth. |
 | `passedIds` | Local mock/demo state | Candidate for local interaction store. |
 | `superLikedIds` | Local mock/demo state / prototype monetization facade | Owned by the local interaction store; still participates in demo Super Like behavior. |
@@ -246,11 +246,31 @@ Preserved behavior:
 
 Not moved:
 
-- `conversations`
 - Backend chat thread hydration and message merge behavior.
-- Local simulated replies, photo requests, photo approvals, and conversation persistence.
+- Local simulated replies, photo requests, and photo approvals.
 
-Provider-internal cleanup after this slice keeps conversation state and persistence in `ProfileProvider`, but pure backend conversation merge/read-through helper functions now live in `expo/services/local-interaction-service.ts`.
+Provider-internal cleanup after this slice keeps backend chat orchestration in `ProfileProvider`, but pure backend conversation merge/read-through helper functions now live in `expo/services/local-interaction-service.ts`.
+
+## Extracted Persisted Conversations Hook
+
+Post-Slice 6 provider-internal cleanup moved local conversation state and AsyncStorage write orchestration behind `expo/hooks/use-persisted-conversations.ts`.
+
+State now owned by the hook:
+
+- `conversations`
+
+Preserved behavior:
+
+- Existing AsyncStorage key is reused: `duet.conversations.v1`.
+- Initial storage hydration can replace in-memory conversations without writing back immediately.
+- Provider mutations still persist local conversation updates through a single `updateConversations` wrapper.
+- `ProfileProvider` still exposes `conversations` through the compatibility facade.
+
+Not moved:
+
+- Backend match/thread hydration decisions.
+- Backend chat send/read calls.
+- Local simulated replies, photo requests, and photo approvals.
 
 ## Current Role
 
@@ -274,10 +294,9 @@ Current persistence is local through `AsyncStorage` via `expo/services/local-pro
 ## State Owned
 
 - `profile`
-- `conversations`
 - `hydrated`
 
-The provider still owns React state for these values. Storage and several local mutation helpers now live in service modules and focused stores. `likedIds`, `passedIds`, and `superLikedIds` are owned by `use-interaction-store.ts`; `readWatermarks` and `seenMatchIds` are owned by `use-preferences-store.ts`; `extraSlots`, `boostedUntil`, `superLikeBalance`, `superLikeLastUseAt`, and `subscription` are owned by `use-monetization-store.ts`; `drafts` and `typingProfileIds` are owned by `use-chat-ui-store.ts`.
+The provider still owns React state for these values. Storage and several local mutation helpers now live in service modules and focused stores/hooks. `conversations` is owned by `use-persisted-conversations.ts`; `likedIds`, `passedIds`, and `superLikedIds` are owned by `use-interaction-store.ts`; `readWatermarks` and `seenMatchIds` are owned by `use-preferences-store.ts`; `extraSlots`, `boostedUntil`, `superLikeBalance`, `superLikeLastUseAt`, and `subscription` are owned by `use-monetization-store.ts`; `drafts` and `typingProfileIds` are owned by `use-chat-ui-store.ts`.
 
 ## Derived State
 
@@ -383,7 +402,7 @@ Partner invite/link behavior is local profile metadata through helpers in `expo/
 - Screens depend directly on provider actions and local state names.
 - Local match creation is still coupled to mock profiles and conversations.
 - Chat simulation still depends on `MOCK_PROFILES`.
-- Local React state updates and persistence calls are still coupled in provider callbacks.
+- Conversation write callbacks still coordinate backend state, local simulation, and persisted local updates in the provider.
 - Most provider actions are not yet backed by the service interfaces under `expo/services/`; swipe persistence is the first lightly wired service-factory hook.
 
 ## Recommended Extraction Order
@@ -414,6 +433,7 @@ Runtime local helper modules now exist:
 - `expo/store/use-monetization-store.ts`
 - `expo/store/use-preferences-store.ts`
 - `expo/store/use-chat-ui-store.ts`
+- `expo/hooks/use-persisted-conversations.ts`
 
 - `ProfileService`: profile lifecycle and settings.
 - `AuthProvider`: auth/session state and future Supabase auth operations.

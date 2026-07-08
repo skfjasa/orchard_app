@@ -11,6 +11,7 @@ import {
 } from "@/constants/mock-profile-ids";
 import { MVP_MONETIZATION_ENABLED } from "@/constants/features";
 import { useMatchesQuery } from "@/hooks/api/use-matches";
+import { usePersistedConversations } from "@/hooks/use-persisted-conversations";
 import { useTransientEmptyList } from "@/hooks/use-transient-empty-list";
 import { useAuth } from "@/providers/auth-provider";
 import { createAppServices } from "@/services/app-services";
@@ -32,7 +33,6 @@ import {
 } from "@/services/local-interaction-service";
 import {
   loadStoredProfileState,
-  saveStoredConversations,
   saveStoredProfile,
   saveStoredKnownProfiles,
 } from "@/services/local-profile-storage";
@@ -60,7 +60,6 @@ import {
   loadPendingOnboardingProfile,
 } from "@/services/pending-onboarding-storage";
 import {
-  Conversation,
   DEFAULT_MATCH_SLOTS,
   DEFAULT_SUPER_LIKES,
   Message,
@@ -171,7 +170,12 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const lastResolvedProfilesRef = useRef<Record<string, Profile>>({});
   const [profile, setProfile] = useState<Profile | null>(null);
   const [knownProfiles, setKnownProfiles] = useState<Profile[]>([]);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const {
+    conversations,
+    hydrateConversations,
+    replaceConversations,
+    updateConversations,
+  } = usePersistedConversations();
   const [newMatchIds, setNewMatchIds] = useState<string[]>([]);
   const [backendActiveMatchIds, setBackendActiveMatchIds] = useState<string[]>(
     []
@@ -198,7 +202,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   useEffect(() => {
     if (loadQuery.data && !hydrated) {
       setProfile(loadQuery.data.profile);
-      setConversations(loadQuery.data.conversations);
+      hydrateConversations(loadQuery.data.conversations);
       hydrateInteractions(
         loadQuery.data.likedIds,
         loadQuery.data.passedIds,
@@ -237,10 +241,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
   const saveProfileMutation = useMutation({
     mutationFn: saveStoredProfile,
-  });
-
-  const saveConvosMutation = useMutation({
-    mutationFn: saveStoredConversations,
   });
 
   useEffect(() => {
@@ -601,7 +601,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         return next;
       });
 
-      setConversations((prev) => {
+      updateConversations((prev) => {
         const filtered = prev.filter(
           (conversation) =>
             matchedLocalProfileIds.has(conversation.profileId) ||
@@ -629,8 +629,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
             next = ensureGreetingConversation(next, other, "like");
           }
         }
-        if (next === prev) return prev;
-        saveConvosMutation.mutate(next);
         return next;
       });
       lastBackendMatchHydrationKey.current = hydrationKey;
@@ -663,7 +661,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     profile,
     rememberProfiles,
     refetchBackendMatchesQuery,
-    saveConvosMutation,
+    updateConversations,
     session?.access_token,
     userId,
   ]);
@@ -803,7 +801,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       result = await signOutAuth();
     }
     setProfile(null);
-    setConversations([]);
+    replaceConversations([]);
     setNewMatchIds([]);
     resetInteractions();
     resetMonetization();
@@ -814,13 +812,12 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     inFlightBackendMatchHydrationKey.current = null;
     pendingBackendMatchRefreshRef.current = false;
     saveProfileMutation.mutate(null);
-    saveConvosMutation.mutate([]);
     return result ?? { ok: true as const };
   }, [
     mode,
     signOutAuth,
     saveProfileMutation,
-    saveConvosMutation,
+    replaceConversations,
     resetInteractions,
     resetMonetization,
   ]);
@@ -870,15 +867,14 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         return next;
       });
 
-      setConversations((prev) => {
+      updateConversations((prev) => {
         const other = MOCK_PROFILES.find((p) => p.id === id);
         const next = ensureGreetingConversation(prev, other, kind);
         if (next === prev) return prev;
-        saveConvosMutation.mutate(next);
         return next;
       });
     },
-    [saveConvosMutation, setLikedIds]
+    [setLikedIds, updateConversations]
   );
 
   const markMatchSeen = useCallback(async (profileId: string) => {
@@ -956,10 +952,9 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
           if (next === prev) return prev;
           return next;
         });
-        setConversations((prev) => {
+        updateConversations((prev) => {
           const next = removeConversation(prev, targetId);
           if (next === prev) return prev;
-          saveConvosMutation.mutate(next);
           return next;
         });
         return;
@@ -981,15 +976,14 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
           if (options.appendLocalEcho === false) return;
 
-          setConversations((prev) => {
+          updateConversations((prev) => {
             const next = mergeBackendConversation(prev, targetId, [result.value]);
             if (next === prev) return prev;
-            saveConvosMutation.mutate(next);
             return next;
           });
         });
     },
-    [appServices, mode, profile, saveConvosMutation, setLikedIds, userId]
+    [appServices, mode, profile, setLikedIds, updateConversations, userId]
   );
 
   const likeProfile = useCallback(
@@ -1031,9 +1025,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         const next = removeId(prev, id);
         return next;
       });
-      setConversations((prev) => {
+      updateConversations((prev) => {
         const next = removeConversation(prev, id);
-        saveConvosMutation.mutate(next);
         return next;
       });
 
@@ -1076,7 +1069,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         }
       }
     },
-    [appServices, mode, profile, saveConvosMutation, setLikedIds, userId]
+    [appServices, mode, profile, setLikedIds, updateConversations, userId]
   );
 
   const reportProfile = useCallback(
@@ -1130,9 +1123,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         const next = addUniqueId(prev, blockedProfileId);
         return next;
       });
-      setConversations((prev) => {
+      updateConversations((prev) => {
         const next = removeConversation(prev, blockedProfileId);
-        saveConvosMutation.mutate(next);
         return next;
       });
 
@@ -1141,9 +1133,9 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     [
       appServices,
       profile,
-      saveConvosMutation,
       setLikedIds,
       setPassedIds,
+      updateConversations,
     ]
   );
 
@@ -1255,7 +1247,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         return;
       }
       console.log("[profile-provider] sendMessage", { profileId, length: text.length });
-      setConversations((prev) => {
+      updateConversations((prev) => {
         const exists = prev.find((c) => c.profileId === profileId);
         if (!exists) {
           console.log(
@@ -1264,7 +1256,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
           );
         }
         const next = appendOutgoingTextMessage(prev, profileId, text, authorName);
-        saveConvosMutation.mutate(next);
         return next;
       });
 
@@ -1276,26 +1267,24 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       const reply = makeSimulatedReply(localMockProfile);
       const delay = 1800 + Math.floor(Math.random() * 2500);
       setTimeout(() => {
-        setConversations((prev) => {
+        updateConversations((prev) => {
           const next = appendIncomingTextReply(prev, profileId, localMockProfile, reply);
-          saveConvosMutation.mutate(next);
           return next;
         });
       }, delay);
     },
-    [likedIds, mode, saveConvosMutation, persistBackendChatMessage]
+    [likedIds, mode, persistBackendChatMessage, updateConversations]
   );
 
   const deleteMessage = useCallback(
     (profileId: string, messageId: string) => {
       console.log("[profile-provider] deleteMessage", { profileId, messageId });
-      setConversations((prev) => {
+      updateConversations((prev) => {
         const next = removeMessage(prev, profileId, messageId);
-        saveConvosMutation.mutate(next);
         return next;
       });
     },
-    [saveConvosMutation]
+    [updateConversations]
   );
 
   const sendPhoto = useCallback(
@@ -1307,7 +1296,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         return;
       }
       const msgId = `m-${Date.now()}`;
-      setConversations((prev) => {
+      updateConversations((prev) => {
         const next = appendOutgoingPhotoRequest(
           prev,
           profileId,
@@ -1315,32 +1304,29 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
           msgId,
           authorName
         );
-        saveConvosMutation.mutate(next);
         return next;
       });
 
       const delay = 2500 + Math.floor(Math.random() * 3500);
       setTimeout(() => {
         console.log("[profile-provider] simulated photo approval", msgId);
-        setConversations((prev) => {
+        updateConversations((prev) => {
           const next = approvePendingPhoto(prev, profileId, msgId);
-          saveConvosMutation.mutate(next);
           return next;
         });
       }, delay);
     },
-    [likedIds, saveConvosMutation]
+    [likedIds, updateConversations]
   );
 
   const respondToPhoto = useCallback(
     (profileId: string, messageId: string, decision: "approved" | "declined") => {
-      setConversations((prev) => {
+      updateConversations((prev) => {
         const next = updatePhotoStatus(prev, profileId, messageId, decision);
-        saveConvosMutation.mutate(next);
         return next;
       });
     },
-    [saveConvosMutation]
+    [updateConversations]
   );
 
   const markRead = useCallback(
@@ -1403,10 +1389,9 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
           });
         }
       }
-      setConversations((prev) => {
+      updateConversations((prev) => {
         const next = markConversationRead(prev, profileId);
         if (next === prev) return prev;
-        saveConvosMutation.mutate(next);
         return next;
       });
     },
@@ -1415,7 +1400,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       conversations,
       mode,
       profile?.id,
-      saveConvosMutation,
+      updateConversations,
       userId,
     ]
   );
