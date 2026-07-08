@@ -1,6 +1,6 @@
 # Next Task
 
-Human UAT forgot-password when practical, then continue provider-internal cleanup after Slice 6, likely with backend chat send/read orchestration or remaining local simulated conversation mutation callbacks next.
+Human UAT forgot-password when practical, then continue provider-internal cleanup after Slice 6. Likely next engineering slice: backend chat send/read orchestration or remaining local simulated conversation mutation callbacks.
 
 ## Canonical Startup Context
 
@@ -87,3 +87,9 @@ Read only if needed:
 ## Follow-Up After Slice 1
 
 Navigation cleanup is accepted. Forgot-password is wired but still needs human UAT when practical. Slices 2, 3, 4, 5, and 6 are implemented. App routes/components no longer import `useProfile()` directly; focused hooks own the route/provider boundary. Provider-internal selector, monetization, chat UI, persisted conversation, chat simulation timing, match-record lookup, and pure conversation helper cleanup are implemented. Next engineering task is moving the next small state domain, likely backend chat send/read orchestration or remaining local simulated conversation mutation callbacks, out of `ProfileProvider` behind clearer services.
+
+## Latest Handoff
+
+- Repo is clean and synced with `origin/main` through `ff24c2c`.
+- Latest implementation commit is `2d942f7` - Extract backend match lookup helper.
+- No human UAT was run after the provider-internal cleanup slices.

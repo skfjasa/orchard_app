@@ -1,6 +1,6 @@
 # Current Agent State
 
-Last updated: 2026-07-07
+Last updated: 2026-07-08
 
 ## Objective
 
@@ -10,7 +10,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 
 - Branch: `main`
 - Latest implementation checkpoint: `2d942f7` - Extract backend match lookup helper
-- Current working state: clean after backend match lookup helper extraction; verify push status at session close.
+- Latest pushed checkpoint: `ff24c2c` - Refresh status after match lookup helper
+- Current working state: clean and synced with `origin/main` after provider-internal cleanup slices.
 
 ## Canonical Docs
 
@@ -54,6 +55,7 @@ Old duplicate roadmap/checklist/audit docs were consolidated and deleted from ac
 - Local conversation state and AsyncStorage persistence now live behind `expo/hooks/use-persisted-conversations.ts`; backend chat hydration/send/read orchestration remains in `ProfileProvider`.
 - Local chat simulation timing helpers now live behind `expo/services/local-chat-simulation-service.ts`; provider conversation mutation callbacks remain unchanged.
 - Repeated backend match-pair lookup now lives behind `expo/services/match-record-utils.ts`; provider backend effects remain unchanged.
+- Handoff sync is being refreshed on 2026-07-08 after the pushed cleanup run.
 
 ## Validation State
 
@@ -106,4 +108,4 @@ Foundation Slice 1 validation:
 
 ## Next Recommended Task
 
-Human UAT forgot-password when practical, then continue provider-internal cleanup after Slice 6 by moving the next small state domain out of `ProfileProvider` behind clearer stores/services. The likely next PR-sized slice is backend chat send/read orchestration or remaining local simulated conversation mutation callbacks. Keep the Android Match Detail loader as a monitored follow-up, not a blocker unless it worsens.
+Human UAT forgot-password when practical, then continue provider-internal cleanup after Slice 6. The likely next PR-sized engineering slice is backend chat send/read orchestration or remaining local simulated conversation mutation callbacks. Keep the Android Match Detail loader as a monitored follow-up, not a blocker unless it worsens.
