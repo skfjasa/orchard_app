@@ -347,6 +347,16 @@ Preserved behavior:
 - `ProfileProvider` still applies the returned plan into local compatibility state: active backend match IDs, local liked/new-match state, remembered profiles, and merged conversations.
 - Mock/Fruit fixture behavior during backend hydration is unchanged.
 
+## Extracted Backend Match Hydration Application
+
+Post-Slice 6 provider-internal cleanup moved backend match/thread hydration application calculations behind `expo/services/backend-match-hydration-application-service.ts`.
+
+Preserved behavior:
+
+- `ProfileProvider` still owns the React state setters and hydration readiness flags.
+- Backend hydration still merges backend matches into local liked IDs, new-match IDs, and conversations with local read watermarks.
+- Fixture backend conversations still preserve synthetic greeting behavior.
+
 ## Current Role
 
 `ProfileProvider` is the central app-state provider for the prototype. It still owns UI-facing local state and coordinates persistence, but the first service and store boundaries have been extracted.
@@ -507,6 +517,7 @@ Runtime local helper modules now exist:
 - `expo/services/local-match-action-service.ts`
 - `expo/services/backend-match-action-service.ts`
 - `expo/services/backend-match-hydration-service.ts`
+- `expo/services/backend-match-hydration-application-service.ts`
 - `expo/services/match-record-utils.ts`
 - `expo/services/local-monetization-service.ts`
 - `expo/services/local-profile-mutation-service.ts`

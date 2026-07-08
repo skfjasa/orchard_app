@@ -18,6 +18,11 @@ import {
   sendBackendChatMessage,
 } from "@/services/backend-chat-action-service";
 import { unmatchBackendProfile } from "@/services/backend-match-action-service";
+import {
+  mergeBackendHydratedConversations,
+  mergeBackendLikedIds,
+  mergeBackendNewMatchIds,
+} from "@/services/backend-match-hydration-application-service";
 import { buildBackendMatchHydrationPlan } from "@/services/backend-match-hydration-service";
 import {
   deleteLocalMessage,
@@ -28,7 +33,6 @@ import {
 import { activateLocalMatchState } from "@/services/local-match-action-service";
 import {
   addUniqueId,
-  ensureGreetingConversation,
   markConversationRead,
   mergeBackendConversation,
   newestMessageAt,
@@ -477,71 +481,38 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
       if (hydrationPlan.status === "partial") return;
 
-      const matchedLocalProfileIds = new Set(
-        hydrationPlan.matchedLocalProfileIds
-      );
       rememberProfiles(hydrationPlan.profilesToRemember);
       setBackendActiveMatchIds((prev) =>
         sameStringSet(prev, hydrationPlan.activeBackendMatchIds)
           ? prev
           : hydrationPlan.activeBackendMatchIds
       );
-      setLikedIds((prev) => {
-        const localOnlyLikedIds = prev.filter((id) => !isBackendProfileId(id));
-        const next = [...matchedLocalProfileIds, ...localOnlyLikedIds];
-        if (sameStringSet(prev, next)) return prev;
-        return next;
-      });
+      setLikedIds((prev) =>
+        mergeBackendLikedIds(prev, hydrationPlan.matchedLocalProfileIds)
+      );
 
-      setNewMatchIds((prev) => {
-        const currentSeenMatchIds = new Set(
-          seenMatchIdsRef.current[userId] ?? []
-        );
-        const nextNewMatchIds = [...matchedLocalProfileIds].filter(
-          (id) => !currentSeenMatchIds.has(id)
-        );
-        const localOnlyNewMatchIds = prev.filter(
-          (id) => !isBackendProfileId(id)
-        );
-        const next = [...new Set([...nextNewMatchIds, ...localOnlyNewMatchIds])];
-        if (sameStringSet(prev, next)) return prev;
-        return next;
-      });
+      setNewMatchIds((prev) =>
+        mergeBackendNewMatchIds({
+          matchedLocalProfileIds: hydrationPlan.matchedLocalProfileIds,
+          previousIds: prev,
+          seenMatchIds: seenMatchIdsRef.current[userId] ?? [],
+        })
+      );
 
-      updateConversations((prev) => {
-        const filtered = prev.filter(
-          (conversation) =>
-            matchedLocalProfileIds.has(conversation.profileId) ||
-            !isBackendProfileId(conversation.profileId)
-        );
-        let next = filtered.length === prev.length ? prev : filtered;
-        for (const backendConversation of hydrationPlan.backendConversations) {
-          const hostedReadThrough = backendConversation.readThrough ?? 0;
-          const localReadThrough =
-            readWatermarksRef.current[userId]?.[
-              backendConversation.profileId
-            ] ?? 0;
-          const readThrough = Math.max(hostedReadThrough, localReadThrough);
-          next = mergeBackendConversation(
-            next,
-            backendConversation.profileId,
-            backendConversation.messages,
-            readThrough
-          );
-          if (backendConversation.isFixture) {
-            const other =
-              MOCK_PROFILES.find(
-                (item) => item.id === backendConversation.profileId
-              ) ?? undefined;
-            next = ensureGreetingConversation(next, other, "like");
-          }
-        }
-        return next;
-      });
+      updateConversations((prev) =>
+        mergeBackendHydratedConversations({
+          backendConversations: hydrationPlan.backendConversations,
+          matchedLocalProfileIds: hydrationPlan.matchedLocalProfileIds,
+          mockProfiles: MOCK_PROFILES,
+          previousConversations: prev,
+          readWatermarks: readWatermarksRef.current,
+          userId,
+        })
+      );
       lastBackendMatchHydrationKey.current = hydrationKey;
       console.log("[profile-provider] backend match bootstrap applied", {
         backendConversations: hydrationPlan.backendConversations.length,
-        matchedLocalProfileIds: [...matchedLocalProfileIds],
+        matchedLocalProfileIds: hydrationPlan.matchedLocalProfileIds,
         userId,
       });
       setBackendMatchesHydrated(true);

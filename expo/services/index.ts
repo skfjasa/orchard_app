@@ -77,6 +77,12 @@ export type {
   BackendMatchHydrationPlan,
 } from "./backend-match-hydration-service";
 
+export {
+  mergeBackendHydratedConversations,
+  mergeBackendLikedIds,
+  mergeBackendNewMatchIds,
+} from "./backend-match-hydration-application-service";
+
 export type {
   AccountDeletionRequestInput,
   BlockInput,
