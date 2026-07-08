@@ -9,8 +9,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 ## Branch And Commit
 
 - Branch: `main`
-- Latest implementation checkpoint: `37b1c1f` - Extract persisted conversations hook
-- Current working state: clean after persisted conversations hook extraction; verify push status at session close.
+- Latest implementation checkpoint: `a47dd00` - Extract local chat simulation helpers
+- Current working state: clean after local chat simulation helper extraction; verify push status at session close.
 
 ## Canonical Docs
 
