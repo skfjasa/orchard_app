@@ -10,8 +10,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 
 - Branch: `main`
 - Latest implementation checkpoint: `2d942f7` - Extract backend match lookup helper
-- Latest pushed checkpoint: `ff24c2c` - Refresh status after match lookup helper
-- Current working state: clean and synced with `origin/main` after provider-internal cleanup slices.
+- Latest handoff checkpoint: `250bd49` - Sync handoff after provider cleanup
+- Current working state: handoff sync updated locally; push verification pending.
 
 ## Canonical Docs
 
@@ -55,7 +55,7 @@ Old duplicate roadmap/checklist/audit docs were consolidated and deleted from ac
 - Local conversation state and AsyncStorage persistence now live behind `expo/hooks/use-persisted-conversations.ts`; backend chat hydration/send/read orchestration remains in `ProfileProvider`.
 - Local chat simulation timing helpers now live behind `expo/services/local-chat-simulation-service.ts`; provider conversation mutation callbacks remain unchanged.
 - Repeated backend match-pair lookup now lives behind `expo/services/match-record-utils.ts`; provider backend effects remain unchanged.
-- Handoff sync is being refreshed on 2026-07-08 after the pushed cleanup run.
+- Handoff sync was refreshed on 2026-07-08 after the pushed cleanup run.
 
 ## Validation State
 
