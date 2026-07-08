@@ -408,11 +408,12 @@ Done:
 - [x] [C+U] One-sided real-profile likes no longer create local active matches.
 - [x] [C+U] Reciprocal backend matches hydrate after sign-out/sign-in.
 - [x] [C+U] Already matched backend real/dev profiles are excluded from Fruit.
+- [x] [C] RLS/tests cover blocked, invisible, suspended, incomplete, and unverified profile exclusion from discovery reads; hosted UAT still needs to accept the real-app behavior.
 
 Remaining:
 
 - [ ] [C] Make backend discovery the clear source of truth for Supabase mode.
-- [ ] [C+U] Confirm blocked/invisible/suspended users are excluded in hosted UAT.
+- [ ] [U] Confirm blocked/invisible/suspended users are excluded in hosted UAT.
 - [ ] [C+U] Confirm pass/like/super-like state persists and affects discovery consistently.
 - [ ] [H] Decide whether fixture profile images should be ingested into Supabase Storage.
 - [x] [C] Keep Fruit/mock profiles explicitly separated from real Supabase discovery.
@@ -458,13 +459,14 @@ Done:
 - [x] [C] Safety RPCs/RLS tests exist for key server-side restrictions.
 - [x] [C] Account deletion request flow exists.
 - [x] [C] Service-role keys are not shipped in the mobile app.
+- [x] [C] Source audit confirmed RLS/tests cover blocked users being removed from discovery and blocked match message reads/sends being denied; hosted UAT still needs to accept the real-app behavior.
 
 Remaining:
 
 - [ ] [U] Hosted UAT report profile, report message, block, unmatch, and account deletion request with real accounts.
 - [x] [C] Document Supabase Studio moderation workflow for inner-circle testing in `docs/supabase-moderation-workflow.md`.
-- [ ] [C+U] Confirm blocked users disappear from discovery, matches, and chat in hosted mode.
-- [ ] [C+U] Confirm suspended/invisible users do not appear in discovery.
+- [ ] [U] Confirm blocked users disappear from discovery, matches, and chat in hosted mode.
+- [ ] [U] Confirm suspended/invisible users do not appear in discovery.
 - [x] [C] Confirm no private messages, raw profile text, or PII are sent to analytics/logging. Source audit on 2026-07-08 found only an unused mock analytics interface and diagnostic logs without private message bodies or raw profile text.
 - [x] [C] Confirm seed fixtures contain no real user data and no explicit sexual demo content. Source audit on 2026-07-08 confirmed deterministic fixture emails/ids and fictional mock copy; human-like dating/profile language is intentionally preserved for simulation realism.
 - [!] [H] Real public legal/support/account deletion URLs are still needed before production/TestFlight polish.
