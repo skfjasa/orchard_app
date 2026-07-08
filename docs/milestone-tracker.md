@@ -525,12 +525,17 @@ Blocked/human decisions:
 - [!] [H] App Store Connect app setup.
 - [!] [H] Real domain/public URLs for privacy, terms, community standards, support, and account deletion.
 
+Done:
+
+- [x] [C] Added explicit iOS photo-library and microphone permission copy in `expo/app.json`; the current image-picker config blocks camera permission because the app only launches the photo library.
+- [x] [C] Audited current app metadata and branded asset wiring: `Orchard`, slug `orchard`, version `1.0.0`, iOS bundle `com.orchardapp.ios`, Android package `com.orchardapp.android`, and 1024x1024 branded icon/adaptive/splash assets are present.
+
 Remaining:
 
 - [x] [C] Add or verify `eas.json`.
 - [x] [C] Configure EAS build profiles for internal preview and production builds.
-- [ ] [C+H] Verify app name, bundle id, version/build number.
-- [ ] [C+H] Review icon, splash, and permission strings.
+- [~] [C+H] Verify app name, bundle id, version/build number. Agent-side config audit is done; human/App Store Connect confirmation remains.
+- [~] [C+H] Review icon, splash, and permission strings. Agent-side asset/config audit is done; human visual/copy approval remains.
 - [ ] [C+H] Prepare beta app description.
 - [ ] [C+H] Prepare reviewer notes.
 - [ ] [C+H] Prepare demo account or seeded beta data.

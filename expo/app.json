@@ -31,7 +31,20 @@
       "expo-router",
       "expo-font",
       "expo-web-browser",
-      "expo-audio"
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Orchard lets you choose profile and chat photos from your photo library.",
+          "cameraPermission": false,
+          "microphonePermission": "Orchard uses the microphone only when you record a voice prompt."
+        }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Orchard uses the microphone only when you record a voice prompt."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
