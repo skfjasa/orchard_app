@@ -487,7 +487,7 @@ Remaining:
 
 - [ ] [C+U] Complete M4 session bootstrap.
 - [ ] [C+U] Complete enough M5/M6/M7 hosted UAT to trust real tester flows.
-- [ ] [C+H] Prepare seeded/demo accounts and tester instructions.
+- [~] [C+H] Prepare seeded/demo accounts and tester instructions. Draft tester instructions now live in `docs/beta-release-notes.md`; seeded/demo account creation and private credential handling remain.
 - [ ] [H] Decide feedback channel and support process.
 - [ ] [H] Decide whether analytics/crash reporting are required before inner-circle testing.
 - [ ] [C+H] Confirm privacy posture for test data and fixtures.
@@ -536,8 +536,8 @@ Remaining:
 - [x] [C] Configure EAS build profiles for internal preview and production builds.
 - [~] [C+H] Verify app name, bundle id, version/build number. Agent-side config audit is done; human/App Store Connect confirmation remains.
 - [~] [C+H] Review icon, splash, and permission strings. Agent-side asset/config audit is done; human visual/copy approval remains.
-- [ ] [C+H] Prepare beta app description.
-- [ ] [C+H] Prepare reviewer notes.
+- [~] [C+H] Prepare beta app description. Draft copy now lives in `docs/beta-release-notes.md`; human final approval remains.
+- [~] [C+H] Prepare reviewer notes. Draft scaffolding now lives in `docs/beta-release-notes.md`; private reviewer credentials and final App Store Connect wording remain.
 - [ ] [C+H] Prepare demo account or seeded beta data.
 - [ ] [C+H] Produce iOS build.
 - [ ] [H] Upload to TestFlight.

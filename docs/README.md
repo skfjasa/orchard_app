@@ -17,6 +17,7 @@ This directory intentionally uses a small set of active source-of-truth docs. Ol
 - [Supabase Schema Draft](supabase-schema.md): current schema/RLS/migration reference.
 - [Supabase Hardening Plan](supabase-hardening-plan.md): security/RLS principles and current hardening reference.
 - [Supabase Moderation Workflow](supabase-moderation-workflow.md): interim Supabase Studio review process for reports, account deletion requests, blocks, and manual moderation during inner-circle testing.
+- [Beta Release Notes](beta-release-notes.md): draft tester instructions, beta description, and App Store review-note scaffolding with placeholders for human-owned details.
 - [Development Setup](setup.md): local setup, commands, environment variables, and TestFlight setup notes.
 - [Codex Operating Guide](codex-operating-guide.md): operating rules for agent sessions.
 - [Profile Provider Responsibility Map](profile-provider-map.md): provider extraction context; not a rewrite directive.
