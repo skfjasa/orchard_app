@@ -367,7 +367,7 @@ Remaining:
 - [ ] [H] Decide what to do with local simulated replies and photo-request behavior in Supabase mode.
 - [ ] [C+U] Confirm message send failures do not create misleading local sent state.
 - [ ] [C+U] Confirm unmatch/block immediately prevents further message visibility and sending.
-- [ ] [C] Confirm private messages are never sent to analytics/logging.
+- [x] [C] Confirm private messages are never sent to analytics/logging. Source audit on 2026-07-08 found no production analytics calls; chat logs include ids/lengths/status only, not message bodies.
 
 Exit criteria:
 
@@ -393,7 +393,7 @@ Remaining:
 - [ ] [C] Document Supabase Studio moderation workflow for inner-circle testing.
 - [ ] [C+U] Confirm blocked users disappear from discovery, matches, and chat in hosted mode.
 - [ ] [C+U] Confirm suspended/invisible users do not appear in discovery.
-- [ ] [C] Confirm no private messages, raw profile text, or PII are sent to analytics/logging.
+- [x] [C] Confirm no private messages, raw profile text, or PII are sent to analytics/logging. Source audit on 2026-07-08 found only an unused mock analytics interface and diagnostic logs without private message bodies or raw profile text.
 - [ ] [C] Confirm seed fixtures contain no real user data and no explicit sexual demo content.
 - [!] [H] Real public legal/support/account deletion URLs are still needed before production/TestFlight polish.
 
