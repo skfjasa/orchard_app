@@ -507,7 +507,7 @@ Remaining:
 - [ ] [C] Do not capture private messages, raw profile text, or PII.
 - [x] [C] Create repeatable UAT checklist for auth, onboarding, discovery, matching, chat, safety, and sign-out/sign-in. See "Repeatable Full-Flow UAT Checklist" above.
 - [ ] [H] Decide whether to automate more E2E/browser smoke checks.
-- [ ] [C] Add or confirm app-level error boundary strategy before broader tester release.
+- [x] [C] Add or confirm app-level error boundary strategy before broader tester release. Root Expo Router error boundary exists in `expo/app/_layout.tsx` with retry UI and message-only diagnostic logging.
 
 Exit criteria:
 

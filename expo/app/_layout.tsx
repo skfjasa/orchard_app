@@ -3,10 +3,18 @@ import {
   QueryClient,
   QueryClientProvider,
 } from "@tanstack/react-query";
-import { Stack } from "expo-router";
+import { Stack, type ErrorBoundaryProps } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
-import { AppState, Platform, type AppStateStatus } from "react-native";
+import {
+  AppState,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  type AppStateStatus,
+} from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -85,6 +93,37 @@ function RootLayoutNav() {
   );
 }
 
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  useEffect(() => {
+    console.log("[root-error-boundary]", error.message);
+  }, [error.message]);
+
+  return (
+    <View style={styles.errorRoot}>
+      <View style={styles.errorPanel}>
+        <Text style={styles.errorTitle}>Something went wrong</Text>
+        <Text style={styles.errorBody}>
+          Orchard hit an unexpected app error. You can retry this screen or
+          restart the app if it happens again.
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => {
+            void retry();
+          }}
+          style={({ pressed }) => [
+            styles.errorButton,
+            pressed && styles.errorButtonPressed,
+          ]}
+          testID="root-error-retry"
+        >
+          <Text style={styles.errorButtonText}>Retry</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
 export default function RootLayout() {
   useEffect(() => {
     SplashScreen.hideAsync();
@@ -116,3 +155,44 @@ export default function RootLayout() {
     </QueryClientProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  errorRoot: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.light.background,
+    padding: 24,
+  },
+  errorPanel: {
+    width: "100%",
+    maxWidth: 420,
+    gap: 16,
+  },
+  errorTitle: {
+    color: Colors.light.text,
+    fontSize: 24,
+    fontWeight: "800",
+  },
+  errorBody: {
+    color: Colors.light.textMuted,
+    fontSize: 16,
+    lineHeight: 23,
+  },
+  errorButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 52,
+    borderRadius: 8,
+    backgroundColor: Colors.light.tint,
+    paddingHorizontal: 20,
+  },
+  errorButtonPressed: {
+    opacity: 0.85,
+  },
+  errorButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+});
