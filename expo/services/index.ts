@@ -107,6 +107,8 @@ export {
   ensureGreetingConversation,
   makeSimulatedReply,
   markConversationRead,
+  mergeBackendConversation,
+  newestMessageAt,
   removeConversation,
   removeId,
   removeMessage,
@@ -114,6 +116,11 @@ export {
 } from "./local-interaction-service";
 
 export type { LocalGreetingKind } from "./local-interaction-service";
+
+export {
+  scheduleSimulatedPhotoApproval,
+  scheduleSimulatedTextReply,
+} from "./local-chat-simulation-service";
 
 export {
   applyLocalPurchase,

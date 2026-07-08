@@ -189,6 +189,7 @@ Done:
 - [x] [C] Local chat UI state for drafts and simulated typing IDs now lives in `expo/store/use-chat-ui-store.ts`.
 - [x] [C] Pure backend conversation merge/read-through helpers now live in `expo/services/local-interaction-service.ts`.
 - [x] [C] Local conversation state and AsyncStorage persistence now live in `expo/hooks/use-persisted-conversations.ts`.
+- [x] [C] Local chat simulation timing helpers now live in `expo/services/local-chat-simulation-service.ts`.
 
 Remaining:
 

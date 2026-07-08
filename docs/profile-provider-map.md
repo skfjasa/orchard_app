@@ -270,7 +270,29 @@ Not moved:
 
 - Backend match/thread hydration decisions.
 - Backend chat send/read calls.
-- Local simulated replies, photo requests, and photo approvals.
+- Local simulated reply/photo conversation mutations.
+
+## Extracted Local Chat Simulation Helpers
+
+Post-Slice 6 provider-internal cleanup moved local chat simulation timing behind `expo/services/local-chat-simulation-service.ts`.
+
+Helper behavior now owned by the service:
+
+- Simulated text reply delay.
+- Simulated photo approval delay.
+- Simulated text reply selection through the existing local interaction helper.
+
+Preserved behavior:
+
+- `ProfileProvider` still appends the simulated reply or photo approval to conversations through the persisted conversations hook.
+- Existing random delay windows are unchanged.
+- Mock/Fruit fixture chat behavior remains local/demo-only.
+
+Not moved:
+
+- Backend chat send/read orchestration.
+- Conversation mutation callbacks.
+- Product decision about simulated replies/photo requests in Supabase mode.
 
 ## Current Role
 
@@ -427,6 +449,7 @@ Runtime local helper modules now exist:
 
 - `expo/services/local-profile-storage.ts`
 - `expo/services/local-interaction-service.ts`
+- `expo/services/local-chat-simulation-service.ts`
 - `expo/services/local-monetization-service.ts`
 - `expo/services/local-profile-mutation-service.ts`
 - `expo/store/use-interaction-store.ts`

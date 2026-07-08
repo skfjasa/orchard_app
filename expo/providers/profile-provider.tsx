@@ -16,13 +16,16 @@ import { useTransientEmptyList } from "@/hooks/use-transient-empty-list";
 import { useAuth } from "@/providers/auth-provider";
 import { createAppServices } from "@/services/app-services";
 import {
+  scheduleSimulatedPhotoApproval,
+  scheduleSimulatedTextReply,
+} from "@/services/local-chat-simulation-service";
+import {
   addUniqueId,
   appendIncomingTextReply,
   appendOutgoingPhotoRequest,
   appendOutgoingTextMessage,
   approvePendingPhoto,
   ensureGreetingConversation,
-  makeSimulatedReply,
   markConversationRead,
   mergeBackendConversation,
   newestMessageAt,
@@ -1264,14 +1267,12 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       });
 
       if (!localMockProfile) return;
-      const reply = makeSimulatedReply(localMockProfile);
-      const delay = 1800 + Math.floor(Math.random() * 2500);
-      setTimeout(() => {
+      scheduleSimulatedTextReply(localMockProfile, (reply) => {
         updateConversations((prev) => {
           const next = appendIncomingTextReply(prev, profileId, localMockProfile, reply);
           return next;
         });
-      }, delay);
+      });
     },
     [likedIds, mode, persistBackendChatMessage, updateConversations]
   );
@@ -1307,14 +1308,13 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         return next;
       });
 
-      const delay = 2500 + Math.floor(Math.random() * 3500);
-      setTimeout(() => {
+      scheduleSimulatedPhotoApproval(() => {
         console.log("[profile-provider] simulated photo approval", msgId);
         updateConversations((prev) => {
           const next = approvePendingPhoto(prev, profileId, msgId);
           return next;
         });
-      }, delay);
+      });
     },
     [likedIds, updateConversations]
   );
