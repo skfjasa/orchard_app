@@ -221,6 +221,7 @@ Last updated: 2026-07-08
 - Repeated backend match-pair lookup now lives behind `expo/services/match-record-utils.ts`. `ProfileProvider` still owns backend chat hydration and unmatch side effects.
 - Backend chat send/read action orchestration now lives behind `expo/services/backend-chat-action-service.ts`. `ProfileProvider` still owns local visible conversation updates, stale local-match cleanup when the backend has no active match, unmatch side effects, and local simulated reply/photo mutation callbacks.
 - Supabase discovery now excludes hosted test fixture rows by default through an explicit `includeTestFixtures` discovery filter. Discover and Fruit both leave hosted fixtures out of backend discovery, while Fruit continues to use its local `FRUIT_PROFILES` fixture pool for demo/test behavior.
+- Foundation Slice 5b hands backend match polling and Realtime refresh control to React Query. `useMatchesQuery` now runs when Supabase/profile bootstrap is ready, polls every 10 seconds, `useMatchRealtime` invalidates match queries on Supabase match/message changes, and the root layout bridges native app foreground state into React Query focus handling. `ProfileProvider` still applies the existing backend match/thread merge algorithm when query data changes and keeps `refreshBackendMatches` as a compatibility refetch wrapper.
 - Profile-tab sign-out now clears profile/auth state before routing to `/onboarding`, preventing the user from landing on Discover with no profile/data loaded.
 - Remaining observed behavior to decide/fix later: after sign-out/sign-in, only hosted messages are restored; local fixture greeting/simulated messages are intentionally not persisted to hosted chat yet.
 - The original generated onboarding background was recovered from the previous remote URL, vendored as `expo/assets/images/welcome-background.png`, and the welcome, sign-in, and pending-confirmation screens now use the local bundled asset instead of the app icon background or a remote Rork URL.
@@ -236,12 +237,12 @@ Last updated: 2026-07-08
 
 ## Current Task
 
-Provider-internal cleanup after Slice 6 has moved pure compatibility selectors, prototype monetization state, local chat UI state, local conversation state/persistence, local chat simulation timing, backend match-pair lookup, backend chat send/read action orchestration, Supabase discovery fixture filtering, and pure backend conversation merge/read-through helpers out of `ProfileProvider` while preserving route hooks, facade members, storage keys, and visible behavior.
+Provider-internal cleanup after Slice 6 has moved pure compatibility selectors, prototype monetization state, local chat UI state, local conversation state/persistence, local chat simulation timing, backend match-pair lookup, backend chat send/read action orchestration, Supabase discovery fixture filtering, React Query polling/realtime invalidation control, and pure backend conversation merge/read-through helpers out of `ProfileProvider` while preserving route hooks, facade members, storage keys, and visible behavior.
 
 ## Next Planned Tasks
 
 1. Human UAT forgot-password flow on hosted Supabase/ngrok when practical: request reset email, open link, set new password, sign in with the new password, and confirm the old password no longer works.
-2. Continue provider-internal cleanup after Slice 6: move the next small state domain, likely remaining local simulated conversation mutation callbacks, fixture match repair paths, or unmatch action orchestration, out of `ProfileProvider` behind clearer services without changing visible UI.
+2. Continue provider-internal cleanup after Slice 6/Slice 5b: move the next small state domain, likely remaining local simulated conversation mutation callbacks, fixture match repair paths, or unmatch action orchestration, out of `ProfileProvider` behind clearer services without changing visible UI.
 3. Continue Supabase source-of-truth session bootstrap for inner-circle testing: profile, active matches, display profiles/photos, inbox summaries, thread snippets, unread/read state, and block/unmatch visibility should load before tabs render.
 4. Monitor Android Match Detail's brief app-background loading step; optimize only if it is multi-second, frequent after warmup, or loses rows/highlight state.
 5. Decide whether seen-match/highlight state remains local-only for inner-circle testing or moves to backend-backed per-user state.

@@ -210,6 +210,7 @@ Remaining:
   - [x] [C] Profile/safety/paywall/onboarding calls.
     - [x] [C] Edit Profile, Paywall, Report, and Safety & Legal now use focused read-model hooks.
     - [x] [C] Profile tab, onboarding photos/sign-in, tab badges, root redirect, and ProtectedRoute/bootstrap gates now use focused read-model hooks.
+- [x] [C] Slice 5b: Hand over background polling and cache invalidation to React Query (remove manual setInterval/AppState from ProfileProvider and extract Realtime invalidation).
 - [ ] [C] Continue isolating remaining mock/local fixture behavior inside `ProfileProvider`, especially local simulated chat/photo callbacks and fixture match repair paths.
 
 Exit criteria:

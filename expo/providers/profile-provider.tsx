@@ -1,7 +1,6 @@
 import createContextHook from "@nkzw/create-context-hook";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AppState } from "react-native";
 
 import { MOCK_PROFILES } from "@/mocks/profiles";
 import {
@@ -10,6 +9,7 @@ import {
   toBackendProfileId,
 } from "@/constants/mock-profile-ids";
 import { MVP_MONETIZATION_ENABLED } from "@/constants/features";
+import { useMatchRealtime } from "@/hooks/api/use-match-realtime";
 import { useMatchesQuery } from "@/hooks/api/use-matches";
 import { usePersistedConversations } from "@/hooks/use-persisted-conversations";
 import { useTransientEmptyList } from "@/hooks/use-transient-empty-list";
@@ -76,7 +76,9 @@ import {
   SUPER_LIKE_RECHARGE_MS,
   SubscriptionId,
 } from "@/types";
+import type { MatchRecord } from "@/services/match-service";
 import type { ReportReason } from "@/services/safety-service";
+import type { ServiceResponse } from "@/services/service-types";
 import type { SwipeDecision, SwipeResult } from "@/services/swipe-service";
 import { useChatUiStore } from "@/store/use-chat-ui-store";
 import { useInteractionStore } from "@/store/use-interaction-store";
@@ -101,9 +103,8 @@ function sameStringSet(a: string[], b: string[]) {
   return b.every((item) => values.has(item));
 }
 
-const BACKEND_MATCH_REFRESH_INTERVAL_MS = 10_000;
-const BACKEND_REALTIME_REFRESH_DELAY_MS = 250;
 const INCOMPLETE_BACKEND_PROFILE_NAME = "orchard user";
+type BackendMatchListResult = ServiceResponse<MatchRecord[]>;
 
 function isIncompleteBackendProfile(profile: Profile | undefined): boolean {
   if (!profile || !isBackendProfileId(profile.id)) return false;
@@ -200,12 +201,27 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     queryKey: ["duet-storage"],
     queryFn: loadStoredProfileState,
   });
+  const canQueryBackendMatches =
+    mode === "supabase" &&
+    appServices.capabilities.matches === "supabase" &&
+    appServices.capabilities.chat === "supabase" &&
+    hydrated &&
+    backendProfileHydrated &&
+    !!profile &&
+    !!userId &&
+    profile.id === userId;
   const backendMatchesQuery = useMatchesQuery({
-    enabled: false,
+    enabled: canQueryBackendMatches,
     profileId: userId,
     services: appServices,
   });
   const refetchBackendMatchesQuery = backendMatchesQuery.refetch;
+  useMatchRealtime({
+    enabled: canQueryBackendMatches,
+    matchIds: backendActiveMatchIds,
+    profileId: userId,
+    services: appServices,
+  });
 
   useEffect(() => {
     if (loadQuery.data && !hydrated) {
@@ -437,12 +453,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     });
   }, []);
 
-  const refreshBackendMatches = useCallback(async () => {
-    if (mode !== "supabase") return;
-    if (appServices.capabilities.matches !== "supabase") return;
-    if (appServices.capabilities.chat !== "supabase") return;
-    if (!hydrated || !backendProfileHydrated) return;
-    if (!profile || !userId || profile.id !== userId) return;
+  const applyBackendMatches = useCallback(async (matchResult: BackendMatchListResult) => {
+    if (!canQueryBackendMatches) return;
 
     const sessionKey = session?.access_token ?? "";
     const hydrationKey = `${userId}:${sessionKey}`;
@@ -460,17 +472,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     });
 
     try {
-      const matchQueryResult = await refetchBackendMatchesQuery();
-      const matchResult =
-        matchQueryResult.data ??
-        ({
-          ok: false,
-          error: {
-            code: "matches_query_empty",
-            message: "Backend matches query did not return a result.",
-          },
-        } as const);
-
       if (!matchResult.ok) {
         console.log("[profile-provider] backend match hydration failed", {
           code: matchResult.error.code,
@@ -657,98 +658,32 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       if (pendingBackendMatchRefreshRef.current) {
         pendingBackendMatchRefreshRef.current = false;
         setTimeout(() => {
-          void refreshBackendMatches();
+          void applyBackendMatches(matchResult);
         }, 0);
       }
     }
   }, [
     appServices,
-    backendProfileHydrated,
-    hydrated,
-    mode,
+    canQueryBackendMatches,
     profile,
     rememberProfiles,
-    refetchBackendMatchesQuery,
     updateConversations,
     session?.access_token,
     userId,
   ]);
 
-  useEffect(() => {
-    void refreshBackendMatches();
-  }, [refreshBackendMatches]);
+  const refreshBackendMatches = useCallback(async () => {
+    if (!canQueryBackendMatches) return;
+    await refetchBackendMatchesQuery();
+  }, [canQueryBackendMatches, refetchBackendMatchesQuery]);
 
   useEffect(() => {
-    if (mode !== "supabase") return;
-    if (!hydrated || !backendProfileHydrated) return;
-    if (!profile || !userId || profile.id !== userId) return;
-
-    const intervalId = setInterval(() => {
-      void refreshBackendMatches();
-    }, BACKEND_MATCH_REFRESH_INTERVAL_MS);
-
-    const subscription = AppState.addEventListener("change", (nextState) => {
-      if (nextState === "active") {
-        void refreshBackendMatches();
-      }
-    });
-
-    return () => {
-      clearInterval(intervalId);
-      subscription.remove();
-    };
+    if (!backendMatchesQuery.data) return;
+    void applyBackendMatches(backendMatchesQuery.data);
   }, [
-    backendProfileHydrated,
-    hydrated,
-    mode,
-    profile,
-    refreshBackendMatches,
-    userId,
-  ]);
-
-  useEffect(() => {
-    if (mode !== "supabase") return;
-    if (appServices.capabilities.realtime !== "supabase") return;
-    if (!hydrated || !backendProfileHydrated) return;
-    if (!profile || !userId || profile.id !== userId) return;
-
-    let refreshTimeout: ReturnType<typeof setTimeout> | null = null;
-    const subscriptionResult =
-      appServices.realtime.subscribeToMatchAndMessageChanges({
-        profileId: userId,
-        matchIds: backendActiveMatchIds,
-        onChange: () => {
-          if (refreshTimeout) return;
-          refreshTimeout = setTimeout(() => {
-            refreshTimeout = null;
-            void refreshBackendMatches();
-          }, BACKEND_REALTIME_REFRESH_DELAY_MS);
-        },
-      });
-
-    if (!subscriptionResult.ok) {
-      console.log("[profile-provider] backend realtime unavailable", {
-        code: subscriptionResult.error.code,
-        message: subscriptionResult.error.message,
-      });
-      return;
-    }
-
-    return () => {
-      if (refreshTimeout) {
-        clearTimeout(refreshTimeout);
-      }
-      subscriptionResult.value.unsubscribe();
-    };
-  }, [
-    appServices,
-    backendActiveMatchIds,
-    backendProfileHydrated,
-    hydrated,
-    mode,
-    profile,
-    refreshBackendMatches,
-    userId,
+    applyBackendMatches,
+    backendMatchesQuery.data,
+    backendMatchesQuery.dataUpdatedAt,
   ]);
 
   const completeOnboarding = useCallback(

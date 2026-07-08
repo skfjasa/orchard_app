@@ -371,6 +371,34 @@ Validation:
   - Reciprocal match and backend chat.
   - Safety flows.
 
+## Part 3: React Query Control Flow Handover (Slice 5b)
+
+Status: implemented 2026-07-08.
+
+> [!WARNING]
+> **To the executing agent (Codex):** The previous Slice 5 extraction created `useMatchesQuery` but left it neutered (`enabled: false`). It is currently being manually triggered by `ProfileProvider.refreshBackendMatches` inside `setInterval` loops. Execute the following steps to permanently hand over the background polling control flow to React Query and dismantle the manual loops.
+
+### Step 1: Remove Manual Polling from `ProfileProvider`
+- **[MODIFY] `expo/providers/profile-provider.tsx`**
+  - Delete the `setInterval` block that triggers `refreshBackendMatches` based on `BACKEND_MATCH_REFRESH_INTERVAL_MS`.
+  - Delete the `AppState.addEventListener` block that triggers `refreshBackendMatches` on app focus.
+
+### Step 2: Native React Query Configuration
+- **[MODIFY] `expo/hooks/api/use-matches.ts`**
+  - Remove `enabled: false`. Allow the query to run natively when the `profileId` is present and the mode is `supabase`.
+  - Add `refetchInterval: 10000` (10 seconds) to the `useQuery` config so React Query handles the background polling automatically.
+  - Add `refetchOnWindowFocus: true` so React Query handles the AppState foregrounding automatically.
+
+### Step 3: Extract Realtime Subscriptions
+- **[NEW] `expo/hooks/api/use-match-realtime.ts`**
+  - Move the Supabase Realtime subscription logic (`appServices.realtime.subscribeToMatchAndMessageChanges`) out of `ProfileProvider` and into this new hook.
+  - Instead of calling `refreshBackendMatches()` on a socket event, this hook should simply call `queryClient.invalidateQueries({ queryKey: ["matches"] })`.
+
+### Step 4: Isolate the Data Merge Algorithm
+- **[MODIFY] `expo/providers/profile-provider.tsx` (or extract to a service)**
+  - Move the complex merging of `useMatchesQuery.data` (which merges backend threads, Fruit profiles, and Mock modes into Zustand stores) out of the manual `refreshBackendMatches` function.
+  - Instead, run this merge logic reactively inside a `useEffect` that listens for changes to `useMatchesQuery.data`, or preferably inside the `select` / `onSuccess` handlers of the React Query hook itself.
+
 ## Deprecated Items Removed From Active Plan
 
 These items are no longer active instructions:
@@ -386,4 +414,4 @@ Historical rationale for these removed items is preserved in [Architecture Audit
 
 ## Current Recommended Next Step
 
-Slices 2 through 6 are implemented, and provider-internal cleanup has started with selector, prototype monetization, chat UI state, local conversation persistence, local chat simulation timing, backend match lookup, backend chat send/read action orchestration, Supabase discovery fixture filtering, and pure conversation helper extraction. Next, continue moving one small state domain at a time out of `ProfileProvider` without changing visible UI or mock/Supabase behavior.
+Slices 2 through 6 and Slice 5b are implemented, and provider-internal cleanup has started with selector, prototype monetization, chat UI state, local conversation persistence, local chat simulation timing, backend match lookup, backend chat send/read action orchestration, Supabase discovery fixture filtering, React Query polling/realtime invalidation handover, and pure conversation helper extraction. Next, continue moving one small state domain at a time out of `ProfileProvider` without changing visible UI or mock/Supabase behavior.

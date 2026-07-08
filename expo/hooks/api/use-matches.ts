@@ -10,6 +10,7 @@ import { backendQueryKeys } from "./query-keys";
 interface UseMatchesQueryOptions {
   enabled?: boolean;
   profileId?: string | null;
+  refetchIntervalMs?: number;
   services?: AppServices;
   staleTime?: number;
 }
@@ -17,6 +18,7 @@ interface UseMatchesQueryOptions {
 export function useMatchesQuery({
   enabled = true,
   profileId,
+  refetchIntervalMs = 10_000,
   services,
   staleTime = 5_000,
 }: UseMatchesQueryOptions) {
@@ -24,12 +26,15 @@ export function useMatchesQuery({
   const appServices = services ?? defaultServices;
 
   return useQuery<ServiceResponse<MatchRecord[]>>({
-    enabled: enabled && !!profileId,
+    enabled: enabled && appServices.mode === "supabase" && !!profileId,
     queryFn: () => {
       if (!profileId) return Promise.resolve({ ok: true, value: [] });
       return appServices.matches.listMatches(profileId);
     },
     queryKey: backendQueryKeys.matches.list(appServices.mode, profileId),
+    refetchInterval:
+      appServices.mode === "supabase" ? refetchIntervalMs : false,
+    refetchOnWindowFocus: true,
     staleTime,
   });
 }

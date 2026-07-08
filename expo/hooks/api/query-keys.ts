@@ -28,8 +28,10 @@ function viewerProfileKey(filters?: DiscoveryFilters | null) {
 export const backendQueryKeys = {
   all: ["backend"] as const,
   matches: {
+    all: (mode: BackendMode) =>
+      [...backendQueryKeys.all, mode, "matches"] as const,
     list: (mode: BackendMode, profileId?: string | null) =>
-      [...backendQueryKeys.all, mode, "matches", profileId ?? "none"] as const,
+      [...backendQueryKeys.matches.all(mode), profileId ?? "none"] as const,
   },
   chat: {
     thread: (
