@@ -7,6 +7,7 @@ export interface DiscoveryFilters {
   viewerProfile?: Profile;
   limit?: number;
   includePassed?: boolean;
+  includeTestFixtures?: boolean;
   excludedProfileIds?: string[];
 }
 

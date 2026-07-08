@@ -54,6 +54,7 @@ export const backendQueryKeys = {
         {
           excludedProfileIds: stableIds(filters?.excludedProfileIds),
           includePassed: filters?.includePassed ?? false,
+          includeTestFixtures: filters?.includeTestFixtures ?? false,
           limit: filters?.limit ?? null,
           profileId: filters?.profileId ?? "none",
           viewerProfile: viewerProfileKey(filters),

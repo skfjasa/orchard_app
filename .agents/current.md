@@ -9,9 +9,10 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 ## Branch And Commit
 
 - Branch: `main`
-- Latest implementation checkpoint: `2d942f7` - Extract backend match lookup helper
+- Latest implementation checkpoint in git: `2d942f7` - Extract backend match lookup helper
+- Current uncommitted implementation slice: backend chat action helper extraction.
 - Latest handoff sync: 2026-07-08 after provider cleanup.
-- Current working state: clean and synced with `origin/main` after handoff sync; use `git log --oneline -5` for the exact latest handoff-only commit.
+- Current working state: dirty with the backend chat action extraction and status-doc updates; `main` is otherwise synced with `origin/main`.
 
 ## Canonical Docs
 
@@ -52,9 +53,11 @@ Old duplicate roadmap/checklist/audit docs were consolidated and deleted from ac
 - Prototype monetization state now lives behind `expo/store/use-monetization-store.ts` while preserving existing AsyncStorage keys and provider compatibility wrappers.
 - Local chat UI state for drafts and simulated typing IDs now lives behind `expo/store/use-chat-ui-store.ts`.
 - Pure backend conversation merge/read-through helpers now live in `expo/services/local-interaction-service.ts`.
-- Local conversation state and AsyncStorage persistence now live behind `expo/hooks/use-persisted-conversations.ts`; backend chat hydration/send/read orchestration remains in `ProfileProvider`.
+- Local conversation state and AsyncStorage persistence now live behind `expo/hooks/use-persisted-conversations.ts`; backend chat hydration remains in `ProfileProvider`.
 - Local chat simulation timing helpers now live behind `expo/services/local-chat-simulation-service.ts`; provider conversation mutation callbacks remain unchanged.
 - Repeated backend match-pair lookup now lives behind `expo/services/match-record-utils.ts`; provider backend effects remain unchanged.
+- Backend chat send/read action orchestration now lives behind `expo/services/backend-chat-action-service.ts`; provider local conversation updates and stale local-match cleanup remain unchanged.
+- Supabase discovery now excludes hosted test fixture rows by default through `includeTestFixtures`; Discover and Fruit do not opt in, so Fruit's demo profiles remain local `FRUIT_PROFILES` instead of hosted mock rows.
 - Handoff sync was refreshed on 2026-07-08 after the pushed cleanup run.
 
 ## Validation State
@@ -96,6 +99,8 @@ Foundation Slice 1 validation:
 - Persisted conversations hook validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
 - Chat simulation helper extraction validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
 - Match record helper extraction validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
+- Backend chat action helper extraction validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
+- Supabase discovery fixture filtering validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
 
 ## Recent Docs Consolidation
 
@@ -108,4 +113,4 @@ Foundation Slice 1 validation:
 
 ## Next Recommended Task
 
-Human UAT forgot-password when practical, then continue provider-internal cleanup after Slice 6. The likely next PR-sized engineering slice is backend chat send/read orchestration or remaining local simulated conversation mutation callbacks. Keep the Android Match Detail loader as a monitored follow-up, not a blocker unless it worsens.
+Human UAT forgot-password when practical, then continue provider-internal cleanup after Slice 6. The likely next PR-sized engineering slice is remaining local simulated conversation mutation callbacks, fixture match repair paths, or unmatch action orchestration. Keep the Android Match Detail loader as a monitored follow-up, not a blocker unless it worsens.

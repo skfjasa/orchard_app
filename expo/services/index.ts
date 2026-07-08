@@ -59,6 +59,13 @@ export type {
   SendMessageInput,
 } from "./chat-service";
 
+export {
+  markBackendConversationRead,
+  sendBackendChatMessage,
+} from "./backend-chat-action-service";
+
+export type { BackendChatSendResult } from "./backend-chat-action-service";
+
 export type {
   AccountDeletionRequestInput,
   BlockInput,

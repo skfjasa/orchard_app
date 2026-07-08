@@ -29,6 +29,7 @@ export function useDiscoverReadModel() {
             profileId: profile.id,
             viewerProfile: profile,
             excludedProfileIds: [...likedIds, ...passedIds],
+            includeTestFixtures: false,
           }
         : null,
     [likedIds, passedIds, profile]

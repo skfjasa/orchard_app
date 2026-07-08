@@ -27,6 +27,7 @@ export function useFruitReadModel() {
             viewerProfile: profile,
             excludedProfileIds: [],
             includePassed: true,
+            includeTestFixtures: false,
             limit: 20,
           }
         : null,

@@ -1,6 +1,6 @@
 # Next Task
 
-Human UAT forgot-password when practical, then continue provider-internal cleanup after Slice 6. Likely next engineering slice: backend chat send/read orchestration or remaining local simulated conversation mutation callbacks.
+Human UAT forgot-password when practical, then continue provider-internal cleanup after Slice 6. Likely next engineering slice: remaining local simulated conversation mutation callbacks, fixture match repair paths, or unmatch action orchestration.
 
 ## Canonical Startup Context
 
@@ -57,6 +57,8 @@ Read only if needed:
 - `expo/hooks/use-persisted-conversations.ts`: moved local conversation state and AsyncStorage persistence out of `ProfileProvider` without changing the compatibility facade.
 - `expo/services/local-chat-simulation-service.ts`: moved local chat simulation timing helpers out of `ProfileProvider` without changing simulated reply/photo behavior.
 - `expo/services/match-record-utils.ts`: moved repeated backend match-pair lookup out of `ProfileProvider` without changing backend effects.
+- `expo/services/backend-chat-action-service.ts`: moved backend chat send/read action orchestration out of `ProfileProvider` without changing local visible chat behavior.
+- `expo/services/supabase-discovery-service.ts`: excludes hosted test fixture rows by default through `includeTestFixtures`; Discover and Fruit do not opt in, keeping Fruit's demo pool local.
 
 ## Validation
 
@@ -83,10 +85,12 @@ Read only if needed:
 - Persisted conversations hook: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, and `git diff --check` passed.
 - Chat simulation helper extraction: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, and `git diff --check` passed.
 - Match record helper extraction: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, and `git diff --check` passed.
+- Backend chat action helper extraction: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, and `git diff --check` passed.
+- Supabase discovery fixture filtering: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, and `git diff --check` passed.
 
 ## Follow-Up After Slice 1
 
-Navigation cleanup is accepted. Forgot-password is wired but still needs human UAT when practical. Slices 2, 3, 4, 5, and 6 are implemented. App routes/components no longer import `useProfile()` directly; focused hooks own the route/provider boundary. Provider-internal selector, monetization, chat UI, persisted conversation, chat simulation timing, match-record lookup, and pure conversation helper cleanup are implemented. Next engineering task is moving the next small state domain, likely backend chat send/read orchestration or remaining local simulated conversation mutation callbacks, out of `ProfileProvider` behind clearer services.
+Navigation cleanup is accepted. Forgot-password is wired but still needs human UAT when practical. Slices 2, 3, 4, 5, and 6 are implemented. App routes/components no longer import `useProfile()` directly; focused hooks own the route/provider boundary. Provider-internal selector, monetization, chat UI, persisted conversation, chat simulation timing, match-record lookup, backend chat action, Supabase discovery fixture filtering, and pure conversation helper cleanup are implemented. Next engineering task is moving the next small state domain, likely remaining local simulated conversation mutation callbacks, fixture match repair paths, or unmatch action orchestration, out of `ProfileProvider` behind clearer services.
 
 ## Latest Handoff
 

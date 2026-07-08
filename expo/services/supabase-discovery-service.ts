@@ -60,6 +60,7 @@ export function createSupabaseDiscoveryService(): DiscoveryService {
 
       const profileRows = (data ?? []).filter((row) => {
         if (excludedBackendIds.has(row.id)) return false;
+        if (!filters.includeTestFixtures && row.is_test_fixture) return false;
         if (!filters.includePassed && swipedBackendIds.has(row.id)) {
           return false;
         }

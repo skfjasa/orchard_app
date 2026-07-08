@@ -1,6 +1,6 @@
 # Orchard Closed-Beta Milestone Tracker
 
-Last updated: 2026-07-07
+Last updated: 2026-07-08
 
 This is the single canonical milestone, roadmap, checklist, blocker, and feedback-loop document for getting Orchard to a closed beta with close friends and inner-circle testers.
 
@@ -191,6 +191,8 @@ Done:
 - [x] [C] Local conversation state and AsyncStorage persistence now live in `expo/hooks/use-persisted-conversations.ts`.
 - [x] [C] Local chat simulation timing helpers now live in `expo/services/local-chat-simulation-service.ts`.
 - [x] [C] Repeated backend match-pair lookup now lives in `expo/services/match-record-utils.ts`.
+- [x] [C] Backend chat send/read action orchestration now lives in `expo/services/backend-chat-action-service.ts`.
+- [x] [C] Supabase discovery now excludes hosted test fixture rows by default; Fruit keeps its local fixture pool explicit instead of mixing hosted mock rows into backend discovery.
 
 Remaining:
 
@@ -208,7 +210,7 @@ Remaining:
   - [x] [C] Profile/safety/paywall/onboarding calls.
     - [x] [C] Edit Profile, Paywall, Report, and Safety & Legal now use focused read-model hooks.
     - [x] [C] Profile tab, onboarding photos/sign-in, tab badges, root redirect, and ProtectedRoute/bootstrap gates now use focused read-model hooks.
-- [ ] [C] Isolate mock/Fruit behavior from Supabase signed-in runtime state.
+- [ ] [C] Continue isolating remaining mock/local fixture behavior inside `ProfileProvider`, especially local simulated chat/photo callbacks and fixture match repair paths.
 
 Exit criteria:
 
@@ -321,7 +323,7 @@ Remaining:
 - [ ] [C+U] Confirm blocked/invisible/suspended users are excluded in hosted UAT.
 - [ ] [C+U] Confirm pass/like/super-like state persists and affects discovery consistently.
 - [ ] [H] Decide whether fixture profile images should be ingested into Supabase Storage.
-- [ ] [C] Keep Fruit/mock profiles explicitly separated from real Supabase discovery.
+- [x] [C] Keep Fruit/mock profiles explicitly separated from real Supabase discovery.
 
 Exit criteria:
 

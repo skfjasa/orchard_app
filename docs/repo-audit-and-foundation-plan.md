@@ -1,6 +1,6 @@
 # Orchard Repo Audit & Foundation Refactor Plan
 
-Last updated: 2026-07-07
+Last updated: 2026-07-08
 
 This is the active execution plan for the July 2026 repository audit. It supersedes older one-pass refactor recommendations while preserving their useful findings in [Architecture Audit History](architecture-history.md).
 
@@ -386,4 +386,4 @@ Historical rationale for these removed items is preserved in [Architecture Audit
 
 ## Current Recommended Next Step
 
-Slices 2 through 6 are implemented, and provider-internal cleanup has started with selector, prototype monetization, chat UI state, local conversation persistence, local chat simulation timing, backend match lookup, and pure conversation helper extraction. Next, continue moving one small state domain at a time out of `ProfileProvider` without changing visible UI or mock/Supabase behavior.
+Slices 2 through 6 are implemented, and provider-internal cleanup has started with selector, prototype monetization, chat UI state, local conversation persistence, local chat simulation timing, backend match lookup, backend chat send/read action orchestration, Supabase discovery fixture filtering, and pure conversation helper extraction. Next, continue moving one small state domain at a time out of `ProfileProvider` without changing visible UI or mock/Supabase behavior.

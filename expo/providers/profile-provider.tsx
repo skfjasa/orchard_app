@@ -16,6 +16,10 @@ import { useTransientEmptyList } from "@/hooks/use-transient-empty-list";
 import { useAuth } from "@/providers/auth-provider";
 import { createAppServices } from "@/services/app-services";
 import {
+  markBackendConversationRead,
+  sendBackendChatMessage,
+} from "@/services/backend-chat-action-service";
+import {
   scheduleSimulatedPhotoApproval,
   scheduleSimulatedTextReply,
 } from "@/services/local-chat-simulation-service";
@@ -898,96 +902,40 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   }, [profile?.id]);
 
   const persistBackendChatMessage = useCallback(
-    (
-      targetId: string,
-      text: string,
-      options: { appendLocalEcho?: boolean } = {}
-    ) => {
-      if (mode !== "supabase") return;
-      if (appServices.capabilities.chat !== "supabase") return;
-      if (appServices.capabilities.matches !== "supabase") return;
-      if (!profile || !userId || profile.id !== userId) return;
-
-      const targetProfileId = toBackendProfileId(targetId);
-      if (!isBackendProfileId(targetProfileId)) return;
-
-      void appServices.matches
-        .listMatches(userId)
-        .then(async (matchResult) => {
-          if (!matchResult.ok) {
-            console.log("[profile-provider] backend match lookup failed", {
-              code: matchResult.error.code,
-              message: matchResult.error.message,
-            });
-            return;
-          }
-
-          const match = findMatchBetweenProfiles(
-            matchResult.value,
-            userId,
-            targetProfileId
-          );
-
-          let matchId = match?.id;
-          if (!matchId && appServices.capabilities.swipes === "supabase") {
-            const swipeResult = await appServices.swipes.recordSwipe({
-              swiperId: userId,
-              targetId,
-              decision: "like",
-            });
-
-            if (!swipeResult.ok) {
-              console.log("[profile-provider] backend chat match repair failed", {
-                code: swipeResult.error.code,
-                message: swipeResult.error.message,
-                targetProfileId,
-              });
-            } else {
-              matchId = swipeResult.value.matchId;
-            }
-          }
-
-      if (!matchId) {
-        console.log("[profile-provider] backend chat match not found", {
-          targetProfileId,
-        });
-        setLikedIds((prev) => {
-          const next = removeId(prev, targetId);
-          if (next === prev) return prev;
-          return next;
-        });
-        updateConversations((prev) => {
-          const next = removeConversation(prev, targetId);
-          if (next === prev) return prev;
-          return next;
-        });
-        return;
-      }
-
-          const result = await appServices.chat.sendMessage({
-            matchId,
-            senderId: userId,
-            body: text,
-          });
-
-          if (!result.ok) {
-            console.log("[profile-provider] backend message send failed", {
-              code: result.error.code,
-              message: result.error.message,
-            });
-            return;
-          }
-
-          if (options.appendLocalEcho === false) return;
-
-          updateConversations((prev) => {
-            const next = mergeBackendConversation(prev, targetId, [result.value]);
+    (targetId: string, text: string, options: { appendLocalEcho?: boolean } = {}) => {
+      void sendBackendChatMessage({
+        body: text,
+        currentProfileId: profile?.id,
+        services: appServices,
+        targetId,
+        userId,
+      }).then((result) => {
+        if (result.status === "match_not_found") {
+          setLikedIds((prev) => {
+            const next = removeId(prev, targetId);
             if (next === prev) return prev;
             return next;
           });
+          updateConversations((prev) => {
+            const next = removeConversation(prev, targetId);
+            if (next === prev) return prev;
+            return next;
+          });
+          return;
+        }
+
+        if (result.status !== "sent" || options.appendLocalEcho === false) {
+          return;
+        }
+
+        updateConversations((prev) => {
+          const next = mergeBackendConversation(prev, targetId, [result.message]);
+          if (next === prev) return prev;
+          return next;
         });
+      });
     },
-    [appServices, mode, profile, setLikedIds, updateConversations, userId]
+    [appServices, profile?.id, setLikedIds, updateConversations, userId]
   );
 
   const likeProfile = useCallback(
@@ -1350,60 +1298,20 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
           }
         }
       }
-      if (
-        readThrough > 0 &&
-        mode === "supabase" &&
-        appServices.capabilities.matches === "supabase" &&
-        appServices.capabilities.chat === "supabase" &&
-        profile?.id &&
-        userId &&
-        profile.id === userId
-      ) {
-        const targetProfileId = toBackendProfileId(profileId);
-        if (isBackendProfileId(targetProfileId)) {
-          void appServices.matches.listMatches(userId).then((matchResult) => {
-            if (!matchResult.ok) {
-              console.log("[profile-provider] backend mark read match lookup failed", {
-                code: matchResult.error.code,
-                message: matchResult.error.message,
-              });
-              return;
-            }
-
-            const match = findMatchBetweenProfiles(
-              matchResult.value,
-              userId,
-              targetProfileId
-            );
-            if (!match) return;
-
-            void appServices.chat.markRead(match.id, userId, readThrough).then(
-              (result) => {
-                if (!result.ok) {
-                  console.log("[profile-provider] backend mark read failed", {
-                    code: result.error.code,
-                    message: result.error.message,
-                  });
-                }
-              }
-            );
-          });
-        }
-      }
+      void markBackendConversationRead({
+        currentProfileId: profile?.id,
+        profileId,
+        readThrough,
+        services: appServices,
+        userId,
+      });
       updateConversations((prev) => {
         const next = markConversationRead(prev, profileId);
         if (next === prev) return prev;
         return next;
       });
     },
-    [
-      appServices,
-      conversations,
-      mode,
-      profile?.id,
-      updateConversations,
-      userId,
-    ]
+    [appServices, conversations, profile?.id, updateConversations, userId]
   );
 
   const purchase = useCallback(
