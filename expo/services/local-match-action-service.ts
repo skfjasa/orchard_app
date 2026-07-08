@@ -3,6 +3,8 @@ import type { Conversation, Profile } from "@/types";
 import {
   addUniqueId,
   ensureGreetingConversation,
+  removeConversation,
+  removeId,
   type LocalGreetingKind,
 } from "./local-interaction-service";
 
@@ -15,6 +17,12 @@ interface ActivateLocalMatchInput {
   profileId: string;
   setLikedIds: IdListUpdate;
   setNewMatchIds: IdListUpdate;
+  updateConversations: ConversationUpdate;
+}
+
+interface RemoveLocalMatchInput {
+  profileId: string;
+  setLikedIds: IdListUpdate;
   updateConversations: ConversationUpdate;
 }
 
@@ -40,4 +48,13 @@ export function activateLocalMatchState({
     if (next === prev) return prev;
     return next;
   });
+}
+
+export function removeLocalMatchState({
+  profileId,
+  setLikedIds,
+  updateConversations,
+}: RemoveLocalMatchInput) {
+  setLikedIds((prev) => removeId(prev, profileId));
+  updateConversations((prev) => removeConversation(prev, profileId));
 }

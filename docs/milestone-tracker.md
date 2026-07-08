@@ -191,7 +191,7 @@ Done:
 - [x] [C] Local conversation state and AsyncStorage persistence now live in `expo/hooks/use-persisted-conversations.ts`.
 - [x] [C] Local chat simulation timing helpers now live in `expo/services/local-chat-simulation-service.ts`.
 - [x] [C] Local chat text/photo action orchestration now lives in `expo/services/local-chat-action-service.ts`.
-- [x] [C] Local match activation for fixture/demo likes now lives in `expo/services/local-match-action-service.ts`.
+- [x] [C] Local match activation and stale-match cleanup now live in `expo/services/local-match-action-service.ts`.
 - [x] [C] Local block cleanup now lives in `expo/services/local-safety-action-service.ts`.
 - [x] [C] Repeated backend match-pair lookup now lives in `expo/services/match-record-utils.ts`.
 - [x] [C] Backend chat send/read action orchestration now lives in `expo/services/backend-chat-action-service.ts`.
@@ -217,7 +217,7 @@ Remaining:
     - [x] [C] Edit Profile, Paywall, Report, and Safety & Legal now use focused read-model hooks.
     - [x] [C] Profile tab, onboarding photos/sign-in, tab badges, root redirect, and ProtectedRoute/bootstrap gates now use focused read-model hooks.
 - [x] [C] Slice 5b: Hand over background polling and cache invalidation to React Query (remove manual setInterval/AppState from ProfileProvider and extract Realtime invalidation).
-- [ ] [C] Continue isolating remaining provider-owned application paths, especially profile bootstrap application and stale local-match cleanup.
+- [ ] [C] Continue isolating remaining provider-owned application paths, especially profile bootstrap application.
 
 Exit criteria:
 

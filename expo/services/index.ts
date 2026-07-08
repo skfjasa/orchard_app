@@ -155,7 +155,10 @@ export {
   sendLocalTextMessage,
 } from "./local-chat-action-service";
 
-export { activateLocalMatchState } from "./local-match-action-service";
+export {
+  activateLocalMatchState,
+  removeLocalMatchState,
+} from "./local-match-action-service";
 
 export { applyLocalBlockCleanup } from "./local-safety-action-service";
 

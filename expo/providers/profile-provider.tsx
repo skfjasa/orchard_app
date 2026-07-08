@@ -30,13 +30,15 @@ import {
   sendLocalPhoto,
   sendLocalTextMessage,
 } from "@/services/local-chat-action-service";
-import { activateLocalMatchState } from "@/services/local-match-action-service";
+import {
+  activateLocalMatchState,
+  removeLocalMatchState,
+} from "@/services/local-match-action-service";
 import {
   addUniqueId,
   markConversationRead,
   mergeBackendConversation,
   newestMessageAt,
-  removeConversation,
   removeId,
 } from "@/services/local-interaction-service";
 import { applyLocalBlockCleanup } from "@/services/local-safety-action-service";
@@ -710,15 +712,10 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         userId,
       }).then((result) => {
         if (result.status === "match_not_found") {
-          setLikedIds((prev) => {
-            const next = removeId(prev, targetId);
-            if (next === prev) return prev;
-            return next;
-          });
-          updateConversations((prev) => {
-            const next = removeConversation(prev, targetId);
-            if (next === prev) return prev;
-            return next;
+          removeLocalMatchState({
+            profileId: targetId,
+            setLikedIds,
+            updateConversations,
           });
           return;
         }
@@ -772,13 +769,10 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
   const unmatch = useCallback(
     (id: string) => {
-      setLikedIds((prev) => {
-        const next = removeId(prev, id);
-        return next;
-      });
-      updateConversations((prev) => {
-        const next = removeConversation(prev, id);
-        return next;
+      removeLocalMatchState({
+        profileId: id,
+        setLikedIds,
+        updateConversations,
       });
 
       void unmatchBackendProfile({
