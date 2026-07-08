@@ -135,6 +135,78 @@ Feedback loop rule:
 - Human decisions should move into the Human Decisions Register.
 - Material status changes should also update `docs/project-status.md`, `.agents/current.md`, and `.agents/next.md`.
 
+## Repeatable Full-Flow UAT Checklist
+
+Use this checklist when validating a build for M3-M8 beta readiness. Keep the target device/browser, account ids, and result notes with the milestone item being accepted or rejected.
+
+Setup:
+
+1. Confirm hosted Supabase mode is active.
+2. Launch mobile web UAT with `bun run uat-web-tunnel` from `expo/` unless testing desktop Chrome.
+3. Use a fresh Android Chrome incognito tab for mobile web runs.
+4. Keep one primary account and at least one counterpart account available for reciprocal matching and chat.
+5. Record the ngrok URL, account ids, browser/device, and starting route.
+
+Auth, onboarding, profile, and photos:
+
+1. Sign up with a fresh test email when testing onboarding; otherwise sign in with an existing hosted test account.
+2. If email confirmation is required, open the confirmation link and verify onboarding/profile persistence resumes.
+3. Complete account type, basics, identity, interests, preferences, legal gate, and photos.
+4. Confirm selected profile photos upload and render after sign-out/sign-in.
+5. Run forgot-password when practical: request reset, open link, set a new password, sign in with the new password, and confirm the old password no longer works.
+
+Session bootstrap and navigation:
+
+1. Sign in and confirm protected tabs wait for backend profile and first match/thread hydration.
+2. Confirm Matches and Inbox do not show a true empty state when hosted rows exist.
+3. Open Inbox first, enter a real/dev conversation, then use Android device/browser back.
+4. Open Matches, enter Match Detail, then use Android device/browser back.
+5. Repeat the opposite order from a fresh incognito sign-in.
+6. Sign out, sign back into the same account, and confirm profile, photos, matches, conversations, read state, and seen-match state remain stable.
+7. Sign into a different hosted test account and confirm prior-account profile/match state does not leak.
+
+Discovery, swipes, and matches:
+
+1. Confirm real/dev eligible profiles appear in Discover.
+2. Confirm Fruit keeps explicit local fixtures separate from real Supabase discovery.
+3. Pass a profile, sign out/sign in, and confirm pass state still affects discovery where expected.
+4. Like or super-like a real/dev profile without reciprocal state and confirm no local active match/chat appears.
+5. Create a reciprocal hosted match and confirm it appears in Matches and Inbox after refresh/sign-out/sign-in.
+6. Confirm already matched backend real/dev profiles are excluded from Fruit.
+
+Chat and read state:
+
+1. Open an active hosted match chat and send a unique text message.
+2. Confirm the message persists to hosted state and hydrates after sign-out/sign-in.
+3. From the counterpart account, send a new message and confirm Realtime/polling refresh updates Inbox.
+4. Open the conversation and confirm unread state clears.
+5. Sign out/sign in and confirm previously read messages remain read.
+6. Confirm non-matches, unmatched matches, and blocked matches cannot send or view new messages.
+7. Confirm failed sends do not create misleading local sent state.
+
+Safety and moderation:
+
+1. Report a profile and verify a `public.reports` row exists for the reporter/reported profile pair.
+2. Report a message and verify `reported_message_id` is stored.
+3. Block a profile and verify both app state and backend state remove discovery/match/chat visibility.
+4. Unmatch an active match and verify chat access is removed.
+5. Request account deletion and verify a `public.account_deletion_requests` row exists.
+6. Use [Supabase Moderation Workflow](supabase-moderation-workflow.md) to review report/deletion rows and any manual moderation state.
+7. Confirm private message bodies, raw profile text, and PII are not copied into analytics, logs, docs, or support notes.
+
+Mock/demo regression:
+
+1. Run with Supabase env vars absent or mock mode forced.
+2. Confirm Discover, Fruit, local fixture matching, local simulated replies, photo requests, report/block/unmatch surfaces, and sign-out remain usable.
+3. Confirm no hosted-only loader blocks mock mode.
+
+Result recording:
+
+1. Mark each tested milestone bullet accepted or still remaining.
+2. For each failure, record account, route sequence, device/browser, URL before/after navigation, expected behavior, actual behavior, and whether rows recover by themselves.
+3. Add new human decisions to the Human Decisions Register.
+4. Update `docs/project-status.md` only when the result changes project status, blockers, or next steps.
+
 ## Milestone Map
 
 | ID | Milestone | Status | Exit Criteria |
@@ -433,7 +505,7 @@ Remaining:
 - [ ] [C] Add env-gated analytics/crash setup if approved.
 - [ ] [C] Track privacy-safe funnel/safety events only.
 - [ ] [C] Do not capture private messages, raw profile text, or PII.
-- [ ] [C] Create repeatable UAT checklist for auth, onboarding, discovery, matching, chat, safety, and sign-out/sign-in.
+- [x] [C] Create repeatable UAT checklist for auth, onboarding, discovery, matching, chat, safety, and sign-out/sign-in. See "Repeatable Full-Flow UAT Checklist" above.
 - [ ] [H] Decide whether to automate more E2E/browser smoke checks.
 - [ ] [C] Add or confirm app-level error boundary strategy before broader tester release.
 
