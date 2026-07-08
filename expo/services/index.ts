@@ -89,9 +89,13 @@ export {
   chooseDisplayProfile,
   isIncompleteBackendProfile,
   mergeRememberedDisplayProfiles,
+  resolveDisplayProfileById,
 } from "./backend-profile-display-service";
 
-export type { RememberedDisplayProfilesMerge } from "./backend-profile-display-service";
+export type {
+  DisplayProfileResolution,
+  RememberedDisplayProfilesMerge,
+} from "./backend-profile-display-service";
 
 export { recordBackendSwipe } from "./backend-swipe-action-service";
 

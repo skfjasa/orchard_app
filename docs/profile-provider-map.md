@@ -390,6 +390,7 @@ Preserved behavior:
 - Hosted fixture/mock profile ids are still treated as complete fixture profiles.
 - Backend match hydration still prefers complete backend profile data and falls back to remembered complete display profiles.
 - Remembered display-profile cache merge logic still updates known profiles, display cache, and last-resolved cache while preserving provider-owned refs/state/persistence.
+- Profile lookup resolution still checks known profiles, known-profile cache, display cache, last-resolved cache, and mock profiles in the same order while preserving provider-owned facade callback state.
 
 ## Extracted Backend Match Hydration Application
 

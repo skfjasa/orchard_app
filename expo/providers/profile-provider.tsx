@@ -22,6 +22,7 @@ import {
   buildBackendDisplayProfileMap,
   isIncompleteBackendProfile,
   mergeRememberedDisplayProfiles,
+  resolveDisplayProfileById,
 } from "@/services/backend-profile-display-service";
 import {
   completeBackendOnboardingProfile,
@@ -1090,20 +1091,16 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
   const getProfileById = useCallback(
     (profileId: string) => {
-      const profile =
-        knownProfiles.find((item) => item.id === profileId) ??
-        knownProfilesRef.current.find((item) => item.id === profileId) ??
-        displayProfilesRef.current[profileId] ??
-        lastResolvedProfilesRef.current[profileId] ??
-        MOCK_PROFILES.find((item) => item.id === profileId);
-      if (isIncompleteBackendProfile(profile)) return undefined;
-      if (profile) {
-        lastResolvedProfilesRef.current = {
-          ...lastResolvedProfilesRef.current,
-          [profile.id]: profile,
-        };
-      }
-      return profile;
+      const resolution = resolveDisplayProfileById({
+        displayProfiles: displayProfilesRef.current,
+        knownProfiles,
+        knownProfilesCache: knownProfilesRef.current,
+        lastResolvedProfiles: lastResolvedProfilesRef.current,
+        mockProfiles: MOCK_PROFILES,
+        profileId,
+      });
+      lastResolvedProfilesRef.current = resolution.lastResolvedProfiles;
+      return resolution.profile;
     },
     [knownProfiles]
   );

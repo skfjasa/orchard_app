@@ -87,3 +87,49 @@ export function mergeRememberedDisplayProfiles({
     lastResolvedProfiles,
   };
 }
+
+interface ResolveDisplayProfileByIdInput {
+  displayProfiles: Record<string, Profile>;
+  knownProfiles: Profile[];
+  knownProfilesCache: Profile[];
+  lastResolvedProfiles: Record<string, Profile>;
+  mockProfiles: Profile[];
+  profileId: string;
+}
+
+export interface DisplayProfileResolution {
+  lastResolvedProfiles: Record<string, Profile>;
+  profile: Profile | undefined;
+}
+
+export function resolveDisplayProfileById({
+  displayProfiles,
+  knownProfiles,
+  knownProfilesCache,
+  lastResolvedProfiles,
+  mockProfiles,
+  profileId,
+}: ResolveDisplayProfileByIdInput): DisplayProfileResolution {
+  const profile =
+    knownProfiles.find((item) => item.id === profileId) ??
+    knownProfilesCache.find((item) => item.id === profileId) ??
+    displayProfiles[profileId] ??
+    lastResolvedProfiles[profileId] ??
+    mockProfiles.find((item) => item.id === profileId);
+
+  if (isIncompleteBackendProfile(profile)) {
+    return { lastResolvedProfiles, profile: undefined };
+  }
+
+  if (!profile) {
+    return { lastResolvedProfiles, profile: undefined };
+  }
+
+  return {
+    lastResolvedProfiles: {
+      ...lastResolvedProfiles,
+      [profile.id]: profile,
+    },
+    profile,
+  };
+}
