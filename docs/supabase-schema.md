@@ -89,7 +89,7 @@ These functions are granted to authenticated users only. Database/RLS tests exis
 
 ## Known Gaps Before Staging Or Production
 
-- Admin/moderation read policies are not included; use Supabase Studio/service role initially.
+- Admin/moderation read policies are not included; use the interim Supabase Studio workflow in `docs/supabase-moderation-workflow.md` initially.
 - Exact relationship-structure enum values are not locked yet.
 - Birthdate/age handling needs product/legal review.
 - Approximate location approach needs product/privacy review.

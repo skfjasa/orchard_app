@@ -149,5 +149,5 @@ Add SQL/RLS tests covering:
 - Hosted UAT still needs to cover report profile, report message, block, unmatch, and account deletion request with real accounts.
 - Hosted UAT still needs to confirm blocked users disappear from discovery, matches, and chat.
 - Hosted UAT still needs to confirm suspended/invisible users do not appear in discovery.
-- Supabase Studio moderation workflow should be documented for inner-circle testing.
+- Supabase Studio moderation workflow is documented in `docs/supabase-moderation-workflow.md`; a production admin/moderation process is still needed before `orchard-prod`.
 - Production project `orchard-prod` should not be created or used until closed-beta hardening decisions are accepted.

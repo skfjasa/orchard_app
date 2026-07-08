@@ -390,7 +390,7 @@ Done:
 Remaining:
 
 - [ ] [U] Hosted UAT report profile, report message, block, unmatch, and account deletion request with real accounts.
-- [ ] [C] Document Supabase Studio moderation workflow for inner-circle testing.
+- [x] [C] Document Supabase Studio moderation workflow for inner-circle testing in `docs/supabase-moderation-workflow.md`.
 - [ ] [C+U] Confirm blocked users disappear from discovery, matches, and chat in hosted mode.
 - [ ] [C+U] Confirm suspended/invisible users do not appear in discovery.
 - [x] [C] Confirm no private messages, raw profile text, or PII are sent to analytics/logging. Source audit on 2026-07-08 found only an unused mock analytics interface and diagnostic logs without private message bodies or raw profile text.
