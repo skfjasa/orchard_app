@@ -107,6 +107,14 @@ export type {
   SafetyService,
 } from "./safety-service";
 
+export {
+  blockProfileThroughSafetyService,
+  reportProfileThroughSafetyService,
+  requestAccountDeletionThroughSafetyService,
+} from "./safety-action-service";
+
+export type { SafetyActionResult } from "./safety-action-service";
+
 export type {
   StorageService,
   UploadInput,

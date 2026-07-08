@@ -75,6 +75,11 @@ import {
   hasActiveProfileMatch,
 } from "@/services/profile-provider-selectors";
 import {
+  blockProfileThroughSafetyService,
+  reportProfileThroughSafetyService,
+  requestAccountDeletionThroughSafetyService,
+} from "@/services/safety-action-service";
+import {
   DEFAULT_MATCH_SLOTS,
   DEFAULT_SUPER_LIKES,
   Profile,
@@ -740,19 +745,16 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         return { ok: false, error: "Create a profile before reporting." };
       }
 
-      const result = await appServices.safety.reportUser({
-        reporterId: profile.id,
-        reportedUserId: reportedProfileId,
-        reportedMessageId,
-        reason,
+      const result = await reportProfileThroughSafetyService({
         details,
+        reason,
+        reportedMessageId,
+        reportedProfileId,
+        reporterId: profile.id,
+        services: appServices,
       });
 
-      if (!result.ok) {
-        return { ok: false, error: result.error.message };
-      }
-
-      return { ok: true };
+      return result;
     },
     [appServices, profile]
   );
@@ -763,13 +765,14 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         return { ok: false, error: "Create a profile before blocking." };
       }
 
-      const result = await appServices.safety.blockUser({
+      const result = await blockProfileThroughSafetyService({
+        blockedProfileId,
         blockerId: profile.id,
-        blockedId: blockedProfileId,
+        services: appServices,
       });
 
       if (!result.ok) {
-        return { ok: false, error: result.error.message };
+        return result;
       }
 
       applyLocalBlockCleanup({
@@ -796,13 +799,14 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         return { ok: false, error: "No profile is signed in." };
       }
 
-      const result = await appServices.safety.requestAccountDeletion({
+      const result = await requestAccountDeletionThroughSafetyService({
         profileId: profile.id,
         reason,
+        services: appServices,
       });
 
       if (!result.ok) {
-        return { ok: false, error: result.error.message };
+        return result;
       }
 
       signOut();

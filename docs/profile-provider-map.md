@@ -324,6 +324,17 @@ Preserved behavior:
 - `ProfileProvider.blockProfile` still waits for the backend/mock safety service result.
 - Successful blocks still remove the blocked profile from local liked IDs, add it to local passed IDs, and remove the local conversation.
 
+## Extracted Safety Service Actions
+
+Post-Slice 6 provider-internal cleanup moved report, block, and account-deletion safety service calls behind `expo/services/safety-action-service.ts`.
+
+Preserved behavior:
+
+- Report, block, and account-deletion request failures still return the safety service error message to the UI.
+- `ProfileProvider` still owns the profile-required guard before each action.
+- Successful blocks still delegate local visible cleanup to `expo/services/local-safety-action-service.ts`.
+- Successful account-deletion requests still call the provider sign-out path.
+
 ## Extracted Match Record Helpers
 
 Post-Slice 6 provider-internal cleanup moved repeated backend match-pair lookup logic behind `expo/services/match-record-utils.ts`.
@@ -558,6 +569,7 @@ Runtime local helper modules now exist:
 - `expo/services/local-chat-action-service.ts`
 - `expo/services/local-match-action-service.ts`
 - `expo/services/local-safety-action-service.ts`
+- `expo/services/safety-action-service.ts`
 - `expo/services/backend-match-action-service.ts`
 - `expo/services/backend-profile-action-service.ts`
 - `expo/services/backend-profile-bootstrap-service.ts`
