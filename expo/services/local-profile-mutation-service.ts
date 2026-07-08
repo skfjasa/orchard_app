@@ -2,6 +2,17 @@ import { LinkedPartner, Profile } from "@/types";
 
 const INVITE_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
+export function applyProfileMutation(
+  profile: Profile | null,
+  mutateProfile: (profile: Profile | null) => Profile | null,
+  persistProfile: (profile: Profile) => void
+): Profile | null {
+  const next = mutateProfile(profile);
+  if (!next) return profile;
+  persistProfile(next);
+  return next;
+}
+
 export function applyProfilePatch(
   profile: Profile | null,
   patch: Partial<Profile>

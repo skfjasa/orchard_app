@@ -68,6 +68,7 @@ import {
 import {
   acceptPartnerLink as acceptLocalPartnerLink,
   addPartnerInvite,
+  applyProfileMutation,
   applyProfilePatch,
   removePartnerLink as removeLocalPartnerLink,
   resendPartnerInvite as resendLocalPartnerInvite,
@@ -530,17 +531,20 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
   const updateProfile = useCallback(
     (patch: Partial<Profile>) => {
-      setProfile((prev) => {
-        const next = applyProfilePatch(prev, patch);
-        if (!next) return prev;
-        void updateBackendProfile({
-          patch,
-          profileId: next.id,
-          services: appServices,
-        });
-        saveProfileMutation.mutate(next);
-        return next;
-      });
+      setProfile((prev) =>
+        applyProfileMutation(
+          prev,
+          (current) => applyProfilePatch(current, patch),
+          (next) => {
+            void updateBackendProfile({
+              patch,
+              profileId: next.id,
+              services: appServices,
+            });
+            saveProfileMutation.mutate(next);
+          }
+        )
+      );
     },
     [appServices, saveProfileMutation]
   );
@@ -1034,48 +1038,52 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
   const invitePartner = useCallback(
     (email: string, displayName?: string) => {
-      setProfile((prev) => {
-        const next = addPartnerInvite(prev, email, displayName);
-        if (!next) return prev;
-        saveProfileMutation.mutate(next);
-        return next;
-      });
+      setProfile((prev) =>
+        applyProfileMutation(
+          prev,
+          (current) => addPartnerInvite(current, email, displayName),
+          (next) => saveProfileMutation.mutate(next)
+        )
+      );
     },
     [saveProfileMutation]
   );
 
   const resendPartnerInvite = useCallback(
     (partnerId: string) => {
-      setProfile((prev) => {
-        const next = resendLocalPartnerInvite(prev, partnerId);
-        if (!next) return prev;
-        saveProfileMutation.mutate(next);
-        return next;
-      });
+      setProfile((prev) =>
+        applyProfileMutation(
+          prev,
+          (current) => resendLocalPartnerInvite(current, partnerId),
+          (next) => saveProfileMutation.mutate(next)
+        )
+      );
     },
     [saveProfileMutation]
   );
 
   const acceptPartnerLink = useCallback(
     (partnerId: string) => {
-      setProfile((prev) => {
-        const next = acceptLocalPartnerLink(prev, partnerId);
-        if (!next) return prev;
-        saveProfileMutation.mutate(next);
-        return next;
-      });
+      setProfile((prev) =>
+        applyProfileMutation(
+          prev,
+          (current) => acceptLocalPartnerLink(current, partnerId),
+          (next) => saveProfileMutation.mutate(next)
+        )
+      );
     },
     [saveProfileMutation]
   );
 
   const removePartnerLink = useCallback(
     (partnerId: string) => {
-      setProfile((prev) => {
-        const next = removeLocalPartnerLink(prev, partnerId);
-        if (!next) return prev;
-        saveProfileMutation.mutate(next);
-        return next;
-      });
+      setProfile((prev) =>
+        applyProfileMutation(
+          prev,
+          (current) => removeLocalPartnerLink(current, partnerId),
+          (next) => saveProfileMutation.mutate(next)
+        )
+      );
     },
     [saveProfileMutation]
   );

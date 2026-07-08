@@ -193,6 +193,7 @@ Done:
 - [x] [C] Local chat text/photo action orchestration now lives in `expo/services/local-chat-action-service.ts`.
 - [x] [C] Local match activation and stale-match cleanup now live in `expo/services/local-match-action-service.ts`.
 - [x] [C] Local block cleanup now lives in `expo/services/local-safety-action-service.ts`.
+- [x] [C] Local profile mutation persistence application now lives in `expo/services/local-profile-mutation-service.ts`.
 - [x] [C] Repeated backend match-pair lookup now lives in `expo/services/match-record-utils.ts`.
 - [x] [C] Backend chat send/read action orchestration now lives in `expo/services/backend-chat-action-service.ts`.
 - [x] [C] Backend unmatch action orchestration now lives in `expo/services/backend-match-action-service.ts`.

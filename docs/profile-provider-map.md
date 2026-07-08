@@ -557,7 +557,7 @@ Monetization is disabled for the feedback MVP through `expo/constants/features.t
 
 ### Partner Links
 
-Partner invite/link behavior is local profile metadata through helpers in `expo/services/local-profile-mutation-service.ts`. Invite links/codes are generated locally and are not backed by email, auth, or a real account-linking backend.
+Partner invite/link behavior is local profile metadata through helpers in `expo/services/local-profile-mutation-service.ts`. Profile mutation persistence application is also centralized there, while `ProfileProvider` keeps the public facade wrappers. Invite links/codes are generated locally and are not backed by email, auth, or a real account-linking backend.
 
 ## Extraction Risks
 

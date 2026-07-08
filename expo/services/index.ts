@@ -227,6 +227,7 @@ export type {
 export {
   acceptPartnerLink,
   addPartnerInvite,
+  applyProfileMutation,
   applyProfilePatch,
   makeInviteCode,
   removePartnerLink,
