@@ -10,8 +10,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 
 - Branch: `main`
 - Latest implementation checkpoint: `2d942f7` - Extract backend match lookup helper
-- Latest handoff checkpoint: `bf81f3e` - Mark handoff sync pushed
-- Current working state: clean and synced with `origin/main` after handoff sync.
+- Latest handoff sync: 2026-07-08 after provider cleanup.
+- Current working state: clean and synced with `origin/main` after handoff sync; use `git log --oneline -5` for the exact latest handoff-only commit.
 
 ## Canonical Docs
 
