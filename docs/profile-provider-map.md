@@ -335,6 +335,16 @@ Preserved behavior:
 - Successful blocks still delegate local visible cleanup to `expo/services/local-safety-action-service.ts`.
 - Successful account-deletion requests still call the provider sign-out path.
 
+## Extracted Profile Provider Reset Helpers
+
+Post-Slice 6 provider-internal cleanup moved sign-out reset bookkeeping behind `expo/services/profile-provider-reset-service.ts`.
+
+Preserved behavior:
+
+- Supabase auth sign-out still completes before local provider state is reset.
+- Sign-out still clears the local profile, conversations, new-match ids, interaction state, monetization state, backend hydration flags, in-flight hydration keys, and pending backend match refresh state.
+- `ProfileProvider` still owns the saved-profile mutation that removes the local profile from storage.
+
 ## Extracted Match Record Helpers
 
 Post-Slice 6 provider-internal cleanup moved repeated backend match-pair lookup logic behind `expo/services/match-record-utils.ts`.
@@ -569,6 +579,7 @@ Runtime local helper modules now exist:
 - `expo/services/local-chat-action-service.ts`
 - `expo/services/local-match-action-service.ts`
 - `expo/services/local-safety-action-service.ts`
+- `expo/services/profile-provider-reset-service.ts`
 - `expo/services/safety-action-service.ts`
 - `expo/services/backend-match-action-service.ts`
 - `expo/services/backend-profile-action-service.ts`

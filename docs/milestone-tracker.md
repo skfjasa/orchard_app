@@ -202,6 +202,7 @@ Done:
 - [x] [C] Backend profile bootstrap loading and pending onboarding recovery now live in `expo/services/backend-profile-bootstrap-service.ts`.
 - [x] [C] Backend swipe persistence calls now live in `expo/services/backend-swipe-action-service.ts`.
 - [x] [C] Report, block, and account-deletion safety service calls now live in `expo/services/safety-action-service.ts`.
+- [x] [C] Profile provider sign-out reset bookkeeping now lives in `expo/services/profile-provider-reset-service.ts`.
 - [x] [C] Supabase discovery now excludes hosted test fixture rows by default; Fruit keeps its local fixture pool explicit instead of mixing hosted mock rows into backend discovery.
 
 Remaining:
@@ -221,7 +222,7 @@ Remaining:
     - [x] [C] Edit Profile, Paywall, Report, and Safety & Legal now use focused read-model hooks.
     - [x] [C] Profile tab, onboarding photos/sign-in, tab badges, root redirect, and ProtectedRoute/bootstrap gates now use focused read-model hooks.
 - [x] [C] Slice 5b: Hand over background polling and cache invalidation to React Query (remove manual setInterval/AppState from ProfileProvider and extract Realtime invalidation).
-- [ ] [C] Continue isolating remaining provider-owned application paths, especially sign-out cleanup and backend-first action cleanup.
+- [ ] [C] Continue isolating remaining provider-owned application paths, especially backend match hydration application and backend-first action cleanup.
 
 Exit criteria:
 

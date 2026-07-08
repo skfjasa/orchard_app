@@ -186,6 +186,8 @@ export {
 
 export { applyLocalBlockCleanup } from "./local-safety-action-service";
 
+export { applyProfileProviderSignOutReset } from "./profile-provider-reset-service";
+
 export {
   applyLocalPurchase,
   createLocalSubscription,

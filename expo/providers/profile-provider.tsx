@@ -74,6 +74,7 @@ import {
   findConversationByProfileId,
   hasActiveProfileMatch,
 } from "@/services/profile-provider-selectors";
+import { applyProfileProviderSignOutReset } from "@/services/profile-provider-reset-service";
 import {
   blockProfileThroughSafetyService,
   reportProfileThroughSafetyService,
@@ -576,17 +577,19 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     if (mode === "supabase") {
       result = await signOutAuth();
     }
-    setProfile(null);
-    replaceConversations([]);
-    setNewMatchIds([]);
-    resetInteractions();
-    resetMonetization();
-    setBackendProfileHydrated(false);
-    setBackendMatchesHydrated(false);
-    lastBackendProfileSessionKey.current = null;
-    lastBackendMatchHydrationKey.current = null;
-    inFlightBackendMatchHydrationKey.current = null;
-    pendingBackendMatchRefreshRef.current = false;
+    applyProfileProviderSignOutReset({
+      inFlightBackendMatchHydrationKey,
+      lastBackendMatchHydrationKey,
+      lastBackendProfileSessionKey,
+      pendingBackendMatchRefreshRef,
+      replaceConversations,
+      resetInteractions,
+      resetMonetization,
+      setBackendMatchesHydrated,
+      setBackendProfileHydrated,
+      setNewMatchIds,
+      setProfile,
+    });
     saveProfileMutation.mutate(null);
     return result ?? { ok: true as const };
   }, [
