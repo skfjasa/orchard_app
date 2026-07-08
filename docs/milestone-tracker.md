@@ -527,8 +527,8 @@ Blocked/human decisions:
 
 Remaining:
 
-- [ ] [C] Add or verify `eas.json`.
-- [ ] [C] Configure EAS build profiles.
+- [x] [C] Add or verify `eas.json`.
+- [x] [C] Configure EAS build profiles for internal preview and production builds.
 - [ ] [C+H] Verify app name, bundle id, version/build number.
 - [ ] [C+H] Review icon, splash, and permission strings.
 - [ ] [C+H] Prepare beta app description.

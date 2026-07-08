@@ -200,7 +200,7 @@ Supabase hosted auth setup:
 
 Before TestFlight, add or verify:
 
-- `eas.json`
+- `expo/eas.json` exists with `preview` and `production` build profiles.
 - Production bundle identifier
 - App version and build number
 - iOS permission strings
@@ -215,7 +215,7 @@ Expected commands later:
 
 ```powershell
 cd C:\Users\skfja\Projects\orchard_app\expo
-bunx eas build:configure
+bunx eas build --profile preview --platform ios
 bunx eas build --platform ios
 bunx eas submit --platform ios
 ```
