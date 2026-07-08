@@ -66,6 +66,10 @@ export {
 
 export type { BackendChatSendResult } from "./backend-chat-action-service";
 
+export { unmatchBackendProfile } from "./backend-match-action-service";
+
+export type { BackendUnmatchResult } from "./backend-match-action-service";
+
 export type {
   AccountDeletionRequestInput,
   BlockInput,

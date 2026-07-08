@@ -192,6 +192,7 @@ Done:
 - [x] [C] Local chat simulation timing helpers now live in `expo/services/local-chat-simulation-service.ts`.
 - [x] [C] Repeated backend match-pair lookup now lives in `expo/services/match-record-utils.ts`.
 - [x] [C] Backend chat send/read action orchestration now lives in `expo/services/backend-chat-action-service.ts`.
+- [x] [C] Backend unmatch action orchestration now lives in `expo/services/backend-match-action-service.ts`.
 - [x] [C] Supabase discovery now excludes hosted test fixture rows by default; Fruit keeps its local fixture pool explicit instead of mixing hosted mock rows into backend discovery.
 
 Remaining:

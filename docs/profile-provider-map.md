@@ -304,8 +304,18 @@ Helper behavior now owned by the service:
 
 Preserved behavior:
 
-- `ProfileProvider` still owns backend chat send/read and unmatch side effects.
-- Existing match lookup semantics are unchanged for chat send repair, unmatch, and backend mark-read.
+- `ProfileProvider` still owns backend chat send/read side effects.
+- Existing match lookup semantics are unchanged for chat send repair, backend unmatch, and backend mark-read.
+
+## Extracted Backend Match Actions
+
+Post-Slice 6 provider-internal cleanup moved backend unmatch lookup/RPC orchestration behind `expo/services/backend-match-action-service.ts`.
+
+Preserved behavior:
+
+- `ProfileProvider.unmatch` still removes the local liked id and local conversation immediately.
+- Supabase mode still attempts to resolve the active hosted match and call the existing backend unmatch RPC after local cleanup.
+- Mock/local unmatch behavior is unchanged.
 
 ## Current Role
 
@@ -463,6 +473,7 @@ Runtime local helper modules now exist:
 - `expo/services/local-profile-storage.ts`
 - `expo/services/local-interaction-service.ts`
 - `expo/services/local-chat-simulation-service.ts`
+- `expo/services/backend-match-action-service.ts`
 - `expo/services/match-record-utils.ts`
 - `expo/services/local-monetization-service.ts`
 - `expo/services/local-profile-mutation-service.ts`

@@ -6,7 +6,6 @@ import { MOCK_PROFILES } from "@/mocks/profiles";
 import {
   fromBackendProfileId,
   isBackendProfileId,
-  toBackendProfileId,
 } from "@/constants/mock-profile-ids";
 import { MVP_MONETIZATION_ENABLED } from "@/constants/features";
 import { useMatchRealtime } from "@/hooks/api/use-match-realtime";
@@ -19,6 +18,7 @@ import {
   markBackendConversationRead,
   sendBackendChatMessage,
 } from "@/services/backend-chat-action-service";
+import { unmatchBackendProfile } from "@/services/backend-match-action-service";
 import {
   scheduleSimulatedPhotoApproval,
   scheduleSimulatedTextReply,
@@ -48,7 +48,6 @@ import {
   createLocalSubscription,
   isLocalBoostActive,
 } from "@/services/local-monetization-service";
-import { findMatchBetweenProfiles } from "@/services/match-record-utils";
 import {
   acceptPartnerLink as acceptLocalPartnerLink,
   addPartnerInvite,
@@ -917,46 +916,14 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         return next;
       });
 
-      if (
-        mode === "supabase" &&
-        appServices.capabilities.matches === "supabase" &&
-        profile &&
-        userId &&
-        profile.id === userId
-      ) {
-        const targetProfileId = toBackendProfileId(id);
-        if (isBackendProfileId(targetProfileId)) {
-          void appServices.matches.listMatches(userId).then(async (matchResult) => {
-            if (!matchResult.ok) {
-              console.log("[profile-provider] backend unmatch lookup failed", {
-                code: matchResult.error.code,
-                message: matchResult.error.message,
-                targetProfileId,
-              });
-              return;
-            }
-
-            const match = findMatchBetweenProfiles(
-              matchResult.value,
-              userId,
-              targetProfileId
-            );
-
-            if (!match) return;
-
-            const result = await appServices.matches.unmatch(match.id, userId);
-            if (!result.ok) {
-              console.log("[profile-provider] backend unmatch failed", {
-                code: result.error.code,
-                message: result.error.message,
-                targetProfileId,
-              });
-            }
-          });
-        }
-      }
+      void unmatchBackendProfile({
+        currentProfileId: profile?.id,
+        profileId: id,
+        services: appServices,
+        userId,
+      });
     },
-    [appServices, mode, profile, setLikedIds, updateConversations, userId]
+    [appServices, profile?.id, setLikedIds, updateConversations, userId]
   );
 
   const reportProfile = useCallback(
