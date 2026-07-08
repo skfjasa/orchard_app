@@ -8,108 +8,59 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 
 ## Branch And Commit
 
-- Branch: `main`
-- Latest implementation checkpoint in git: `b229d02` - Continue provider cleanup
-- Latest handoff sync: 2026-07-08 after backend chat action and discovery fixture filtering cleanup.
-- Current working state before handoff doc edits: clean and synced with `origin/main` at `b229d02`.
-
-## Canonical Docs
-
-- `docs/milestone-tracker.md`: single canonical milestone/checklist/UAT/blocker/human-decision source of truth for closed beta.
-- `docs/repo-audit-and-foundation-plan.md`: active engineering plan for Option 3 foundation cleanup.
-- `docs/architecture-history.md`: consolidated durable audit and historical planning lineage.
-- `docs/project-status.md`: running narrative status log.
-- `docs/README.md`: docs index and source-of-truth map.
-
-Old duplicate roadmap/checklist/audit docs were consolidated and deleted from active docs:
-
-- `docs/repo-audit.md`
-- `docs/20260620_project_review.md`
-- `docs/20260621_repo_audit_recommendations.md`
-- `docs/20260621_second_opinion_audit_v2.md`
-- `docs/mvp-plan.md`
-- `docs/mvp-backlog.md`
-- `docs/mvp-prototype-gap-assessment.md`
-- `docs/mobile-release-checklist.md`
-- `docs/safety-and-privacy-checklist.md`
+- Branch: `main`.
+- Remote state: ahead of `origin/main` by 29 commits as of latest check.
+- Latest checkpoint: `cb8ff54` - Add root app error boundary.
+- Recent relevant checkpoints:
+  - `cb8ff54` - Add root app error boundary.
+  - `6b24afe` - Add repeatable full-flow UAT checklist.
+  - `054679d` - Document Supabase moderation workflow.
+  - `249f11e` - Restore fixture profile copy.
+  - `7d66cf3` - Record privacy logging audit.
+  - `84f7b98` - Extract seen match preference application.
+  - `f17c7f8` - Extract local read watermark application.
 
 ## Current Product / Technical State
 
-- Current milestone: M4 - Supabase source-of-truth app session.
-- Hosted `orchard-dev` is aligned through migration `202607040004`.
+- Current milestone remains **M4 - Supabase source-of-truth app session**.
+- M1 provider/facade cleanup has advanced: local read-watermark and seen-match preference calculations now live in `expo/services/local-interaction-service.ts`.
+- M7 safety/moderation work advanced:
+  - Privacy/logging audit found no production analytics calls and no private message bodies/raw profile text/PII in current diagnostics.
+  - Fixture audit confirmed deterministic test emails/ids and fictional mock copy; original human-like dating/profile language is intentionally preserved for simulation realism.
+  - Interim Supabase Studio moderation workflow is documented in `docs/supabase-moderation-workflow.md`.
+- M9 QA hardening advanced:
+  - Repeatable full-flow UAT checklist now lives in `docs/milestone-tracker.md`.
+  - Root Expo Router error boundary exists in `expo/app/_layout.tsx` with retry UI and message-only diagnostic logging.
+- `ProfileProvider` remains active as a compatibility facade. App routes/components no longer import `useProfile()` directly; focused read-model hooks own route/provider access.
 - Supabase mode has auth/profile/photo/discovery/match/chat/read-state/Realtime paths in varying degrees.
-- Mock/Fruit/demo mode remains required.
-- `ProfileProvider` remains active and too broad; the accepted direction is staged extraction with a compatibility facade, not one-pass deletion.
-- Foundation Slice 1 has removed Match Detail web history/hash workarounds, preserves native Android `BackHandler`, and uses focused web browser-back replacement in the shared canonical-back hook.
-- Focused UAT now passes for Android Chat, desktop Chat, desktop Match Detail, and Android Match Detail back navigation. Android Match Detail still shows a brief app-background loader during early repeated backs, then stops after warmup; monitor but do not treat as blocking unless it becomes multi-second, frequent after warmup, or loses rows/highlight state.
-- Forgot-password was reported broken by a real/dev tester because the sign-in screen only had a placeholder alert. It now sends a Supabase reset email, detects recovery callbacks, and lets the user set a new password in app.
-- Foundation Slice 2 is implemented: `expo/providers/profile-provider-contract.ts` freezes the `useProfile()` compatibility facade, `ProfileProvider` is annotated against that contract, and `docs/profile-provider-map.md` categorizes every field/action by extraction domain.
-- Foundation Slice 3 is implemented: local `readWatermarks` and `seenMatchIds` now live behind `expo/store/use-preferences-store.ts` using the existing AsyncStorage keys. Provider wrappers `markRead` and `markMatchSeen` remain intact.
-- Foundation Slice 4 is implemented: local/demo `likedIds`, `passedIds`, and `superLikedIds` now live behind `expo/store/use-interaction-store.ts` using the existing AsyncStorage keys. Provider wrappers remain intact and Supabase reciprocal-match decisions remain service-owned.
-- Foundation Slice 5 is implemented: `expo/hooks/api/` now contains query keys and query hooks for matches, chat threads, and discovery. Discover/Fruit consume discovery through `useDiscoveryProfilesQuery`, and provider match bootstrap uses `useMatchesQuery().refetch()` without moving the whole hydration algorithm.
-- Foundation Slice 6 route read-model migration is implemented: app routes/components no longer import `useProfile()` directly. Provider access is confined to focused hooks under `expo/hooks/`.
-- Provider-internal selector cleanup is implemented: pure compatibility selectors now live in `expo/services/profile-provider-selectors.ts`.
-- Prototype monetization state now lives behind `expo/store/use-monetization-store.ts` while preserving existing AsyncStorage keys and provider compatibility wrappers.
-- Local chat UI state for drafts and simulated typing IDs now lives behind `expo/store/use-chat-ui-store.ts`.
-- Pure backend conversation merge/read-through helpers now live in `expo/services/local-interaction-service.ts`.
-- Local conversation state and AsyncStorage persistence now live behind `expo/hooks/use-persisted-conversations.ts`; backend chat hydration remains in `ProfileProvider`.
-- Local chat simulation timing helpers now live behind `expo/services/local-chat-simulation-service.ts`; provider conversation mutation callbacks remain unchanged.
-- Repeated backend match-pair lookup now lives behind `expo/services/match-record-utils.ts`; provider backend effects remain unchanged.
-- Backend chat send/read action orchestration now lives behind `expo/services/backend-chat-action-service.ts`; provider local conversation updates and stale local-match cleanup remain unchanged.
-- Supabase discovery now excludes hosted test fixture rows by default through `includeTestFixtures`; Discover and Fruit do not opt in, so Fruit's demo profiles remain local `FRUIT_PROFILES` instead of hosted mock rows.
-- Handoff sync was refreshed on 2026-07-08 after the pushed cleanup run.
+- Mock/Fruit/demo mode remains required and should not be broken by hosted-mode work.
 
 ## Validation State
 
-Latest known code-validation state before docs consolidation:
+Latest code-touching checks:
 
-- `bun run typecheck`: passed.
-- `bun run lint`: passed.
-- Local Supabase DB reset/test passed for latest schema set: 1 file / 45 tests.
+- `cd expo; bun run typecheck`: passed after root error boundary.
+- `cd expo; bun run lint`: passed after root error boundary.
+- `git diff --check`: passed for the UAT checklist and moderation/error-boundary doc updates.
 
-Docs consolidation validation:
+No new human UAT was run after these checkpoints.
 
-- `git diff --check`: passed.
-- Deleted-doc reference scan found only intentional entries in consolidated/deleted-doc lists and architecture history.
-- Runtime code was not changed; changed files are docs, README, and `.agents` only.
+## Current Blockers / Human Decisions
 
-Foundation Slice 1 validation:
+- Forgot-password flow is wired but still needs human UAT when practical.
+- Apple Developer Program, App Store Connect, and real public legal/support/account-deletion URLs are still required before TestFlight polish.
+- Human decisions remain open for analytics/crash reporting, automatic Supabase DB tests on migration PRs, fixture image ingestion, feedback channel/support process, and whether mobile web/ngrok is acceptable for the first inner-circle pass before TestFlight.
+- M6 Supabase-mode fixture simulated replies/photo behavior still needs a product decision before changing chat behavior further.
 
-- `cd expo; bun run typecheck`: passed.
-- `cd expo; bun run lint`: passed.
-- `git diff --check`: passed.
-- Human UAT: Android Chat pass, desktop Chat pass, desktop Match Detail pass, Android Match Detail pass with residual brief app-background loader.
-- Forgot-password fix validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
-- Foundation Slice 2 validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
-- Foundation Slice 3 validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
-- Foundation Slice 4 validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
-- Foundation Slice 5 validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
-- Foundation Slice 6 Matches read-path validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
-- Foundation Slice 6 Inbox read-path validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
-- Foundation Slice 6 Match Detail read-path validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
-- Foundation Slice 6 Chat read-path validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed.
-- Foundation Slice 6 Discover/Fruit read-path validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed.
-- Foundation Slice 6 profile/safety/paywall route facade validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed.
-- Foundation Slice 6 final route migration validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed.
-- Provider selector extraction validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed.
-- Monetization store extraction validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
-- Chat UI store extraction validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
-- Conversation helper extraction validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
-- Persisted conversations hook validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
-- Chat simulation helper extraction validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
-- Match record helper extraction validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
-- Backend chat action helper extraction validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
-- Supabase discovery fixture filtering validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
+## Canonical Docs
 
-## Recent Docs Consolidation
-
-- Rewrote `docs/milestone-tracker.md` as the canonical closed-beta roadmap/checklist/feedback-loop doc.
-- Rewrote `docs/repo-audit-and-foundation-plan.md` to make Option 3 PR-sized and safe.
-- Added `docs/architecture-history.md`.
-- Added `docs/README.md`.
-- Updated README/setup/backend/schema/hardening/Codex/provider-map/status docs to point to the canonical docs and remove stale current-state claims.
-- Deleted obsolete duplicate planning/checklist/audit docs listed above.
+- `docs/milestone-tracker.md`: single canonical milestone/checklist/UAT/blocker/human-decision source of truth.
+- `docs/project-status.md`: running narrative status log.
+- `docs/supabase-moderation-workflow.md`: interim Studio moderation workflow.
+- `docs/repo-audit-and-foundation-plan.md`: provider/foundation cleanup plan.
+- `docs/profile-provider-map.md`: provider responsibility map and extraction context.
+- `docs/README.md`: docs index.
 
 ## Next Recommended Task
 
-Human UAT forgot-password when practical, then continue provider-internal cleanup after Slice 6. The likely next PR-sized engineering slice is remaining local simulated conversation mutation callbacks, fixture match repair paths, or unmatch action orchestration. Keep the Android Match Detail loader as a monitored follow-up, not a blocker unless it worsens.
+Best next non-UAT task: inspect M5/M6 source-of-truth gaps and choose the smallest code slice that does not require the unresolved fixture-chat product decision. Good candidates are discovery/pass-state source-of-truth cleanup or a source audit of blocked/invisible/suspended filtering that prepares hosted UAT without changing user-facing mock behavior.
