@@ -136,6 +136,13 @@ export {
 } from "./local-chat-simulation-service";
 
 export {
+  deleteLocalMessage,
+  respondToLocalPhoto,
+  sendLocalPhoto,
+  sendLocalTextMessage,
+} from "./local-chat-action-service";
+
+export {
   applyLocalPurchase,
   createLocalSubscription,
   isLocalBoostActive,

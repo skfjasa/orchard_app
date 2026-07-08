@@ -288,10 +288,20 @@ Preserved behavior:
 - Existing random delay windows are unchanged.
 - Mock/Fruit fixture chat behavior remains local/demo-only.
 
+## Extracted Local Chat Actions
+
+Post-Slice 6 provider-internal cleanup moved local chat text/photo action orchestration behind `expo/services/local-chat-action-service.ts`.
+
+Preserved behavior:
+
+- `ProfileProvider` still blocks sends when there is no active local match.
+- Real backend-only Supabase text sends still go backend-first without a local echo from the local chat action service.
+- Local/mock fixture text sends still append an outgoing message, optionally persist to hosted chat, and schedule simulated replies.
+- Local photo requests, simulated photo approval, delete-message, and respond-to-photo behavior are unchanged.
+
 Not moved:
 
-- Backend chat send/read orchestration.
-- Conversation mutation callbacks.
+- Backend chat hydration application.
 - Product decision about simulated replies/photo requests in Supabase mode.
 
 ## Extracted Match Record Helpers
@@ -425,11 +435,11 @@ When Supabase mode is active and the local profile id matches the authenticated 
 
 ### Chat
 
-`sendMessage` appends a local outgoing message through `appendOutgoingTextMessage`. It then schedules a fake auto-reply using `setTimeout` and `appendIncomingTextReply`.
+`sendMessage` delegates local/mock text behavior to `sendLocalTextMessage`. That service appends local outgoing messages and schedules simulated fixture replies when applicable. Supabase backend-only real profile sends go through backend chat persistence first.
 
-`sendPhoto` creates a local pending photo message through `appendOutgoingPhotoRequest`, then simulates approval after a timeout.
+`sendPhoto` delegates local pending photo messages and simulated approval to `sendLocalPhoto`.
 
-No chat authorization, backend persistence, realtime, or moderation exists.
+Backend text persistence, read receipts, and Realtime refresh exist in Supabase mode in varying degrees. Photo messages, delete-message behavior, and simulated fixture replies remain local/demo behavior.
 
 ### Monetization
 
@@ -473,6 +483,7 @@ Runtime local helper modules now exist:
 - `expo/services/local-profile-storage.ts`
 - `expo/services/local-interaction-service.ts`
 - `expo/services/local-chat-simulation-service.ts`
+- `expo/services/local-chat-action-service.ts`
 - `expo/services/backend-match-action-service.ts`
 - `expo/services/match-record-utils.ts`
 - `expo/services/local-monetization-service.ts`

@@ -20,23 +20,19 @@ import {
 } from "@/services/backend-chat-action-service";
 import { unmatchBackendProfile } from "@/services/backend-match-action-service";
 import {
-  scheduleSimulatedPhotoApproval,
-  scheduleSimulatedTextReply,
-} from "@/services/local-chat-simulation-service";
+  deleteLocalMessage,
+  respondToLocalPhoto,
+  sendLocalPhoto,
+  sendLocalTextMessage,
+} from "@/services/local-chat-action-service";
 import {
   addUniqueId,
-  appendIncomingTextReply,
-  appendOutgoingPhotoRequest,
-  appendOutgoingTextMessage,
-  approvePendingPhoto,
   ensureGreetingConversation,
   markConversationRead,
   mergeBackendConversation,
   newestMessageAt,
   removeConversation,
   removeId,
-  removeMessage,
-  updatePhotoStatus,
 } from "@/services/local-interaction-service";
 import {
   loadStoredProfileState,
@@ -1100,29 +1096,13 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         persistBackendChatMessage(profileId, text);
         return;
       }
-      console.log("[profile-provider] sendMessage", { profileId, length: text.length });
-      updateConversations((prev) => {
-        const exists = prev.find((c) => c.profileId === profileId);
-        if (!exists) {
-          console.log(
-            "[profile-provider] sendMessage: creating missing convo",
-            profileId
-          );
-        }
-        const next = appendOutgoingTextMessage(prev, profileId, text, authorName);
-        return next;
-      });
-
-      persistBackendChatMessage(profileId, text, {
-        appendLocalEcho: !localMockProfile,
-      });
-
-      if (!localMockProfile) return;
-      scheduleSimulatedTextReply(localMockProfile, (reply) => {
-        updateConversations((prev) => {
-          const next = appendIncomingTextReply(prev, profileId, localMockProfile, reply);
-          return next;
-        });
+      sendLocalTextMessage({
+        authorName,
+        localMockProfile,
+        persistBackendChatMessage,
+        profileId,
+        text,
+        updateConversations,
       });
     },
     [likedIds, mode, persistBackendChatMessage, updateConversations]
@@ -1130,10 +1110,10 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
   const deleteMessage = useCallback(
     (profileId: string, messageId: string) => {
-      console.log("[profile-provider] deleteMessage", { profileId, messageId });
-      updateConversations((prev) => {
-        const next = removeMessage(prev, profileId, messageId);
-        return next;
+      deleteLocalMessage({
+        messageId,
+        profileId,
+        updateConversations,
       });
     },
     [updateConversations]
@@ -1147,24 +1127,11 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         });
         return;
       }
-      const msgId = `m-${Date.now()}`;
-      updateConversations((prev) => {
-        const next = appendOutgoingPhotoRequest(
-          prev,
-          profileId,
-          photoUri,
-          msgId,
-          authorName
-        );
-        return next;
-      });
-
-      scheduleSimulatedPhotoApproval(() => {
-        console.log("[profile-provider] simulated photo approval", msgId);
-        updateConversations((prev) => {
-          const next = approvePendingPhoto(prev, profileId, msgId);
-          return next;
-        });
+      sendLocalPhoto({
+        authorName,
+        photoUri,
+        profileId,
+        updateConversations,
       });
     },
     [likedIds, updateConversations]
@@ -1172,9 +1139,11 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
   const respondToPhoto = useCallback(
     (profileId: string, messageId: string, decision: "approved" | "declined") => {
-      updateConversations((prev) => {
-        const next = updatePhotoStatus(prev, profileId, messageId, decision);
-        return next;
+      respondToLocalPhoto({
+        decision,
+        messageId,
+        profileId,
+        updateConversations,
       });
     },
     [updateConversations]
