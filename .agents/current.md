@@ -9,8 +9,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 ## Branch And Commit
 
 - Branch: `main`
-- Latest implementation checkpoint: `a47dd00` - Extract local chat simulation helpers
-- Current working state: clean after local chat simulation helper extraction; verify push status at session close.
+- Latest implementation checkpoint: `2d942f7` - Extract backend match lookup helper
+- Current working state: clean after backend match lookup helper extraction; verify push status at session close.
 
 ## Canonical Docs
 
