@@ -44,6 +44,7 @@ import {
   createLocalSubscription,
   isLocalBoostActive,
 } from "@/services/local-monetization-service";
+import { findMatchBetweenProfiles } from "@/services/match-record-utils";
 import {
   acceptPartnerLink as acceptLocalPartnerLink,
   addPartnerInvite,
@@ -921,10 +922,10 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
             return;
           }
 
-          const match = matchResult.value.find(
-            (item) =>
-              (item.userA === userId && item.userB === targetProfileId) ||
-              (item.userA === targetProfileId && item.userB === userId)
+          const match = findMatchBetweenProfiles(
+            matchResult.value,
+            userId,
+            targetProfileId
           );
 
           let matchId = match?.id;
@@ -1052,10 +1053,10 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
               return;
             }
 
-            const match = matchResult.value.find(
-              (item) =>
-                (item.userA === userId && item.userB === targetProfileId) ||
-                (item.userA === targetProfileId && item.userB === userId)
+            const match = findMatchBetweenProfiles(
+              matchResult.value,
+              userId,
+              targetProfileId
             );
 
             if (!match) return;
@@ -1369,10 +1370,10 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
               return;
             }
 
-            const match = matchResult.value.find(
-              (item) =>
-                (item.userA === userId && item.userB === targetProfileId) ||
-                (item.userA === targetProfileId && item.userB === userId)
+            const match = findMatchBetweenProfiles(
+              matchResult.value,
+              userId,
+              targetProfileId
             );
             if (!match) return;
 

@@ -218,6 +218,7 @@ Last updated: 2026-07-07
 - Pure backend conversation merge/read-through helpers now live in `expo/services/local-interaction-service.ts`; `ProfileProvider` still owns conversation state, persistence writes, backend chat hydration orchestration, and simulated reply/photo side effects.
 - Local conversation state and AsyncStorage persistence now live behind `expo/hooks/use-persisted-conversations.ts`. `ProfileProvider` still exposes `conversations` through the compatibility facade and still coordinates backend chat hydration, backend sends/read receipts, and local simulated reply/photo side effects.
 - Local chat simulation timing now lives behind `expo/services/local-chat-simulation-service.ts`. `ProfileProvider` still owns the conversation mutation callbacks for simulated replies and photo approvals.
+- Repeated backend match-pair lookup now lives behind `expo/services/match-record-utils.ts`. `ProfileProvider` still owns the backend chat send/read and unmatch side effects.
 - Profile-tab sign-out now clears profile/auth state before routing to `/onboarding`, preventing the user from landing on Discover with no profile/data loaded.
 - Remaining observed behavior to decide/fix later: after sign-out/sign-in, only hosted messages are restored; local fixture greeting/simulated messages are intentionally not persisted to hosted chat yet.
 - The original generated onboarding background was recovered from the previous remote URL, vendored as `expo/assets/images/welcome-background.png`, and the welcome, sign-in, and pending-confirmation screens now use the local bundled asset instead of the app icon background or a remote Rork URL.
@@ -233,7 +234,7 @@ Last updated: 2026-07-07
 
 ## Current Task
 
-Provider-internal cleanup after Slice 6 has moved pure compatibility selectors, prototype monetization state, local chat UI state, local conversation state/persistence, local chat simulation timing, and pure backend conversation merge/read-through helpers out of `ProfileProvider` while preserving route hooks, facade members, storage keys, and visible behavior.
+Provider-internal cleanup after Slice 6 has moved pure compatibility selectors, prototype monetization state, local chat UI state, local conversation state/persistence, local chat simulation timing, backend match-pair lookup, and pure backend conversation merge/read-through helpers out of `ProfileProvider` while preserving route hooks, facade members, storage keys, and visible behavior.
 
 ## Next Planned Tasks
 

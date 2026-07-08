@@ -44,6 +44,8 @@ export type {
 
 export type { MatchRecord, MatchService, MatchStatus } from "./match-service";
 
+export { findMatchBetweenProfiles } from "./match-record-utils";
+
 export type {
   MatchMessageRealtimeInput,
   RealtimeChangeReason,

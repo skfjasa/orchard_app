@@ -294,6 +294,19 @@ Not moved:
 - Conversation mutation callbacks.
 - Product decision about simulated replies/photo requests in Supabase mode.
 
+## Extracted Match Record Helpers
+
+Post-Slice 6 provider-internal cleanup moved repeated backend match-pair lookup logic behind `expo/services/match-record-utils.ts`.
+
+Helper behavior now owned by the service:
+
+- Finding an active match record between two profile ids from a match list.
+
+Preserved behavior:
+
+- `ProfileProvider` still owns backend chat send/read and unmatch side effects.
+- Existing match lookup semantics are unchanged for chat send repair, unmatch, and backend mark-read.
+
 ## Current Role
 
 `ProfileProvider` is the central app-state provider for the prototype. It still owns UI-facing local state and coordinates persistence, but the first service and store boundaries have been extracted.
@@ -450,6 +463,7 @@ Runtime local helper modules now exist:
 - `expo/services/local-profile-storage.ts`
 - `expo/services/local-interaction-service.ts`
 - `expo/services/local-chat-simulation-service.ts`
+- `expo/services/match-record-utils.ts`
 - `expo/services/local-monetization-service.ts`
 - `expo/services/local-profile-mutation-service.ts`
 - `expo/store/use-interaction-store.ts`

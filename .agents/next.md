@@ -56,6 +56,7 @@ Read only if needed:
 - `expo/services/local-interaction-service.ts`: moved pure backend conversation merge/read-through helpers out of `ProfileProvider`.
 - `expo/hooks/use-persisted-conversations.ts`: moved local conversation state and AsyncStorage persistence out of `ProfileProvider` without changing the compatibility facade.
 - `expo/services/local-chat-simulation-service.ts`: moved local chat simulation timing helpers out of `ProfileProvider` without changing simulated reply/photo behavior.
+- `expo/services/match-record-utils.ts`: moved repeated backend match-pair lookup out of `ProfileProvider` without changing backend effects.
 
 ## Validation
 
@@ -81,7 +82,8 @@ Read only if needed:
 - Conversation helper extraction: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, and `git diff --check` passed.
 - Persisted conversations hook: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, and `git diff --check` passed.
 - Chat simulation helper extraction: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, and `git diff --check` passed.
+- Match record helper extraction: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, and `git diff --check` passed.
 
 ## Follow-Up After Slice 1
 
-Navigation cleanup is accepted. Forgot-password is wired but still needs human UAT when practical. Slices 2, 3, 4, 5, and 6 are implemented. App routes/components no longer import `useProfile()` directly; focused hooks own the route/provider boundary. Provider-internal selector, monetization, chat UI, persisted conversation, chat simulation timing, and pure conversation helper cleanup are implemented. Next engineering task is moving the next small state domain, likely backend chat send/read orchestration or remaining local simulated conversation mutation callbacks, out of `ProfileProvider` behind clearer services.
+Navigation cleanup is accepted. Forgot-password is wired but still needs human UAT when practical. Slices 2, 3, 4, 5, and 6 are implemented. App routes/components no longer import `useProfile()` directly; focused hooks own the route/provider boundary. Provider-internal selector, monetization, chat UI, persisted conversation, chat simulation timing, match-record lookup, and pure conversation helper cleanup are implemented. Next engineering task is moving the next small state domain, likely backend chat send/read orchestration or remaining local simulated conversation mutation callbacks, out of `ProfileProvider` behind clearer services.

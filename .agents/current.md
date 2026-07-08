@@ -53,6 +53,7 @@ Old duplicate roadmap/checklist/audit docs were consolidated and deleted from ac
 - Pure backend conversation merge/read-through helpers now live in `expo/services/local-interaction-service.ts`.
 - Local conversation state and AsyncStorage persistence now live behind `expo/hooks/use-persisted-conversations.ts`; backend chat hydration/send/read orchestration remains in `ProfileProvider`.
 - Local chat simulation timing helpers now live behind `expo/services/local-chat-simulation-service.ts`; provider conversation mutation callbacks remain unchanged.
+- Repeated backend match-pair lookup now lives behind `expo/services/match-record-utils.ts`; provider backend effects remain unchanged.
 
 ## Validation State
 
@@ -92,6 +93,7 @@ Foundation Slice 1 validation:
 - Conversation helper extraction validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
 - Persisted conversations hook validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
 - Chat simulation helper extraction validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
+- Match record helper extraction validation: `cd expo; bun run typecheck` passed, `cd expo; bun run lint` passed, `git diff --check` passed.
 
 ## Recent Docs Consolidation
 

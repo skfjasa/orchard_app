@@ -190,6 +190,7 @@ Done:
 - [x] [C] Pure backend conversation merge/read-through helpers now live in `expo/services/local-interaction-service.ts`.
 - [x] [C] Local conversation state and AsyncStorage persistence now live in `expo/hooks/use-persisted-conversations.ts`.
 - [x] [C] Local chat simulation timing helpers now live in `expo/services/local-chat-simulation-service.ts`.
+- [x] [C] Repeated backend match-pair lookup now lives in `expo/services/match-record-utils.ts`.
 
 Remaining:
 
