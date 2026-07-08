@@ -9,10 +9,9 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 ## Branch And Commit
 
 - Branch: `main`
-- Latest implementation checkpoint in git: `2d942f7` - Extract backend match lookup helper
-- Current uncommitted implementation slice: backend chat action helper extraction.
-- Latest handoff sync: 2026-07-08 after provider cleanup.
-- Current working state: dirty with the backend chat action extraction and status-doc updates; `main` is otherwise synced with `origin/main`.
+- Latest implementation checkpoint in git: `b229d02` - Continue provider cleanup
+- Latest handoff sync: 2026-07-08 after backend chat action and discovery fixture filtering cleanup.
+- Current working state before handoff doc edits: clean and synced with `origin/main` at `b229d02`.
 
 ## Canonical Docs
 

@@ -94,6 +94,6 @@ Navigation cleanup is accepted. Forgot-password is wired but still needs human U
 
 ## Latest Handoff
 
-- Repo is clean and synced with `origin/main` through `ff24c2c`.
-- Latest implementation commit is `2d942f7` - Extract backend match lookup helper.
+- Repo was clean and synced with `origin/main` through `b229d02` before handoff doc edits.
+- Latest implementation commit is `b229d02` - Continue provider cleanup.
 - No human UAT was run after the provider-internal cleanup slices.
