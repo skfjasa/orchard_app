@@ -9,9 +9,12 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 ## Branch And Commit
 
 - Branch: `main`.
-- Remote state: ahead of `origin/main` by 29 commits as of latest check.
-- Latest checkpoint: `cb8ff54` - Add root app error boundary.
+- Remote state: ahead of `origin/main` by 32 commits as of latest check.
+- Latest checkpoint: `0af8c4e` - Add EAS build configuration.
 - Recent relevant checkpoints:
+  - `0af8c4e` - Add EAS build configuration.
+  - `d149606` - Record hosted filtering source audit.
+  - `155c6ee` - Sync agent continuity state.
   - `cb8ff54` - Add root app error boundary.
   - `6b24afe` - Add repeatable full-flow UAT checklist.
   - `054679d` - Document Supabase moderation workflow.
@@ -31,6 +34,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 - M9 QA hardening advanced:
   - Repeatable full-flow UAT checklist now lives in `docs/milestone-tracker.md`.
   - Root Expo Router error boundary exists in `expo/app/_layout.tsx` with retry UI and message-only diagnostic logging.
+- M10 TestFlight prep advanced: `expo/eas.json` now exists with internal preview and production build profiles plus an iOS submit placeholder.
 - `ProfileProvider` remains active as a compatibility facade. App routes/components no longer import `useProfile()` directly; focused read-model hooks own route/provider access.
 - Supabase mode has auth/profile/photo/discovery/match/chat/read-state/Realtime paths in varying degrees.
 - Mock/Fruit/demo mode remains required and should not be broken by hosted-mode work.
@@ -63,4 +67,4 @@ No new human UAT was run after these checkpoints.
 
 ## Next Recommended Task
 
-Best next non-UAT task: inspect M5/M6 source-of-truth gaps and choose the smallest code slice that does not require the unresolved fixture-chat product decision. Good candidates are discovery/pass-state source-of-truth cleanup or a source audit of blocked/invisible/suspended filtering that prepares hosted UAT without changing user-facing mock behavior.
+Best next non-UAT task: continue TestFlight/beta preparation that does not require Apple credentials, likely app metadata/icon/splash/permission-string review notes or tester instruction scaffolding with placeholders for human-owned account details.

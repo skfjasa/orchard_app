@@ -4,9 +4,9 @@ Continue safely through the milestone list from `docs/milestone-tracker.md`.
 
 Recommended next non-UAT task:
 
-1. Inspect M5/M6 source-of-truth gaps.
-2. Choose the smallest code or documentation slice that does not depend on unresolved human decisions.
-3. Prefer M5 discovery/pass-state source-of-truth cleanup or a hosted-UAT preparation audit for blocked/invisible/suspended filtering.
+1. Continue TestFlight/beta preparation that does not require Apple credentials.
+2. Good candidates: app metadata/icon/splash/permission-string review notes or tester instruction scaffolding with placeholders for human-owned account details.
+3. Keep M5/M6 source-of-truth cleanup available, but avoid chat fixture/photo behavior changes until the product decision is made.
 
 Avoid changing Supabase-mode fixture simulated replies/photo behavior until the product decision in M6 is made.
 
@@ -31,6 +31,8 @@ Read if relevant:
 ## Latest Completed Work
 
 - Root Expo Router error boundary added in `expo/app/_layout.tsx`.
+- EAS build configuration added in `expo/eas.json`.
+- Hosted filtering source audit recorded; code/RLS coverage is done and hosted UAT remains.
 - Repeatable full-flow UAT checklist added to `docs/milestone-tracker.md`.
 - Supabase Studio moderation workflow documented in `docs/supabase-moderation-workflow.md`.
 - Fixture profile copy restored after over-broad neutralization; human-like fake profile language is intentionally preserved.
