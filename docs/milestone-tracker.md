@@ -394,7 +394,7 @@ Remaining:
 - [ ] [C+U] Confirm blocked users disappear from discovery, matches, and chat in hosted mode.
 - [ ] [C+U] Confirm suspended/invisible users do not appear in discovery.
 - [x] [C] Confirm no private messages, raw profile text, or PII are sent to analytics/logging. Source audit on 2026-07-08 found only an unused mock analytics interface and diagnostic logs without private message bodies or raw profile text.
-- [x] [C] Confirm seed fixtures contain no real user data and no explicit sexual demo content. Source audit on 2026-07-08 confirmed deterministic fixture emails/ids and fictional mock copy; mildly suggestive fixture phrases were neutralized in local mocks and `supabase/seed.sql`.
+- [x] [C] Confirm seed fixtures contain no real user data and no explicit sexual demo content. Source audit on 2026-07-08 confirmed deterministic fixture emails/ids and fictional mock copy; human-like dating/profile language is intentionally preserved for simulation realism.
 - [!] [H] Real public legal/support/account deletion URLs are still needed before production/TestFlight polish.
 
 Exit criteria:
