@@ -191,6 +191,7 @@ Done:
 - [x] [C] Local conversation state and AsyncStorage persistence now live in `expo/hooks/use-persisted-conversations.ts`.
 - [x] [C] Local chat simulation timing helpers now live in `expo/services/local-chat-simulation-service.ts`.
 - [x] [C] Local chat text/photo action orchestration now lives in `expo/services/local-chat-action-service.ts`.
+- [x] [C] Local match activation for fixture/demo likes now lives in `expo/services/local-match-action-service.ts`.
 - [x] [C] Repeated backend match-pair lookup now lives in `expo/services/match-record-utils.ts`.
 - [x] [C] Backend chat send/read action orchestration now lives in `expo/services/backend-chat-action-service.ts`.
 - [x] [C] Backend unmatch action orchestration now lives in `expo/services/backend-match-action-service.ts`.

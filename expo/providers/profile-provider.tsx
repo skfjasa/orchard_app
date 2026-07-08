@@ -25,6 +25,7 @@ import {
   sendLocalPhoto,
   sendLocalTextMessage,
 } from "@/services/local-chat-action-service";
+import { activateLocalMatchState } from "@/services/local-match-action-service";
 import {
   addUniqueId,
   ensureGreetingConversation,
@@ -797,19 +798,13 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
   const activateLocalMatch = useCallback(
     (id: string, kind: "like" | "super_like") => {
-      setNewMatchIds((prev) => addUniqueId(prev, id));
-
-      setLikedIds((prev) => {
-        const next = addUniqueId(prev, id);
-        if (next === prev) return prev;
-        return next;
-      });
-
-      updateConversations((prev) => {
-        const other = MOCK_PROFILES.find((p) => p.id === id);
-        const next = ensureGreetingConversation(prev, other, kind);
-        if (next === prev) return prev;
-        return next;
+      activateLocalMatchState({
+        kind,
+        mockProfiles: MOCK_PROFILES,
+        profileId: id,
+        setLikedIds,
+        setNewMatchIds,
+        updateConversations,
       });
     },
     [setLikedIds, updateConversations]

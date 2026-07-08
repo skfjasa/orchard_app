@@ -142,6 +142,8 @@ export {
   sendLocalTextMessage,
 } from "./local-chat-action-service";
 
+export { activateLocalMatchState } from "./local-match-action-service";
+
 export {
   applyLocalPurchase,
   createLocalSubscription,

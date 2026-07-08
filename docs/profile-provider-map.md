@@ -304,6 +304,16 @@ Not moved:
 - Backend chat hydration application.
 - Product decision about simulated replies/photo requests in Supabase mode.
 
+## Extracted Local Match Actions
+
+Post-Slice 6 provider-internal cleanup moved fixture/demo local match activation behind `expo/services/local-match-action-service.ts`.
+
+Preserved behavior:
+
+- Local fixture/demo likes and super-likes still add the profile to local liked/new-match state.
+- Local fixture/demo likes and super-likes still ensure the synthetic greeting conversation exists.
+- `ProfileProvider` still decides when Supabase swipe results are allowed to activate visible local match state.
+
 ## Extracted Match Record Helpers
 
 Post-Slice 6 provider-internal cleanup moved repeated backend match-pair lookup logic behind `expo/services/match-record-utils.ts`.
@@ -413,7 +423,7 @@ Onboarding stores a `Profile` object locally. Updating a profile patches the loc
 
 ### Likes And Matches
 
-`likeProfile` checks local match slot limits only when monetization is enabled. If allowed, it adds the profile ID to `likedIds` and immediately creates a local conversation with a synthetic greeting from `MOCK_PROFILES` through `ensureGreetingConversation`.
+`likeProfile` checks local match slot limits only when monetization is enabled. If allowed, local visible match activation is delegated to `activateLocalMatchState`, which adds the profile ID to local liked/new-match state and creates a synthetic greeting conversation for fixture/demo profiles.
 
 When Supabase mode is active and the local profile id matches the authenticated Supabase user id, `likeProfile` also sends a non-blocking `swipes.recordSwipe` call through the backend/mock service factory.
 
@@ -484,6 +494,7 @@ Runtime local helper modules now exist:
 - `expo/services/local-interaction-service.ts`
 - `expo/services/local-chat-simulation-service.ts`
 - `expo/services/local-chat-action-service.ts`
+- `expo/services/local-match-action-service.ts`
 - `expo/services/backend-match-action-service.ts`
 - `expo/services/match-record-utils.ts`
 - `expo/services/local-monetization-service.ts`
