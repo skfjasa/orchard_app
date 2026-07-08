@@ -70,6 +70,16 @@ export { unmatchBackendProfile } from "./backend-match-action-service";
 
 export type { BackendUnmatchResult } from "./backend-match-action-service";
 
+export {
+  completeBackendOnboardingProfile,
+  updateBackendProfile,
+} from "./backend-profile-action-service";
+
+export type {
+  BackendProfileCompletionResult,
+  BackendProfileUpdateResult,
+} from "./backend-profile-action-service";
+
 export { bootstrapBackendProfile } from "./backend-profile-bootstrap-service";
 
 export type { BackendProfileBootstrapResult } from "./backend-profile-bootstrap-service";

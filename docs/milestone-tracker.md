@@ -198,6 +198,7 @@ Done:
 - [x] [C] Backend unmatch action orchestration now lives in `expo/services/backend-match-action-service.ts`.
 - [x] [C] Backend match/thread hydration planning now lives in `expo/services/backend-match-hydration-service.ts`.
 - [x] [C] Backend match/thread hydration application calculations now live in `expo/services/backend-match-hydration-application-service.ts`.
+- [x] [C] Backend profile complete-onboarding and update action calls now live in `expo/services/backend-profile-action-service.ts`.
 - [x] [C] Backend profile bootstrap loading and pending onboarding recovery now live in `expo/services/backend-profile-bootstrap-service.ts`.
 - [x] [C] Supabase discovery now excludes hosted test fixture rows by default; Fruit keeps its local fixture pool explicit instead of mixing hosted mock rows into backend discovery.
 
@@ -218,7 +219,7 @@ Remaining:
     - [x] [C] Edit Profile, Paywall, Report, and Safety & Legal now use focused read-model hooks.
     - [x] [C] Profile tab, onboarding photos/sign-in, tab badges, root redirect, and ProtectedRoute/bootstrap gates now use focused read-model hooks.
 - [x] [C] Slice 5b: Hand over background polling and cache invalidation to React Query (remove manual setInterval/AppState from ProfileProvider and extract Realtime invalidation).
-- [ ] [C] Continue isolating remaining provider-owned application paths, especially profile mutation/sign-out application and backend-first action cleanup.
+- [ ] [C] Continue isolating remaining provider-owned application paths, especially sign-out cleanup and backend-first action cleanup.
 
 Exit criteria:
 

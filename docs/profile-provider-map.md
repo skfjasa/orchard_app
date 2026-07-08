@@ -378,6 +378,17 @@ Preserved behavior:
 - Cancellation checks still prevent pending storage cleanup and provider state application after the bootstrap effect is torn down.
 - `ProfileProvider` still owns the React `profile` state setter, local profile persistence mutation, and `backendProfileHydrated` readiness flag.
 
+## Extracted Backend Profile Actions
+
+Post-Slice 6 provider-internal cleanup moved backend complete-onboarding and profile-update calls behind `expo/services/backend-profile-action-service.ts`.
+
+Preserved behavior:
+
+- `completeOnboarding` still stores the backend-returned profile in Supabase mode and the input profile in mock mode.
+- `updateProfile` still applies an optimistic local patch and persists the local profile immediately.
+- Backend profile update failures still log through the existing `[profile-provider] backend profile update failed` message.
+- `ProfileProvider` still owns React state application, local persistence mutation, and readiness flags.
+
 ## Current Role
 
 `ProfileProvider` is the central app-state provider for the prototype. It still owns UI-facing local state and coordinates persistence, but the first service and store boundaries have been extracted.
@@ -538,6 +549,7 @@ Runtime local helper modules now exist:
 - `expo/services/local-match-action-service.ts`
 - `expo/services/local-safety-action-service.ts`
 - `expo/services/backend-match-action-service.ts`
+- `expo/services/backend-profile-action-service.ts`
 - `expo/services/backend-profile-bootstrap-service.ts`
 - `expo/services/backend-match-hydration-service.ts`
 - `expo/services/backend-match-hydration-application-service.ts`

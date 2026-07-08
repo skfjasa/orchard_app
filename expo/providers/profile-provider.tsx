@@ -18,6 +18,10 @@ import {
   sendBackendChatMessage,
 } from "@/services/backend-chat-action-service";
 import { unmatchBackendProfile } from "@/services/backend-match-action-service";
+import {
+  completeBackendOnboardingProfile,
+  updateBackendProfile,
+} from "@/services/backend-profile-action-service";
 import { bootstrapBackendProfile } from "@/services/backend-profile-bootstrap-service";
 import {
   mergeBackendHydratedConversations,
@@ -523,27 +527,23 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
   const completeOnboarding = useCallback(
     async (p: Profile): Promise<{ ok: boolean; error?: string }> => {
-      let profileToStore = p;
+      const result = await completeBackendOnboardingProfile({
+        profile: p,
+        services: appServices,
+      });
 
-      if (mode === "supabase" && appServices.capabilities.profiles === "supabase") {
-        const result = await appServices.profiles.completeOnboarding({
-          profile: p,
-        });
-
-        if (!result.ok) {
-          return { ok: false, error: result.error.message };
-        }
-
-        profileToStore = result.value;
+      if (result.status === "failed") {
+        return { ok: false, error: result.error };
       }
 
+      const profileToStore = result.profile;
       console.log("[profile-provider] completeOnboarding", profileToStore.id);
       setProfile(profileToStore);
       saveProfileMutation.mutate(profileToStore);
       setBackendProfileHydrated(true);
       return { ok: true };
     },
-    [appServices, mode, saveProfileMutation]
+    [appServices, saveProfileMutation]
   );
 
   const updateProfile = useCallback(
@@ -551,26 +551,16 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       setProfile((prev) => {
         const next = applyProfilePatch(prev, patch);
         if (!next) return prev;
-        if (
-          mode === "supabase" &&
-          appServices.capabilities.profiles === "supabase"
-        ) {
-          void appServices.profiles
-            .updateProfile({ profileId: next.id, patch })
-            .then((result) => {
-              if (!result.ok) {
-                console.log("[profile-provider] backend profile update failed", {
-                  code: result.error.code,
-                  message: result.error.message,
-                });
-              }
-            });
-        }
+        void updateBackendProfile({
+          patch,
+          profileId: next.id,
+          services: appServices,
+        });
         saveProfileMutation.mutate(next);
         return next;
       });
     },
-    [appServices, mode, saveProfileMutation]
+    [appServices, saveProfileMutation]
   );
 
   const signOut = useCallback(async () => {
