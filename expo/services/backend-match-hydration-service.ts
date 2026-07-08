@@ -4,10 +4,12 @@ import {
   isBackendProfileId,
 } from "@/constants/mock-profile-ids";
 import type { AppServices } from "@/services/app-services";
+import {
+  chooseDisplayProfile,
+  isIncompleteBackendProfile,
+} from "@/services/backend-profile-display-service";
 import type { MatchRecord } from "@/services/match-service";
 import type { Message, Profile } from "@/types";
-
-const INCOMPLETE_BACKEND_PROFILE_NAME = "orchard user";
 
 export interface BackendConversationHydration {
   profileId: string;
@@ -144,30 +146,4 @@ export async function buildBackendMatchHydrationPlan({
     matchedLocalProfileIds: [...matchedLocalProfileIds],
     profilesToRemember,
   };
-}
-
-function isIncompleteBackendProfile(profile: Profile | undefined): boolean {
-  if (!profile || !isBackendProfileId(profile.id)) return false;
-  if (MOCK_PROFILES.some((item) => item.id === profile.id)) return false;
-  if (profile.people.length === 0) return true;
-
-  return profile.people.every(
-    (person) =>
-      person.name.trim().toLowerCase() === INCOMPLETE_BACKEND_PROFILE_NAME
-  );
-}
-
-function chooseDisplayProfile(
-  backendProfile: Profile | undefined,
-  rememberedProfile: Profile | undefined
-): Profile | undefined {
-  if (backendProfile && !isIncompleteBackendProfile(backendProfile)) {
-    return backendProfile;
-  }
-
-  if (rememberedProfile && !isIncompleteBackendProfile(rememberedProfile)) {
-    return rememberedProfile;
-  }
-
-  return undefined;
 }

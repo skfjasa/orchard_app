@@ -19,6 +19,10 @@ import {
 } from "@/services/backend-chat-action-service";
 import { unmatchBackendProfile } from "@/services/backend-match-action-service";
 import {
+  buildBackendDisplayProfileMap,
+  isIncompleteBackendProfile,
+} from "@/services/backend-profile-display-service";
+import {
   completeBackendOnboardingProfile,
   updateBackendProfile,
 } from "@/services/backend-profile-action-service";
@@ -120,19 +124,7 @@ function sameStringSet(a: string[], b: string[]) {
   return b.every((item) => values.has(item));
 }
 
-const INCOMPLETE_BACKEND_PROFILE_NAME = "orchard user";
 type BackendMatchListResult = ServiceResponse<MatchRecord[]>;
-
-function isIncompleteBackendProfile(profile: Profile | undefined): boolean {
-  if (!profile || !isBackendProfileId(profile.id)) return false;
-  if (MOCK_PROFILES.some((item) => item.id === profile.id)) return false;
-  if (profile.people.length === 0) return true;
-
-  return profile.people.every(
-    (person) =>
-      person.name.trim().toLowerCase() === INCOMPLETE_BACKEND_PROFILE_NAME
-  );
-}
 
 export const [ProfileProvider, useProfile] = createContextHook(() => {
   const { mode, session, signOut: signOutAuth, userId } = useAuth();
@@ -250,9 +242,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       );
       setKnownProfiles(completeKnownProfiles);
       knownProfilesRef.current = completeKnownProfiles;
-      displayProfilesRef.current = Object.fromEntries(
-        completeKnownProfiles.map((item) => [item.id, item])
-      );
+      displayProfilesRef.current =
+        buildBackendDisplayProfileMap(completeKnownProfiles);
       readWatermarksRef.current = loadQuery.data.readWatermarks;
       seenMatchIdsRef.current = loadQuery.data.seenMatchIds;
       setHydrated(true);

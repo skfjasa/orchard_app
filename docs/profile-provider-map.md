@@ -380,6 +380,16 @@ Preserved behavior:
 - `ProfileProvider` still applies the returned plan into local compatibility state: active backend match IDs, local liked/new-match state, remembered profiles, and merged conversations.
 - Mock/Fruit fixture behavior during backend hydration is unchanged.
 
+## Extracted Backend Profile Display Helpers
+
+Post-Slice 6 provider-internal cleanup moved backend display-profile completeness and selection helpers behind `expo/services/backend-profile-display-service.ts`.
+
+Preserved behavior:
+
+- Incomplete backend profiles with placeholder names are still filtered out of provider lookup/cache hydration and backend match hydration.
+- Hosted fixture/mock profile ids are still treated as complete fixture profiles.
+- Backend match hydration still prefers complete backend profile data and falls back to remembered complete display profiles.
+
 ## Extracted Backend Match Hydration Application
 
 Post-Slice 6 provider-internal cleanup moved backend match/thread hydration application calculations behind `expo/services/backend-match-hydration-application-service.ts`.
@@ -586,6 +596,7 @@ Runtime local helper modules now exist:
 - `expo/services/backend-match-action-service.ts`
 - `expo/services/backend-profile-action-service.ts`
 - `expo/services/backend-profile-bootstrap-service.ts`
+- `expo/services/backend-profile-display-service.ts`
 - `expo/services/backend-swipe-action-service.ts`
 - `expo/services/backend-match-hydration-service.ts`
 - `expo/services/backend-match-hydration-application-service.ts`
