@@ -314,6 +314,15 @@ Preserved behavior:
 - Local fixture/demo likes and super-likes still ensure the synthetic greeting conversation exists.
 - `ProfileProvider` still decides when Supabase swipe results are allowed to activate visible local match state.
 
+## Extracted Local Safety Actions
+
+Post-Slice 6 provider-internal cleanup moved local block cleanup behind `expo/services/local-safety-action-service.ts`.
+
+Preserved behavior:
+
+- `ProfileProvider.blockProfile` still waits for the backend/mock safety service result.
+- Successful blocks still remove the blocked profile from local liked IDs, add it to local passed IDs, and remove the local conversation.
+
 ## Extracted Match Record Helpers
 
 Post-Slice 6 provider-internal cleanup moved repeated backend match-pair lookup logic behind `expo/services/match-record-utils.ts`.
@@ -515,6 +524,7 @@ Runtime local helper modules now exist:
 - `expo/services/local-chat-simulation-service.ts`
 - `expo/services/local-chat-action-service.ts`
 - `expo/services/local-match-action-service.ts`
+- `expo/services/local-safety-action-service.ts`
 - `expo/services/backend-match-action-service.ts`
 - `expo/services/backend-match-hydration-service.ts`
 - `expo/services/backend-match-hydration-application-service.ts`

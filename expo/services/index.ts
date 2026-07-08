@@ -157,6 +157,8 @@ export {
 
 export { activateLocalMatchState } from "./local-match-action-service";
 
+export { applyLocalBlockCleanup } from "./local-safety-action-service";
+
 export {
   applyLocalPurchase,
   createLocalSubscription,

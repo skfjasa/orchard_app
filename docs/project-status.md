@@ -220,6 +220,7 @@ Last updated: 2026-07-08
 - Local chat simulation timing now lives behind `expo/services/local-chat-simulation-service.ts`.
 - Local chat text/photo action orchestration now lives behind `expo/services/local-chat-action-service.ts`. `ProfileProvider` still decides whether a real backend profile should send backend-first, then delegates local fixture text replies, local photo requests, photo approvals, deletes, and photo responses to the service.
 - Local match activation for fixture/demo likes and super-likes now lives behind `expo/services/local-match-action-service.ts`. `ProfileProvider` still decides when a backend swipe is allowed to become a local visible match.
+- Local block cleanup now lives behind `expo/services/local-safety-action-service.ts`. `ProfileProvider` still calls the safety service first, then delegates liked/pass/conversation cleanup after a successful block.
 - Repeated backend match-pair lookup now lives behind `expo/services/match-record-utils.ts`. `ProfileProvider` still owns backend chat hydration side effects.
 - Backend chat send/read action orchestration now lives behind `expo/services/backend-chat-action-service.ts`. `ProfileProvider` still owns local visible conversation updates and stale local-match cleanup when the backend has no active match.
 - Backend unmatch action orchestration now lives behind `expo/services/backend-match-action-service.ts`. `ProfileProvider` still performs immediate local visible cleanup, then calls the service to resolve the active backend match and run the hosted unmatch RPC when Supabase mode is eligible.
@@ -242,12 +243,12 @@ Last updated: 2026-07-08
 
 ## Current Task
 
-Provider-internal cleanup after Slice 6 has moved pure compatibility selectors, prototype monetization state, local chat UI state, local conversation state/persistence, local chat simulation timing, local chat text/photo action orchestration, local match activation, backend match-pair lookup, backend match/thread hydration planning and application calculations, backend chat send/read action orchestration, backend unmatch orchestration, Supabase discovery fixture filtering, React Query polling/realtime invalidation control, and pure backend conversation merge/read-through helpers out of `ProfileProvider` while preserving route hooks, facade members, storage keys, and visible behavior.
+Provider-internal cleanup after Slice 6 has moved pure compatibility selectors, prototype monetization state, local chat UI state, local conversation state/persistence, local chat simulation timing, local chat text/photo action orchestration, local match activation, local block cleanup, backend match-pair lookup, backend match/thread hydration planning and application calculations, backend chat send/read action orchestration, backend unmatch orchestration, Supabase discovery fixture filtering, React Query polling/realtime invalidation control, and pure backend conversation merge/read-through helpers out of `ProfileProvider` while preserving route hooks, facade members, storage keys, and visible behavior.
 
 ## Next Planned Tasks
 
 1. Human UAT forgot-password flow on hosted Supabase/ngrok when practical: request reset email, open link, set new password, sign in with the new password, and confirm the old password no longer works.
-2. Continue provider-internal cleanup after Slice 6/Slice 5b: move the next small state domain, likely local block/report cleanup or profile bootstrap application, out of `ProfileProvider` behind clearer services without changing visible UI.
+2. Continue provider-internal cleanup after Slice 6/Slice 5b: move the next small state domain, likely profile bootstrap application or stale local-match cleanup, out of `ProfileProvider` behind clearer services without changing visible UI.
 3. Continue Supabase source-of-truth session bootstrap for inner-circle testing: profile, active matches, display profiles/photos, inbox summaries, thread snippets, unread/read state, and block/unmatch visibility should load before tabs render.
 4. Monitor Android Match Detail's brief app-background loading step; optimize only if it is multi-second, frequent after warmup, or loses rows/highlight state.
 5. Decide whether seen-match/highlight state remains local-only for inner-circle testing or moves to backend-backed per-user state.

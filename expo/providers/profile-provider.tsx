@@ -39,6 +39,7 @@ import {
   removeConversation,
   removeId,
 } from "@/services/local-interaction-service";
+import { applyLocalBlockCleanup } from "@/services/local-safety-action-service";
 import {
   loadStoredProfileState,
   saveStoredProfile,
@@ -833,17 +834,11 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         return { ok: false, error: result.error.message };
       }
 
-      setLikedIds((prev) => {
-        const next = removeId(prev, blockedProfileId);
-        return next;
-      });
-      setPassedIds((prev) => {
-        const next = addUniqueId(prev, blockedProfileId);
-        return next;
-      });
-      updateConversations((prev) => {
-        const next = removeConversation(prev, blockedProfileId);
-        return next;
+      applyLocalBlockCleanup({
+        blockedProfileId,
+        setLikedIds,
+        setPassedIds,
+        updateConversations,
       });
 
       return { ok: true };
