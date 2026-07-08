@@ -193,7 +193,7 @@ Preserved behavior:
 Not moved yet:
 
 - Provider ownership of conversation arrays, message mutation helpers, backend chat hydration, and simulated replies/photo approvals.
-- Provider ownership of profile bootstrap and backend match/thread hydration coordination.
+- Provider ownership of profile state application and backend match/thread hydration coordination.
 
 ## Provider Selector Extraction
 
@@ -367,6 +367,17 @@ Preserved behavior:
 - Backend hydration still merges backend matches into local liked IDs, new-match IDs, and conversations with local read watermarks.
 - Fixture backend conversations still preserve synthetic greeting behavior.
 
+## Extracted Backend Profile Bootstrap
+
+Post-Slice 6 provider-internal cleanup moved backend profile bootstrap loading and pending onboarding recovery behind `expo/services/backend-profile-bootstrap-service.ts`.
+
+Preserved behavior:
+
+- Supabase mode still loads the current backend profile before protected app tabs are allowed through the bootstrap gate.
+- Pending onboarding profiles are still recovered by matching the authenticated user id or owner email, saved through the profile service, and cleared from pending storage only after a successful backend save.
+- Cancellation checks still prevent pending storage cleanup and provider state application after the bootstrap effect is torn down.
+- `ProfileProvider` still owns the React `profile` state setter, local profile persistence mutation, and `backendProfileHydrated` readiness flag.
+
 ## Current Role
 
 `ProfileProvider` is the central app-state provider for the prototype. It still owns UI-facing local state and coordinates persistence, but the first service and store boundaries have been extracted.
@@ -527,6 +538,7 @@ Runtime local helper modules now exist:
 - `expo/services/local-match-action-service.ts`
 - `expo/services/local-safety-action-service.ts`
 - `expo/services/backend-match-action-service.ts`
+- `expo/services/backend-profile-bootstrap-service.ts`
 - `expo/services/backend-match-hydration-service.ts`
 - `expo/services/backend-match-hydration-application-service.ts`
 - `expo/services/match-record-utils.ts`

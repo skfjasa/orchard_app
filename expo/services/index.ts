@@ -70,6 +70,10 @@ export { unmatchBackendProfile } from "./backend-match-action-service";
 
 export type { BackendUnmatchResult } from "./backend-match-action-service";
 
+export { bootstrapBackendProfile } from "./backend-profile-bootstrap-service";
+
+export type { BackendProfileBootstrapResult } from "./backend-profile-bootstrap-service";
+
 export { buildBackendMatchHydrationPlan } from "./backend-match-hydration-service";
 
 export type {

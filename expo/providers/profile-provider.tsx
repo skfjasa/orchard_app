@@ -18,6 +18,7 @@ import {
   sendBackendChatMessage,
 } from "@/services/backend-chat-action-service";
 import { unmatchBackendProfile } from "@/services/backend-match-action-service";
+import { bootstrapBackendProfile } from "@/services/backend-profile-bootstrap-service";
 import {
   mergeBackendHydratedConversations,
   mergeBackendLikedIds,
@@ -66,10 +67,6 @@ import {
   findConversationByProfileId,
   hasActiveProfileMatch,
 } from "@/services/profile-provider-selectors";
-import {
-  clearPendingOnboardingProfile,
-  loadPendingOnboardingProfile,
-} from "@/services/pending-onboarding-storage";
 import {
   DEFAULT_MATCH_SLOTS,
   DEFAULT_SUPER_LIKES,
@@ -345,53 +342,19 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     if (!hydrated || backendProfileHydrated || !userId || profile) return;
 
     let cancelled = false;
-    void appServices.profiles.getCurrentProfile().then(async (result) => {
+    void bootstrapBackendProfile({
+      email: session?.user.email,
+      isCancelled: () => cancelled,
+      services: appServices,
+      userId,
+    }).then((result) => {
       if (cancelled) return;
 
-      if (!result.ok) {
-        console.log("[profile-provider] backend profile load failed", {
-          code: result.error.code,
-          message: result.error.message,
-        });
-        setBackendProfileHydrated(true);
-        return;
+      if (result.status === "loaded") {
+        setProfile(result.profile);
+        saveProfileMutation.mutate(result.profile);
       }
 
-      if (!result.value) {
-        const pendingProfile = await loadPendingOnboardingProfile(
-          userId,
-          session?.user.email
-        );
-        if (cancelled) return;
-        if (!pendingProfile) {
-          setBackendProfileHydrated(true);
-          return;
-        }
-
-        const pendingResult = await appServices.profiles.completeOnboarding({
-          profile: pendingProfile,
-        });
-        if (cancelled) return;
-
-        if (!pendingResult.ok) {
-          console.log("[profile-provider] pending profile save failed", {
-            code: pendingResult.error.code,
-            message: pendingResult.error.message,
-          });
-          setBackendProfileHydrated(true);
-          return;
-        }
-
-        await clearPendingOnboardingProfile();
-        if (cancelled) return;
-        setProfile(pendingResult.value);
-        saveProfileMutation.mutate(pendingResult.value);
-        setBackendProfileHydrated(true);
-        return;
-      }
-
-      setProfile(result.value);
-      saveProfileMutation.mutate(result.value);
       setBackendProfileHydrated(true);
     });
 
