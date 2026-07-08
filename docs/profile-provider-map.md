@@ -432,7 +432,8 @@ Preserved behavior:
 
 - Supabase swipe persistence still runs only when the service factory is in Supabase mode, swipe capability is Supabase-backed, and the authenticated user id matches the current profile id.
 - Backend swipe failures still log through the existing `[profile-provider] backend swipe failed` message.
-- `ProfileProvider` still owns local fixture activation, match-limit checks, super-like counters, and visible local match activation after a backend reciprocal match result.
+- The service now decides whether a like/super-like should activate visible local match state immediately or wait for a backend reciprocal match result.
+- `ProfileProvider` still owns local fixture activation, match-limit checks, and super-like counters.
 
 ## Current Role
 

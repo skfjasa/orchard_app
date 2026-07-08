@@ -97,7 +97,12 @@ export type {
   RememberedDisplayProfilesMerge,
 } from "./backend-profile-display-service";
 
-export { recordBackendSwipe } from "./backend-swipe-action-service";
+export {
+  recordBackendSwipe,
+  resolveBackendSwipeVisibleMatch,
+} from "./backend-swipe-action-service";
+
+export type { BackendSwipeVisibleMatchResult } from "./backend-swipe-action-service";
 
 export { buildBackendMatchHydrationPlan } from "./backend-match-hydration-service";
 

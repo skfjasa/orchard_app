@@ -31,6 +31,7 @@ import {
 import { bootstrapBackendProfile } from "@/services/backend-profile-bootstrap-service";
 import {
   recordBackendSwipe as recordBackendSwipeAction,
+  resolveBackendSwipeVisibleMatch,
 } from "@/services/backend-swipe-action-service";
 import {
   applyBackendMatchHydrationPlan,
@@ -666,28 +667,28 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         return { ok: false, reason: "limit" };
       }
 
-      if (mode === "supabase" && appServices.capabilities.swipes === "supabase") {
-        if (!isBackendProfileId(id)) {
-          activateLocalMatch(id, "like");
-          return { ok: true, matched: true };
-        }
-        const swipe = await recordBackendSwipe(id, "like");
-        if (!swipe?.matched) return { ok: true, matched: false };
+      const backendMatch = await resolveBackendSwipeVisibleMatch({
+        currentProfileId: profile?.id,
+        decision: "like",
+        profileId: id,
+        services: appServices,
+        userId,
+      });
+      if (backendMatch.status === "activate_local_match") {
         activateLocalMatch(id, "like");
         return { ok: true, matched: true };
       }
 
-      activateLocalMatch(id, "like");
-      return { ok: true, matched: true };
+      return { ok: true, matched: false };
     },
     [
       activateLocalMatch,
-      appServices.capabilities.swipes,
+      appServices,
       likedIds,
-      mode,
-      recordBackendSwipe,
+      profile?.id,
       slotsUsed,
       totalSlots,
+      userId,
     ]
   );
 
@@ -821,33 +822,33 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         return next;
       });
 
-      if (mode === "supabase" && appServices.capabilities.swipes === "supabase") {
-        if (!isBackendProfileId(id)) {
-          activateLocalMatch(id, "super_like");
-          return { ok: true, matched: true };
-        }
-        const swipe = await recordBackendSwipe(id, "super_like");
-        if (!swipe?.matched) return { ok: true, matched: false };
+      const backendMatch = await resolveBackendSwipeVisibleMatch({
+        currentProfileId: profile?.id,
+        decision: "super_like",
+        profileId: id,
+        services: appServices,
+        userId,
+      });
+      if (backendMatch.status === "activate_local_match") {
         activateLocalMatch(id, "super_like");
         return { ok: true, matched: true };
       }
 
-      activateLocalMatch(id, "super_like");
-      return { ok: true, matched: true };
+      return { ok: true, matched: false };
     },
     [
       activateLocalMatch,
-      appServices.capabilities.swipes,
+      appServices,
       superLikedIds,
       likedIds,
-      mode,
-      recordBackendSwipe,
+      profile?.id,
       slotsUsed,
       totalSlots,
       superLikeBalance,
       setSuperLikeBalance,
       setSuperLikeLastUseAt,
       setSuperLikedIds,
+      userId,
     ]
   );
 
