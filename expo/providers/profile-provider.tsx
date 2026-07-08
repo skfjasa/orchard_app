@@ -21,6 +21,7 @@ import { unmatchBackendProfile } from "@/services/backend-match-action-service";
 import {
   buildBackendDisplayProfileMap,
   isIncompleteBackendProfile,
+  mergeRememberedDisplayProfiles,
 } from "@/services/backend-profile-display-service";
 import {
   completeBackendOnboardingProfile,
@@ -385,27 +386,17 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     if (profilesToRemember.length === 0) return;
 
     setKnownProfiles((prev) => {
-      const byId = new Map(prev.map((item) => [item.id, item]));
-      let changed = false;
-
-      for (const item of profilesToRemember) {
-        if (isIncompleteBackendProfile(item)) continue;
-        displayProfilesRef.current = {
-          ...displayProfilesRef.current,
-          [item.id]: item,
-        };
-        lastResolvedProfilesRef.current = {
-          ...lastResolvedProfilesRef.current,
-          [item.id]: item,
-        };
-        if (byId.get(item.id) === item) continue;
-        byId.set(item.id, item);
-        changed = true;
-      }
-
-      const next = changed ? [...byId.values()] : prev;
+      const merge = mergeRememberedDisplayProfiles({
+        previousDisplayProfiles: displayProfilesRef.current,
+        previousKnownProfiles: prev,
+        previousLastResolvedProfiles: lastResolvedProfilesRef.current,
+        profilesToRemember,
+      });
+      displayProfilesRef.current = merge.displayProfiles;
+      lastResolvedProfilesRef.current = merge.lastResolvedProfiles;
+      const next = merge.knownProfiles;
       knownProfilesRef.current = next;
-      if (changed) {
+      if (merge.changed) {
         void saveStoredKnownProfiles(next);
       }
       return next;

@@ -389,6 +389,7 @@ Preserved behavior:
 - Incomplete backend profiles with placeholder names are still filtered out of provider lookup/cache hydration and backend match hydration.
 - Hosted fixture/mock profile ids are still treated as complete fixture profiles.
 - Backend match hydration still prefers complete backend profile data and falls back to remembered complete display profiles.
+- Remembered display-profile cache merge logic still updates known profiles, display cache, and last-resolved cache while preserving provider-owned refs/state/persistence.
 
 ## Extracted Backend Match Hydration Application
 
