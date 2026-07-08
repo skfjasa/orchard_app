@@ -51,6 +51,7 @@ import {
 import {
   addUniqueId,
   applyReadWatermark,
+  applySeenMatchId,
   markConversationRead,
   mergeBackendConversation,
   newestMessageAt,
@@ -619,18 +620,15 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
   const markMatchSeen = useCallback(async (profileId: string) => {
     setNewMatchIds((prev) => removeId(prev, profileId));
-    const ownerId = profile?.id;
-    if (!ownerId) return;
-    const ownerSeen = seenMatchIdsRef.current[ownerId] ?? [];
-    const nextOwnerSeen = addUniqueId(ownerSeen, profileId);
-    if (nextOwnerSeen === ownerSeen) return;
+    const nextSeenMatchIds = applySeenMatchId(
+      seenMatchIdsRef.current,
+      profile?.id,
+      profileId
+    );
+    if (nextSeenMatchIds === seenMatchIdsRef.current) return;
 
-    const next = {
-      ...seenMatchIdsRef.current,
-      [ownerId]: nextOwnerSeen,
-    };
-    seenMatchIdsRef.current = next;
-    setSeenMatchIds(next);
+    seenMatchIdsRef.current = nextSeenMatchIds;
+    setSeenMatchIds(nextSeenMatchIds);
   }, [profile?.id]);
 
   const persistBackendChatMessage = useCallback(

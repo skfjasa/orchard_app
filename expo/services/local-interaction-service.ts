@@ -284,6 +284,25 @@ export function applyReadWatermark(
   };
 }
 
+export function applySeenMatchId(
+  seenMatchIds: Record<string, string[]>,
+  ownerProfileId: string | undefined,
+  profileId: string
+): Record<string, string[]> {
+  if (!ownerProfileId) return seenMatchIds;
+
+  const ownerSeenMatchIds = seenMatchIds[ownerProfileId] ?? [];
+  const nextOwnerSeenMatchIds = addUniqueId(ownerSeenMatchIds, profileId);
+  if (nextOwnerSeenMatchIds === ownerSeenMatchIds) {
+    return seenMatchIds;
+  }
+
+  return {
+    ...seenMatchIds,
+    [ownerProfileId]: nextOwnerSeenMatchIds,
+  };
+}
+
 function appendOrCreateConversation(
   conversations: Conversation[],
   profileId: string,
