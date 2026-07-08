@@ -9,9 +9,10 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 ## Branch And Commit
 
 - Branch: `main`.
-- Remote state: ahead of `origin/main` by 36 commits as of latest check.
-- Latest checkpoint: `cd8d0ae` - Clarify Supabase discovery source of truth.
+- Remote state: clean with `origin/main` as of latest push.
+- Latest checkpoint: `6510765` - Sync agent state after milestone progress.
 - Recent relevant checkpoints:
+  - `6510765` - Sync agent state after milestone progress.
   - `cd8d0ae` - Clarify Supabase discovery source of truth.
   - `02ee0d9` - Draft beta release notes.
   - `e0bca1c` - Audit TestFlight app metadata.
