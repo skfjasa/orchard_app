@@ -389,6 +389,16 @@ Preserved behavior:
 - Backend profile update failures still log through the existing `[profile-provider] backend profile update failed` message.
 - `ProfileProvider` still owns React state application, local persistence mutation, and readiness flags.
 
+## Extracted Backend Swipe Actions
+
+Post-Slice 6 provider-internal cleanup moved backend swipe persistence calls behind `expo/services/backend-swipe-action-service.ts`.
+
+Preserved behavior:
+
+- Supabase swipe persistence still runs only when the service factory is in Supabase mode, swipe capability is Supabase-backed, and the authenticated user id matches the current profile id.
+- Backend swipe failures still log through the existing `[profile-provider] backend swipe failed` message.
+- `ProfileProvider` still owns local fixture activation, match-limit checks, super-like counters, and visible local match activation after a backend reciprocal match result.
+
 ## Current Role
 
 `ProfileProvider` is the central app-state provider for the prototype. It still owns UI-facing local state and coordinates persistence, but the first service and store boundaries have been extracted.
@@ -551,6 +561,7 @@ Runtime local helper modules now exist:
 - `expo/services/backend-match-action-service.ts`
 - `expo/services/backend-profile-action-service.ts`
 - `expo/services/backend-profile-bootstrap-service.ts`
+- `expo/services/backend-swipe-action-service.ts`
 - `expo/services/backend-match-hydration-service.ts`
 - `expo/services/backend-match-hydration-application-service.ts`
 - `expo/services/match-record-utils.ts`

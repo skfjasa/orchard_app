@@ -84,6 +84,8 @@ export { bootstrapBackendProfile } from "./backend-profile-bootstrap-service";
 
 export type { BackendProfileBootstrapResult } from "./backend-profile-bootstrap-service";
 
+export { recordBackendSwipe } from "./backend-swipe-action-service";
+
 export { buildBackendMatchHydrationPlan } from "./backend-match-hydration-service";
 
 export type {

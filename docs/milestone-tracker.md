@@ -200,6 +200,7 @@ Done:
 - [x] [C] Backend match/thread hydration application calculations now live in `expo/services/backend-match-hydration-application-service.ts`.
 - [x] [C] Backend profile complete-onboarding and update action calls now live in `expo/services/backend-profile-action-service.ts`.
 - [x] [C] Backend profile bootstrap loading and pending onboarding recovery now live in `expo/services/backend-profile-bootstrap-service.ts`.
+- [x] [C] Backend swipe persistence calls now live in `expo/services/backend-swipe-action-service.ts`.
 - [x] [C] Supabase discovery now excludes hosted test fixture rows by default; Fruit keeps its local fixture pool explicit instead of mixing hosted mock rows into backend discovery.
 
 Remaining:

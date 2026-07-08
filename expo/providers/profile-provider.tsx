@@ -24,6 +24,9 @@ import {
 } from "@/services/backend-profile-action-service";
 import { bootstrapBackendProfile } from "@/services/backend-profile-bootstrap-service";
 import {
+  recordBackendSwipe as recordBackendSwipeAction,
+} from "@/services/backend-swipe-action-service";
+import {
   mergeBackendHydratedConversations,
   mergeBackendLikedIds,
   mergeBackendNewMatchIds,
@@ -602,27 +605,15 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       targetId: string,
       decision: SwipeDecision
     ): Promise<SwipeResult | null> => {
-      if (mode !== "supabase") return null;
-      if (appServices.capabilities.swipes !== "supabase") return null;
-      if (!profile || !userId || profile.id !== userId) return null;
-
-      const result = await appServices.swipes.recordSwipe({
-        swiperId: userId,
-        targetId,
+      return recordBackendSwipeAction({
+        currentProfileId: profile?.id,
         decision,
+        services: appServices,
+        targetId,
+        userId,
       });
-
-      if (!result.ok) {
-        console.log("[profile-provider] backend swipe failed", {
-          code: result.error.code,
-          message: result.error.message,
-        });
-        return null;
-      }
-
-      return result.value;
     },
-    [appServices, mode, profile, userId]
+    [appServices, profile?.id, userId]
   );
 
   const activateLocalMatch = useCallback(
