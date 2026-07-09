@@ -33,6 +33,7 @@ Read if relevant:
 
 ## Latest Completed Work
 
+- Final handoff/status sync is pushed at `bd7c53a`; no active standalone non-human task remains from the latest audit pass.
 - Part 4 React Query/auth/error-boundary stabilization is implemented:
   - Profile and conversation persistence callbacks no longer depend on unstable React Query mutation result objects.
   - `AuthProvider` processes `Linking.getInitialURL()` so cold-start password-reset/email-confirmation callbacks can restore sessions.
@@ -77,6 +78,7 @@ Read if relevant:
 - `cd expo; bun run lint`: passed after M5 discovery change.
 - `git diff --check`: passed after M5 discovery change.
 - `expo/app.json` parsed after permission-string config.
+- `git diff --check`: passed after final docs-only sync `bd7c53a`; typecheck/lint were not rerun because no runtime code changed.
 
 ## UAT Still Needed
 

@@ -10,8 +10,13 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 
 - Branch: `main`.
 - Remote state: clean with `origin/main` as of latest push.
-- Latest checkpoint: `4f18af1` - Move match focus refresh to query invalidation.
+- Latest checkpoint: `bd7c53a` - Sync human-gated remaining work.
 - Recent relevant checkpoints:
+  - `bd7c53a` - Sync human-gated remaining work.
+  - `f960925` - Remove pass swipe provider wrapper.
+  - `9c32cc1` - Extract seen match application.
+  - `d14e2b8` - Extract monetization result application.
+  - `77f7d4d` - Stabilize query auth and route errors.
   - `4f18af1` - Move match focus refresh to query invalidation.
   - `0544a8a` - Reconcile privacy audit checklist.
   - `a041aa3` - Extract super like recharge helpers.
@@ -87,6 +92,8 @@ Latest code-touching checks:
 - `git diff --check`: passed after backend pass-swipe wrapper cleanup.
 
 No new human UAT was run after these checkpoints.
+
+Final docs-only sync `bd7c53a` ran `git diff --check`; typecheck/lint were not rerun because no runtime code changed.
 
 ## Current Blockers / Human Decisions
 
