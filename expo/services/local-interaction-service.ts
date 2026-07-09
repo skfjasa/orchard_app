@@ -1,6 +1,16 @@
 import { Conversation, Message, Profile } from "@/types";
 
 export type LocalGreetingKind = "like" | "super_like";
+type IdListUpdate = (updater: (prev: string[]) => string[]) => void;
+
+interface MarkLocalMatchSeenInput {
+  ownerProfileId: string | undefined;
+  profileId: string;
+  seenMatchIds: Record<string, string[]>;
+  setNewMatchIds: IdListUpdate;
+  setSeenMatchIds(seenMatchIds: Record<string, string[]>): void;
+  onSeenMatchIdsChanged?(seenMatchIds: Record<string, string[]>): void;
+}
 
 export function addUniqueId(ids: string[], id: string): string[] {
   if (ids.includes(id)) return ids;
@@ -301,6 +311,26 @@ export function applySeenMatchId(
     ...seenMatchIds,
     [ownerProfileId]: nextOwnerSeenMatchIds,
   };
+}
+
+export function markLocalMatchSeen({
+  ownerProfileId,
+  profileId,
+  seenMatchIds,
+  setNewMatchIds,
+  setSeenMatchIds,
+  onSeenMatchIdsChanged,
+}: MarkLocalMatchSeenInput) {
+  setNewMatchIds((prev) => removeId(prev, profileId));
+  const nextSeenMatchIds = applySeenMatchId(
+    seenMatchIds,
+    ownerProfileId,
+    profileId
+  );
+  if (nextSeenMatchIds === seenMatchIds) return;
+
+  onSeenMatchIdsChanged?.(nextSeenMatchIds);
+  setSeenMatchIds(nextSeenMatchIds);
 }
 
 function appendOrCreateConversation(

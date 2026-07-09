@@ -85,6 +85,7 @@ Preserved behavior:
 - Existing AsyncStorage keys are reused: `duet.readWatermarks.v1` and `duet.seenMatches.v1`.
 - `ProfileProvider.markRead` remains the compatibility wrapper for screens and still writes Supabase `match_read_states` when available; local watermark calculation is service-owned.
 - `ProfileProvider.markMatchSeen` remains the compatibility wrapper for screens; persisted seen-match calculation is service-owned.
+- `ProfileProvider.markMatchSeen` now delegates local seen-match state/ref application to `expo/services/local-interaction-service.ts`.
 - Provider selectors still expose `newMatchIds`, `matchedProfiles`, `inboxItems`, and badge counts.
 
 Not moved in Slice 3:

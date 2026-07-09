@@ -51,11 +51,10 @@ import {
 import {
   addUniqueId,
   applyReadWatermark,
-  applySeenMatchId,
+  markLocalMatchSeen,
   markConversationRead,
   mergeBackendConversation,
   newestMessageAt,
-  removeId,
 } from "@/services/local-interaction-service";
 import { applyLocalBlockCleanup } from "@/services/local-safety-action-service";
 import {
@@ -630,17 +629,17 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   );
 
   const markMatchSeen = useCallback(async (profileId: string) => {
-    setNewMatchIds((prev) => removeId(prev, profileId));
-    const nextSeenMatchIds = applySeenMatchId(
-      seenMatchIdsRef.current,
-      profile?.id,
-      profileId
-    );
-    if (nextSeenMatchIds === seenMatchIdsRef.current) return;
-
-    seenMatchIdsRef.current = nextSeenMatchIds;
-    setSeenMatchIds(nextSeenMatchIds);
-  }, [profile?.id]);
+    markLocalMatchSeen({
+      ownerProfileId: profile?.id,
+      profileId,
+      seenMatchIds: seenMatchIdsRef.current,
+      setNewMatchIds,
+      setSeenMatchIds,
+      onSeenMatchIdsChanged: (nextSeenMatchIds) => {
+        seenMatchIdsRef.current = nextSeenMatchIds;
+      },
+    });
+  }, [profile?.id, setSeenMatchIds]);
 
   const persistBackendChatMessage = useCallback(
     (targetId: string, text: string, options: { appendLocalEcho?: boolean } = {}) => {
