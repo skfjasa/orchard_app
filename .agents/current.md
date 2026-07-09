@@ -10,15 +10,16 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 
 - Branch: `main`.
 - Remote state: clean with `origin/main` as of latest push.
-- Latest checkpoint: `6510765` - Sync agent state after milestone progress.
+- Latest checkpoint: `487e94e` - Consolidate partner profile mutation wrapper.
 - Recent relevant checkpoints:
+  - `487e94e` - Consolidate partner profile mutation wrapper.
+  - `68d9a08` - Record backend first chat audit.
+  - `b54027b` - Record chat unmatch block audit.
+  - `6c0c2f6` - Record chat send failure audit.
+  - `d5d01a5` - Record pushed sync state.
   - `6510765` - Sync agent state after milestone progress.
   - `cd8d0ae` - Clarify Supabase discovery source of truth.
   - `02ee0d9` - Draft beta release notes.
-  - `e0bca1c` - Audit TestFlight app metadata.
-  - `96a78d9` - Refresh continuity after release prep.
-  - `0af8c4e` - Add EAS build configuration.
-  - `d149606` - Record hosted filtering source audit.
   - `cb8ff54` - Add root app error boundary.
   - `6b24afe` - Add repeatable full-flow UAT checklist.
   - `054679d` - Document Supabase moderation workflow.
@@ -28,7 +29,9 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 ## Current Product / Technical State
 
 - Current milestone remains **M4 - Supabase source-of-truth app session**.
-- M1 provider/facade cleanup has advanced: local read-watermark and seen-match preference calculations now live in `expo/services/local-interaction-service.ts`.
+- M1 provider/facade cleanup has advanced:
+  - Local read-watermark and seen-match preference calculations live in `expo/services/local-interaction-service.ts`.
+  - Partner-link local profile mutations now share one provider-local persistence helper instead of repeating the same wrapper across invite/resend/accept/remove.
 - M7 safety/moderation work advanced:
   - Privacy/logging audit found no production analytics calls and no private message bodies/raw profile text/PII in current diagnostics.
   - Fixture audit confirmed deterministic test emails/ids and fictional mock copy; original human-like dating/profile language is intentionally preserved for simulation realism.
@@ -42,6 +45,10 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
   - Current app metadata/assets were audited: `Orchard`, slug `orchard`, version `1.0.0`, iOS bundle `com.orchardapp.ios`, Android package `com.orchardapp.android`, and 1024x1024 branded icon/adaptive/splash assets.
 - M8/M10 release preparation advanced: `docs/beta-release-notes.md` contains draft tester instructions, beta description, and reviewer-note scaffolding with placeholders only.
 - M5 discovery advanced: Supabase-mode Discover now relies on the backend discovery service/swipe table for query exclusions instead of local liked/passed ids; mock mode still uses local exclusions.
+- M6 chat source audits advanced:
+  - Real/non-fixture Supabase text chat is backend-first and appends local conversation state only from successful backend messages.
+  - Supabase text-send failures do not create false local sent bubbles.
+  - Unmatch/block source paths remove local conversation visibility and server policies deny read/send once inactive; hosted UAT remains.
 - `ProfileProvider` remains active as a compatibility facade. App routes/components no longer import `useProfile()` directly; focused read-model hooks own route/provider access.
 - Supabase mode has auth/profile/photo/discovery/match/chat/read-state/Realtime paths in varying degrees.
 - Mock/Fruit/demo mode remains required and should not be broken by hosted-mode work.
@@ -53,6 +60,9 @@ Latest code-touching checks:
 - `cd expo; bun run typecheck`: passed after M5 Supabase discovery source-of-truth change.
 - `cd expo; bun run lint`: passed after M5 Supabase discovery source-of-truth change.
 - `git diff --check`: passed after M5 Supabase discovery source-of-truth change.
+- `cd expo; bun run typecheck`: passed after partner profile mutation wrapper cleanup.
+- `cd expo; bun run lint`: passed after partner profile mutation wrapper cleanup.
+- `git diff --check`: passed after partner profile mutation wrapper cleanup.
 - `expo/app.json` JSON parse check passed after permission-string config.
 
 No new human UAT was run after these checkpoints.
@@ -77,4 +87,4 @@ No new human UAT was run after these checkpoints.
 
 ## Next Recommended Task
 
-Best next non-UAT task: inspect M6 backend-first chat failure behavior and verify whether Supabase text-message failures can create misleading local sent state. Do not change local simulated replies or photo-request behavior until the M6 product decision is made.
+Best next non-UAT task: continue M1 provider/facade cleanup with another small behavior-preserving extraction, or move to M4/M5/M7 hosted UAT prep when a human/device testing window is available. Do not change Supabase-mode fixture simulated replies or photo-request behavior until the M6 product decision is made.

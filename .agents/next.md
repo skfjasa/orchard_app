@@ -31,6 +31,7 @@ Read if relevant:
 
 ## Latest Completed Work
 
+- Partner-link local profile mutations now share one provider-local persistence helper instead of repeating the same wrapper across invite/resend/accept/remove.
 - M6 source audit confirmed Supabase text-send failures do not create a misleading local sent message; remaining acceptance is hosted failure-path UAT and possible visible retry/error UX.
 - M6 source audit confirmed unmatch/block remove local conversation visibility and server-side message policies deny read/send once a match is inactive; hosted UAT remains.
 - M6 source audit confirmed real/non-fixture Supabase text chat is backend-first; fixture simulated replies/photo-request behavior remains pending product decision.
