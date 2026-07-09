@@ -532,6 +532,17 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     [appServices, saveProfileMutation]
   );
 
+  const mutateLocalProfile = useCallback(
+    (mutateProfile: (profile: Profile | null) => Profile | null) => {
+      setProfile((prev) =>
+        applyProfileMutation(prev, mutateProfile, (next) =>
+          saveProfileMutation.mutate(next)
+        )
+      );
+    },
+    [saveProfileMutation]
+  );
+
   const updateProfile = useCallback(
     (patch: Partial<Profile>) => {
       setProfile((prev) =>
@@ -1030,54 +1041,38 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
   const invitePartner = useCallback(
     (email: string, displayName?: string) => {
-      setProfile((prev) =>
-        applyProfileMutation(
-          prev,
-          (current) => addPartnerInvite(current, email, displayName),
-          (next) => saveProfileMutation.mutate(next)
-        )
+      mutateLocalProfile((current) =>
+        addPartnerInvite(current, email, displayName)
       );
     },
-    [saveProfileMutation]
+    [mutateLocalProfile]
   );
 
   const resendPartnerInvite = useCallback(
     (partnerId: string) => {
-      setProfile((prev) =>
-        applyProfileMutation(
-          prev,
-          (current) => resendLocalPartnerInvite(current, partnerId),
-          (next) => saveProfileMutation.mutate(next)
-        )
+      mutateLocalProfile((current) =>
+        resendLocalPartnerInvite(current, partnerId)
       );
     },
-    [saveProfileMutation]
+    [mutateLocalProfile]
   );
 
   const acceptPartnerLink = useCallback(
     (partnerId: string) => {
-      setProfile((prev) =>
-        applyProfileMutation(
-          prev,
-          (current) => acceptLocalPartnerLink(current, partnerId),
-          (next) => saveProfileMutation.mutate(next)
-        )
+      mutateLocalProfile((current) =>
+        acceptLocalPartnerLink(current, partnerId)
       );
     },
-    [saveProfileMutation]
+    [mutateLocalProfile]
   );
 
   const removePartnerLink = useCallback(
     (partnerId: string) => {
-      setProfile((prev) =>
-        applyProfileMutation(
-          prev,
-          (current) => removeLocalPartnerLink(current, partnerId),
-          (next) => saveProfileMutation.mutate(next)
-        )
+      mutateLocalProfile((current) =>
+        removeLocalPartnerLink(current, partnerId)
       );
     },
-    [saveProfileMutation]
+    [mutateLocalProfile]
   );
 
   const isBoosted = useMemo(() => {

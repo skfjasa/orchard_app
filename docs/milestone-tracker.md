@@ -284,6 +284,7 @@ Done:
 - [x] [C] Backend remembered display-profile cache merge logic now lives in `expo/services/backend-profile-display-service.ts`.
 - [x] [C] Profile lookup cache resolution now lives in `expo/services/backend-profile-display-service.ts`.
 - [x] [C] Supabase discovery now excludes hosted test fixture rows by default; Fruit keeps its local fixture pool explicit instead of mixing hosted mock rows into backend discovery.
+- [x] [C] Partner-link local profile mutations now share one provider-local persistence helper instead of repeating the same `setProfile`/`applyProfileMutation`/save wrapper across invite, resend, accept, and remove actions.
 
 Remaining:
 
