@@ -35,6 +35,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
   - Super-like recharge timing calculation now lives in `expo/services/local-monetization-service.ts`; the provider applies the resulting store reset.
   - Local purchase/subscription result application now lives in `expo/services/local-monetization-service.ts`; provider facade actions delegate store updates.
   - Local seen-match state/ref application for `markMatchSeen` now delegates to `expo/services/local-interaction-service.ts`.
+  - Backend pass-swipe persistence now calls `recordBackendSwipe` directly through `expo/services/backend-swipe-action-service.ts` instead of a provider-owned wrapper.
   - Matches/Inbox focus refresh no longer depends on a provider `refreshBackendMatches` facade; focused hooks invalidate the React Query matches key directly.
 - M7 safety/moderation work advanced:
   - Privacy/logging audit found no production analytics calls and no private message bodies/raw profile text/PII in current diagnostics.
@@ -81,6 +82,9 @@ Latest code-touching checks:
 - `cd expo; bun run typecheck`: passed after local seen-match action cleanup.
 - `cd expo; bun run lint`: passed after local seen-match action cleanup.
 - `git diff --check`: passed after local seen-match action cleanup.
+- `cd expo; bun run typecheck`: passed after backend pass-swipe wrapper cleanup.
+- `cd expo; bun run lint`: passed after backend pass-swipe wrapper cleanup.
+- `git diff --check`: passed after backend pass-swipe wrapper cleanup.
 
 No new human UAT was run after these checkpoints.
 

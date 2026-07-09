@@ -30,7 +30,7 @@ import {
 } from "@/services/backend-profile-action-service";
 import { bootstrapBackendProfile } from "@/services/backend-profile-bootstrap-service";
 import {
-  recordBackendSwipe as recordBackendSwipeAction,
+  recordBackendSwipe,
   resolveBackendSwipeVisibleMatch,
 } from "@/services/backend-swipe-action-service";
 import {
@@ -107,7 +107,6 @@ import {
 import type { MatchRecord } from "@/services/match-service";
 import type { ReportReason } from "@/services/safety-service";
 import type { ServiceResponse } from "@/services/service-types";
-import type { SwipeDecision, SwipeResult } from "@/services/swipe-service";
 import { useChatUiStore } from "@/store/use-chat-ui-store";
 import { useInteractionStore } from "@/store/use-interaction-store";
 import { useMonetizationStore } from "@/store/use-monetization-store";
@@ -598,22 +597,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const slotsRemaining = Math.max(0, totalSlots - slotsUsed);
   const isAtMatchLimit = slotsRemaining <= 0;
 
-  const recordBackendSwipe = useCallback(
-    async (
-      targetId: string,
-      decision: SwipeDecision
-    ): Promise<SwipeResult | null> => {
-      return recordBackendSwipeAction({
-        currentProfileId: profile?.id,
-        decision,
-        services: appServices,
-        targetId,
-        userId,
-      });
-    },
-    [appServices, profile?.id, userId]
-  );
-
   const activateLocalMatch = useCallback(
     (id: string, kind: "like" | "super_like") => {
       activateLocalMatchState({
@@ -872,9 +855,15 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         profileId: id,
         setPassedIds,
       });
-      void recordBackendSwipe(id, "pass");
+      void recordBackendSwipe({
+        currentProfileId: profile?.id,
+        decision: "pass",
+        services: appServices,
+        targetId: id,
+        userId,
+      });
     },
-    [recordBackendSwipe, setPassedIds]
+    [appServices, profile?.id, setPassedIds, userId]
   );
 
   const sendMessage = useCallback(

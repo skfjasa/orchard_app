@@ -278,6 +278,7 @@ Done:
 - [x] [C] Backend profile bootstrap loading and pending onboarding recovery now live in `expo/services/backend-profile-bootstrap-service.ts`.
 - [x] [C] Backend swipe persistence calls now live in `expo/services/backend-swipe-action-service.ts`.
 - [x] [C] Backend swipe visible-match decisions now live in `expo/services/backend-swipe-action-service.ts`.
+- [x] [C] Local pass actions now call `recordBackendSwipe` directly through `expo/services/backend-swipe-action-service.ts` instead of a provider-owned wrapper.
 - [x] [C] Report, block, and account-deletion safety service calls now live in `expo/services/safety-action-service.ts`.
 - [x] [C] Profile provider sign-out reset bookkeeping now lives in `expo/services/profile-provider-reset-service.ts`.
 - [x] [C] Backend bootstrap reset bookkeeping now lives in `expo/services/profile-provider-reset-service.ts`.
