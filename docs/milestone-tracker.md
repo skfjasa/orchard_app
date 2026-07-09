@@ -436,10 +436,11 @@ Done:
 - [x] [C] Chat route is guarded by active-match checks.
 - [x] [C] Source audit confirmed Supabase text-send failures do not create a misleading local sent message. Real backend-profile sends append to the local conversation only after `services.chat.sendMessage` returns `ok`; failures currently log and leave no false sent bubble.
 - [x] [C] Source audit confirmed unmatch/block paths remove local conversation visibility and server-side policies deny message read/send once the match is inactive. `unmatch_match` marks matches `unmatched`, `block_profile` marks matches `blocked`, message RLS depends on `private.can_access_active_match`, and database tests cover unmatched/blocked message denial.
+- [x] [C] Source audit confirmed real/non-fixture Supabase text chat is backend-first: `sendMessage` sends non-mock backend profile ids through `persistBackendChatMessage` only, and the local conversation is updated only from the successful backend message.
 
 Remaining:
 
-- [ ] [C] Make text chat backend-first for Supabase mode.
+- [~] [C+H] Make all Supabase-mode chat behavior backend-first. Real/non-fixture text chat is done; fixture simulated replies and photo-request behavior remain intentionally unchanged until the product decision is made.
 - [ ] [H] Decide what to do with local simulated replies and photo-request behavior in Supabase mode.
 - [ ] [U] Confirm message send failure behavior in hosted UAT. Source audit is done; remaining acceptance is real failure-path UAT and deciding whether to add visible retry/error UX.
 - [ ] [U] Confirm unmatch/block immediately prevents further message visibility and sending in hosted UAT. Source audit is done; remaining acceptance is real-device/backend UAT.

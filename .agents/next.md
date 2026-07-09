@@ -4,9 +4,9 @@ Continue safely through the milestone list from `docs/milestone-tracker.md`.
 
 Recommended next non-UAT task:
 
-1. Continue M6 backend-first chat audit without changing local simulated replies/photo-request behavior.
-2. Inspect whether text chat is already backend-first for non-fixture Supabase profiles and identify the smallest remaining code/doc gap.
-3. Keep the product-decision item open for local simulated replies/photo-request behavior in Supabase mode.
+1. Continue non-human M1 provider/facade cleanup.
+2. Inspect residual `ProfileProvider` state/action wrappers and extract only a small, behavior-preserving helper if it reduces provider ownership.
+3. Avoid changing Supabase-mode fixture simulated replies/photo-request behavior until the M6 product decision is made.
 4. Keep hosted UAT items open unless a human/device test is actually run.
 
 Avoid changing Supabase-mode fixture simulated replies/photo behavior until the product decision in M6 is made.
@@ -33,6 +33,7 @@ Read if relevant:
 
 - M6 source audit confirmed Supabase text-send failures do not create a misleading local sent message; remaining acceptance is hosted failure-path UAT and possible visible retry/error UX.
 - M6 source audit confirmed unmatch/block remove local conversation visibility and server-side message policies deny read/send once a match is inactive; hosted UAT remains.
+- M6 source audit confirmed real/non-fixture Supabase text chat is backend-first; fixture simulated replies/photo-request behavior remains pending product decision.
 - Supabase-mode Discover now relies on backend discovery/swipe state for query exclusions instead of local liked/passed ids; mock mode still uses local exclusions.
 - Draft tester instructions, beta description, and App Store reviewer-note scaffolding now live in `docs/beta-release-notes.md` with placeholders only.
 - TestFlight app metadata/icon/splash/permission-string audit is recorded; `expo/app.json` has explicit photo-library and microphone permission strings and blocks camera permission.
