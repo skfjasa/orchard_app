@@ -348,6 +348,7 @@ Done:
 
 - [x] [C] Email/password signup and sign-in are wired.
 - [x] [C] Forgot-password recovery is wired for hosted Supabase accounts: reset email, recovery callback detection, and in-app password update.
+- [x] [C] Auth provider cold-start deep linking now calls `Linking.getInitialURL()` so password reset and email confirmation links can be processed when the app launches from a cold start.
 - [x] [C+U] Hosted email confirmation can resume onboarding/profile persistence.
 - [x] [C] Pending confirmation screen exists.
 - [x] [C] Profile/member rows persist to Supabase.
@@ -382,6 +383,7 @@ Done:
 - [x] [C] Bootstrap/back instrumentation has been added for Android Chrome UAT diagnostics.
 - [x] [C] Matches cards mark a match as seen before navigating to detail, so immediate back cannot outrun the detail-screen seen effect.
 - [x] [C+U] Focused UAT confirmed Android Chat, desktop Chat, desktop Match Detail, and Android Match Detail back navigation return to canonical views without white browser reload, stale detail screen, hash sentinel, or empty/fixture-only state.
+- [x] [C] React Query mutation dependency stabilization removed unstable mutation object dependencies from persisted conversation/profile save callbacks.
 
 Remaining:
 
@@ -507,6 +509,10 @@ Exit criteria:
 ## M9 - Analytics, Crash Reporting, QA Hardening
 
 Status: `[ ]`
+
+Done:
+
+- [x] [C] Nested tab and onboarding route-group error boundaries exist with retry fallbacks and message-only diagnostic logging.
 
 Remaining:
 

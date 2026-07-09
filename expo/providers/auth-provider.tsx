@@ -193,7 +193,17 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     const client = supabase;
 
     let mounted = true;
-    void processAuthCallbackUrl(getCurrentWebUrl()).finally(() => {
+    void (async () => {
+      await processAuthCallbackUrl(getCurrentWebUrl());
+      try {
+        const initialUrl = await Linking.getInitialURL();
+        await processAuthCallbackUrl(initialUrl ?? undefined);
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Unable to read initial URL.";
+        console.log("[auth-provider] getInitialURL error", message);
+      }
+    })().finally(() => {
       if (!mounted) return;
       client.auth.getSession().then(({ data, error }) => {
         if (!mounted) return;

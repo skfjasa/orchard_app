@@ -1,11 +1,41 @@
-import { Tabs } from "expo-router";
+import { Tabs, type ErrorBoundaryProps } from "expo-router";
 import { Citrus, Compass, Heart, MessageCircle, User } from "lucide-react-native";
-import React from "react";
-import { Platform, StyleSheet } from "react-native";
+import React, { useEffect } from "react";
+import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 import ProtectedRoute from "@/components/navigation/ProtectedRoute";
 import Colors from "@/constants/colors";
 import { useTabBadgeReadModel } from "@/hooks/use-tab-badge-read-model";
+
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  useEffect(() => {
+    console.log("[tabs-error-boundary]", error.message);
+  }, [error.message]);
+
+  return (
+    <View style={styles.errorRoot}>
+      <View style={styles.errorPanel}>
+        <Text style={styles.errorTitle}>This tab needs a retry</Text>
+        <Text style={styles.errorBody}>
+          Orchard hit an unexpected tab error. Retry this area to continue.
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => {
+            void retry();
+          }}
+          style={({ pressed }) => [
+            styles.errorButton,
+            pressed && styles.errorButtonPressed,
+          ]}
+          testID="tabs-error-retry"
+        >
+          <Text style={styles.errorButtonText}>Retry</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
 
 export default function TabLayout() {
   return (
@@ -99,5 +129,43 @@ const styles = StyleSheet.create({
     fontWeight: "800" as const,
     minWidth: 18,
     height: 18,
+  },
+  errorRoot: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.light.background,
+    padding: 24,
+  },
+  errorPanel: {
+    width: "100%",
+    maxWidth: 420,
+    gap: 16,
+  },
+  errorTitle: {
+    color: Colors.light.text,
+    fontSize: 24,
+    fontWeight: "800" as const,
+  },
+  errorBody: {
+    color: Colors.light.textMuted,
+    fontSize: 16,
+    lineHeight: 23,
+  },
+  errorButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 52,
+    borderRadius: 8,
+    backgroundColor: Colors.light.tint,
+    paddingHorizontal: 20,
+  },
+  errorButtonPressed: {
+    opacity: 0.85,
+  },
+  errorButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "700" as const,
   },
 });

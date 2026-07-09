@@ -258,6 +258,11 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const saveProfileMutation = useMutation({
     mutationFn: saveStoredProfile,
   });
+  const saveProfileRef = useRef(saveProfileMutation.mutate);
+
+  useEffect(() => {
+    saveProfileRef.current = saveProfileMutation.mutate;
+  }, [saveProfileMutation.mutate]);
 
   useEffect(() => {
     if (mode !== "supabase") {
@@ -337,10 +342,10 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       userId,
     });
     setProfile(null);
-    saveProfileMutation.mutate(null);
+    saveProfileRef.current(null);
     setBackendProfileHydrated(false);
     setBackendMatchesHydrated(false);
-  }, [hydrated, mode, profile, saveProfileMutation, userId]);
+  }, [hydrated, mode, profile, userId]);
 
   useEffect(() => {
     if (mode !== "supabase") return;
@@ -368,7 +373,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
       if (result.status === "loaded") {
         setProfile(result.profile);
-        saveProfileMutation.mutate(result.profile);
+        saveProfileRef.current(result.profile);
       }
 
       setBackendProfileHydrated(true);
@@ -383,7 +388,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     hydrated,
     mode,
     profile,
-    saveProfileMutation,
     session?.user.email,
     userId,
   ]);
@@ -520,22 +524,22 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       const profileToStore = result.profile;
       console.log("[profile-provider] completeOnboarding", profileToStore.id);
       setProfile(profileToStore);
-      saveProfileMutation.mutate(profileToStore);
+      saveProfileRef.current(profileToStore);
       setBackendProfileHydrated(true);
       return { ok: true };
     },
-    [appServices, saveProfileMutation]
+    [appServices]
   );
 
   const mutateLocalProfile = useCallback(
     (mutateProfile: (profile: Profile | null) => Profile | null) => {
       setProfile((prev) =>
         applyProfileMutation(prev, mutateProfile, (next) =>
-          saveProfileMutation.mutate(next)
+          saveProfileRef.current(next)
         )
       );
     },
-    [saveProfileMutation]
+    []
   );
 
   const updateProfile = useCallback(
@@ -550,12 +554,12 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
               profileId: next.id,
               services: appServices,
             });
-            saveProfileMutation.mutate(next);
+            saveProfileRef.current(next);
           }
         )
       );
     },
-    [appServices, saveProfileMutation]
+    [appServices]
   );
 
   const signOut = useCallback(async () => {
@@ -576,12 +580,11 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       setNewMatchIds,
       setProfile,
     });
-    saveProfileMutation.mutate(null);
+    saveProfileRef.current(null);
     return result ?? { ok: true as const };
   }, [
     mode,
     signOutAuth,
-    saveProfileMutation,
     replaceConversations,
     resetInteractions,
     resetMonetization,

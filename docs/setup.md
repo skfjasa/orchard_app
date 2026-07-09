@@ -148,7 +148,7 @@ Current milestone and next tasks live in `docs/milestone-tracker.md`.
 
 ## Expected Environment Variables
 
-Create a future `.env` from `.env.example` once it exists.
+Create `expo/.env` from `expo/.env.example` when hosted/Supabase testing is needed.
 
 Expected variables:
 

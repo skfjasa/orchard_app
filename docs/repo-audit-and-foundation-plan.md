@@ -29,11 +29,16 @@ The original deletion plan is not the right execution path. The repo rules and m
 
 ### Finding 1: Web Navigation Race Conditions
 
-Android Chrome UAT exposed a blank white transient reload/state gap around Match Detail browser/device back. Current code still contains manual web history/hash handling:
+Android Chrome UAT exposed a blank white transient reload/state gap around Match Detail browser/device back. Earlier code contained manual web history/hash handling:
 
 - `expo/app/(tabs)/matches.tsx`: manual `window.history.pushState(...)`.
-- `expo/hooks/use-canonical-back.ts`: custom web `popstate` handling.
+- `expo/hooks/use-canonical-back.ts`: focused web `popstate` normalization.
 - `expo/app/match/[id].tsx`: Match Detail opts into that web handling.
+
+Current note:
+
+- The Match-tab hash sentinel has been removed.
+- `useCanonicalBack` still intentionally normalizes focused web `popstate` events to the route's canonical destination for Chat and Match Detail, based on later Android Chrome/mobile-web UAT.
 
 Current product impact:
 
@@ -132,6 +137,10 @@ Validation:
 - `cd expo; bun run lint`
 - Desktop browser: open Match Detail from Matches, use browser back, confirm Matches returns without blank/empty state.
 - Android Chrome UAT: repeat the current order-dependent flow. Capture whether the white flash remains after removing the hash workaround.
+
+Implementation note:
+
+- The original target was to remove all web `popstate` handling. Later UAT kept a narrower `useCanonicalBack` web normalization path while removing the Match-tab hash sentinel and raw Match-tab history push.
 
 ### Slice 2: Domain Inventory And Facade Contract
 
@@ -387,6 +396,29 @@ Remaining follow-up:
 
 - Continue isolating provider-owned hydration application and facade action wrappers in small behavior-preserving slices.
 
+## Part 4: React Query Stabilization & Deep Link Fixes (Added by Gemini 3.1 Pro on 2026-07-08)
+
+Status: implemented 2026-07-09.
+
+> [!CAUTION]
+> **To the executing agent (Codex):** A critical infinite render loop vulnerability was discovered in the Slice 5b React Query integration. `useMutation` returns a new object reference on every render, which destroys the memoization of `applyBackendMatches` and causes the app to endlessly ping the Supabase backend. You must execute the following stabilization steps.
+
+### Step 1: Fix `useMutation` Dependency Arrays
+- **[DONE] `expo/hooks/use-persisted-conversations.ts`**
+  - In `replaceConversations` and `updateConversations`, remove `saveConversationsMutation` from the `useCallback` dependency arrays. Instead, pass `saveConversationsMutation.mutate` or use a stable ref.
+- **[DONE] `expo/providers/profile-provider.tsx`**
+  - In `completeOnboarding`, `updateProfile`, and `signOut`, remove `saveProfileMutation` from the dependency arrays and pass `saveProfileMutation.mutate` instead.
+  - Verify that `applyBackendMatches` and the background sync `useEffect` (around line 500) now maintain stable references.
+
+### Step 2: Fix Auth Deep Linking (Cold Starts)
+- **[DONE] `expo/providers/auth-provider.tsx`**
+  - The current `Linking.addEventListener("url", onUrl)` only handles background-to-foreground deep links.
+  - Add `Linking.getInitialURL()` to correctly capture and process deep links (like Supabase password resets or email confirmations) when the app launches from a cold start.
+
+### Step 3: Nested Error Boundaries
+- **[DONE] `expo/app/(tabs)/_layout.tsx`** & **`expo/app/onboarding/_layout.tsx`**
+  - Wrap these layouts in an `ErrorBoundary` so that tab or onboarding crashes degrade gracefully instead of bubbling up to the root layout and killing the session.
+
 ## Deprecated Items Removed From Active Plan
 
 These items are no longer active instructions:
@@ -402,4 +434,4 @@ Historical rationale for these removed items is preserved in [Architecture Audit
 
 ## Current Recommended Next Step
 
-Slices 2 through 6 and Slice 5b are implemented, and provider-internal cleanup has started with selector, prototype monetization, chat UI state, local conversation persistence, local chat simulation timing, backend match lookup, backend chat send/read action orchestration, Supabase discovery fixture filtering, React Query polling/realtime invalidation handover, and pure conversation helper extraction. Next, continue moving one small state domain at a time out of `ProfileProvider` without changing visible UI or mock/Supabase behavior.
+Slices 2 through 6, Slice 5b, and Part 4 are implemented. Provider-internal cleanup has started with selector, prototype monetization, chat UI state, local conversation persistence, local chat simulation timing, backend match lookup, backend chat send/read action orchestration, Supabase discovery fixture filtering, React Query polling/realtime invalidation handover, and pure conversation helper extraction. Next, continue moving one small state domain at a time out of `ProfileProvider` without changing visible UI or mock/Supabase behavior, or run hosted UAT when a human testing window is available.

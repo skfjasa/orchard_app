@@ -150,6 +150,21 @@ Superseded areas:
 
 - It is no longer the active safety checklist. Current safety/privacy status lives in `docs/milestone-tracker.md` M7 and M9.
 
+### July 2026 Deep Audit (Added by Gemini 3.1 Pro on 2026-07-08)
+
+Date: 2026-07-08.
+
+Useful historical context:
+- Confirmed the "Great Decoupling" of `ProfileProvider` into focused domain services (e.g., `backend-match-hydration-service`) was highly successful and aligned with the intended architecture.
+- Validated security posture: `credentials` (passwords) are strictly scrubbed before `AsyncStorage` caching via `stripLocalCredentials()`, and Supabase RLS correctly enforces `_own` and `_active_match_member` policies.
+- Identified that `useMutation` dependency arrays in the new React Query architecture can cause infinite render loops because the hook returns a new object reference on every render. Fixed in code on 2026-07-09 by routing profile/conversation persistence through stable refs.
+- Identified missing `Linking.getInitialURL()` implementation in `AuthProvider`, breaking cold-start deep links. Fixed in code on 2026-07-09.
+- Identified missing nested `ErrorBoundary` coverage in tab/onboarding layouts. Fixed in code on 2026-07-09.
+- Identified missing `app.json` intent filters / associated domains. This remains blocked on final public domain/deep-link decisions.
+
+Superseded areas:
+- (None yet, these are active findings.)
+
 ## Durable Decisions
 
 - Orchard should remain iOS-first for the MVP, with Android later.

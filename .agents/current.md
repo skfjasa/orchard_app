@@ -1,6 +1,6 @@
 # Current Agent State
 
-Last updated: 2026-07-08
+Last updated: 2026-07-09
 
 ## Objective
 
@@ -27,6 +27,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 
 ## Current Product / Technical State
 
+- React Query/auth/error-boundary stabilization from `docs/repo-audit-and-foundation-plan.md` Part 4 is implemented. Profile and conversation persistence callbacks now call stable mutation refs, `AuthProvider` processes cold-start auth callback URLs with `Linking.getInitialURL()`, and tab/onboarding route groups have retry error boundaries.
 - Current milestone remains **M4 - Supabase source-of-truth app session**.
 - M1 provider/facade cleanup has advanced:
   - Local read-watermark and seen-match preference calculations live in `expo/services/local-interaction-service.ts`.
@@ -69,6 +70,9 @@ Latest code-touching checks:
 - `cd expo; bun run lint`: passed after match focus refresh moved to query invalidation.
 - `git diff --check`: passed after match focus refresh moved to query invalidation.
 - `expo/app.json` JSON parse check passed after permission-string config.
+- `cd expo; bun run typecheck`: passed after Part 4 React Query/auth/error-boundary stabilization.
+- `cd expo; bun run lint`: passed after Part 4 React Query/auth/error-boundary stabilization.
+- `git diff --check`: passed after Part 4 React Query/auth/error-boundary stabilization and status doc updates.
 
 No new human UAT was run after these checkpoints.
 

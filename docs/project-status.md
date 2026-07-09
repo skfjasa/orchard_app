@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-07-08
+Last updated: 2026-07-09
 
 ## Current Repo State
 
@@ -252,6 +252,7 @@ Last updated: 2026-07-08
 - Backend display-profile completeness, selection, remembered-cache merge, and profile lookup resolution helpers now live behind `expo/services/backend-profile-display-service.ts`, shared by profile-provider lookup/cache hydration and backend match hydration planning. `ProfileProvider` still owns the refs, React state, facade callback, and cache persistence calls.
 - Supabase discovery now excludes hosted test fixture rows by default through an explicit `includeTestFixtures` discovery filter. Discover and Fruit both leave hosted fixtures out of backend discovery, while Fruit continues to use its local `FRUIT_PROFILES` fixture pool for demo/test behavior.
 - Foundation Slice 5b hands backend match polling and Realtime refresh control to React Query. `useMatchesQuery` now runs when Supabase/profile bootstrap is ready, polls every 10 seconds, `useMatchRealtime` invalidates match queries on Supabase match/message changes, and the root layout bridges native app foreground state into React Query focus handling. `ProfileProvider` still applies the existing backend match/thread merge algorithm when query data changes, while Matches/Inbox focus refresh now invalidates the query key directly through `useRefreshMatchesOnFocus`.
+- Part 4 React Query/auth/error-boundary stabilization is implemented: profile and conversation persistence callbacks no longer depend on unstable mutation result objects, `AuthProvider` processes `Linking.getInitialURL()` for cold-start auth callbacks, and tab/onboarding route groups now have local retry error boundaries.
 - Profile-tab sign-out now clears profile/auth state before routing to `/onboarding`, preventing the user from landing on Discover with no profile/data loaded.
 - Remaining observed behavior to decide/fix later: after sign-out/sign-in, only hosted messages are restored; local fixture greeting/simulated messages are intentionally not persisted to hosted chat yet.
 - The original generated onboarding background was recovered from the previous remote URL, vendored as `expo/assets/images/welcome-background.png`, and the welcome, sign-in, and pending-confirmation screens now use the local bundled asset instead of the app icon background or a remote Rork URL.
@@ -267,7 +268,7 @@ Last updated: 2026-07-08
 
 ## Current Task
 
-Provider-internal cleanup after Slice 6 has moved pure compatibility selectors, prototype monetization state, local chat UI state, local conversation state/persistence, local read/seen preference application, local chat simulation timing, local chat text/photo action orchestration, local match activation and stale-match cleanup, local block cleanup, local profile mutation persistence application, safety service calls, sign-out/backend-bootstrap reset bookkeeping, backend display-profile helpers/cache merge/profile lookup, backend match-pair lookup, backend match/thread hydration planning and application, backend profile complete/update calls, backend profile bootstrap loading/pending recovery, backend swipe persistence/visible-match decisions, backend chat send/read action orchestration, backend unmatch orchestration, Supabase discovery fixture filtering, React Query polling/realtime invalidation control, and pure backend conversation merge/read-through helpers out of `ProfileProvider` while preserving route hooks, facade members, storage keys, and visible behavior.
+Provider-internal cleanup after Slice 6 has moved pure compatibility selectors, prototype monetization state, local chat UI state, local conversation state/persistence, local read/seen preference application, local chat simulation timing, local chat text/photo action orchestration, local match activation and stale-match cleanup, local block cleanup, local profile mutation persistence application, safety service calls, sign-out/backend-bootstrap reset bookkeeping, backend display-profile helpers/cache merge/profile lookup, backend match-pair lookup, backend match/thread hydration planning and application, backend profile complete/update calls, backend profile bootstrap loading/pending recovery, backend swipe persistence/visible-match decisions, backend chat send/read action orchestration, backend unmatch orchestration, Supabase discovery fixture filtering, React Query polling/realtime invalidation control, React Query mutation stabilization, cold-start auth callback handling, nested error boundaries, and pure backend conversation merge/read-through helpers out of `ProfileProvider` while preserving route hooks, facade members, storage keys, and visible behavior.
 
 ## Next Planned Tasks
 

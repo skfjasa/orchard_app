@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { saveStoredConversations } from "@/services/local-profile-storage";
 import type { Conversation } from "@/types";
@@ -11,6 +11,11 @@ export function usePersistedConversations() {
   const saveConversationsMutation = useMutation({
     mutationFn: saveStoredConversations,
   });
+  const saveConversationsRef = useRef(saveConversationsMutation.mutate);
+
+  useEffect(() => {
+    saveConversationsRef.current = saveConversationsMutation.mutate;
+  }, [saveConversationsMutation.mutate]);
 
   const hydrateConversations = useCallback((next: Conversation[]) => {
     setConversationsState(next);
@@ -19,9 +24,9 @@ export function usePersistedConversations() {
   const replaceConversations = useCallback(
     (next: Conversation[]) => {
       setConversationsState(next);
-      saveConversationsMutation.mutate(next);
+      saveConversationsRef.current(next);
     },
-    [saveConversationsMutation]
+    []
   );
 
   const updateConversations = useCallback(
@@ -29,12 +34,12 @@ export function usePersistedConversations() {
       setConversationsState((current) => {
         const next = updater(current);
         if (next !== current) {
-          saveConversationsMutation.mutate(next);
+          saveConversationsRef.current(next);
         }
         return next;
       });
     },
-    [saveConversationsMutation]
+    []
   );
 
   return {
