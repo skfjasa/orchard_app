@@ -434,12 +434,13 @@ Done:
 - [x] [C+U] Read state persists in `match_read_states`.
 - [x] [C+U] Realtime-triggered match/message refresh works in hosted UAT.
 - [x] [C] Chat route is guarded by active-match checks.
+- [x] [C] Source audit confirmed Supabase text-send failures do not create a misleading local sent message. Real backend-profile sends append to the local conversation only after `services.chat.sendMessage` returns `ok`; failures currently log and leave no false sent bubble.
 
 Remaining:
 
 - [ ] [C] Make text chat backend-first for Supabase mode.
 - [ ] [H] Decide what to do with local simulated replies and photo-request behavior in Supabase mode.
-- [ ] [C+U] Confirm message send failures do not create misleading local sent state.
+- [ ] [U] Confirm message send failure behavior in hosted UAT. Source audit is done; remaining acceptance is real failure-path UAT and deciding whether to add visible retry/error UX.
 - [ ] [C+U] Confirm unmatch/block immediately prevents further message visibility and sending.
 - [x] [C] Confirm private messages are never sent to analytics/logging. Source audit on 2026-07-08 found no production analytics calls; chat logs include ids/lengths/status only, not message bodies.
 

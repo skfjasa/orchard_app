@@ -4,10 +4,10 @@ Continue safely through the milestone list from `docs/milestone-tracker.md`.
 
 Recommended next non-UAT task:
 
-1. Inspect M6 backend-first text chat behavior for Supabase mode.
-2. Confirm whether backend send failures can create misleading local sent state.
-3. If the source audit confirms no misleading local sent state, update `docs/milestone-tracker.md` and `docs/project-status.md`; otherwise make the smallest code fix.
-4. Avoid changing local simulated replies or photo-request behavior until the M6 product decision is made.
+1. Continue M6 backend-first chat audit without changing local simulated replies/photo-request behavior.
+2. Inspect unmatch/block message visibility and sending paths in Supabase mode.
+3. If source audit confirms server/client guards are adequate, update `docs/milestone-tracker.md` and `docs/project-status.md`; otherwise make the smallest code fix.
+4. Keep hosted UAT items open unless a human/device test is actually run.
 
 Avoid changing Supabase-mode fixture simulated replies/photo behavior until the product decision in M6 is made.
 
@@ -31,6 +31,7 @@ Read if relevant:
 
 ## Latest Completed Work
 
+- M6 source audit confirmed Supabase text-send failures do not create a misleading local sent message; remaining acceptance is hosted failure-path UAT and possible visible retry/error UX.
 - Supabase-mode Discover now relies on backend discovery/swipe state for query exclusions instead of local liked/passed ids; mock mode still uses local exclusions.
 - Draft tester instructions, beta description, and App Store reviewer-note scaffolding now live in `docs/beta-release-notes.md` with placeholders only.
 - TestFlight app metadata/icon/splash/permission-string audit is recorded; `expo/app.json` has explicit photo-library and microphone permission strings and blocks camera permission.
