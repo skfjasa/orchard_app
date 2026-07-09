@@ -33,6 +33,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
   - Local read-watermark and seen-match preference calculations live in `expo/services/local-interaction-service.ts`.
   - Partner-link local profile mutations now share one provider-local persistence helper instead of repeating the same wrapper across invite/resend/accept/remove.
   - Super-like recharge timing calculation now lives in `expo/services/local-monetization-service.ts`; the provider applies the resulting store reset.
+  - Local purchase/subscription result application now lives in `expo/services/local-monetization-service.ts`; provider facade actions delegate store updates.
   - Matches/Inbox focus refresh no longer depends on a provider `refreshBackendMatches` facade; focused hooks invalidate the React Query matches key directly.
 - M7 safety/moderation work advanced:
   - Privacy/logging audit found no production analytics calls and no private message bodies/raw profile text/PII in current diagnostics.
@@ -73,6 +74,9 @@ Latest code-touching checks:
 - `cd expo; bun run typecheck`: passed after Part 4 React Query/auth/error-boundary stabilization.
 - `cd expo; bun run lint`: passed after Part 4 React Query/auth/error-boundary stabilization.
 - `git diff --check`: passed after Part 4 React Query/auth/error-boundary stabilization and status doc updates.
+- `cd expo; bun run typecheck`: passed after monetization result application cleanup.
+- `cd expo; bun run lint`: passed after monetization result application cleanup.
+- `git diff --check`: passed after monetization result application cleanup.
 
 No new human UAT was run after these checkpoints.
 

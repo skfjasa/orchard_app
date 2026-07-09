@@ -36,6 +36,7 @@ Read if relevant:
   - Profile and conversation persistence callbacks no longer depend on unstable React Query mutation result objects.
   - `AuthProvider` processes `Linking.getInitialURL()` so cold-start password-reset/email-confirmation callbacks can restore sessions.
   - Tab and onboarding route groups now have local retry error boundaries.
+- Local purchase/subscription result application now lives in `expo/services/local-monetization-service.ts`; provider facade actions delegate store updates while preserving demo behavior.
 - Matches/Inbox focus refresh no longer depends on a provider `refreshBackendMatches` facade; focused read-model hooks invalidate the React Query matches key directly.
 - M9 privacy checklist now reflects the completed privacy/logging audit: no production analytics calls and diagnostics avoid private message bodies/raw profile text/photos/PII.
 - Super-like recharge timing calculation now lives in `expo/services/local-monetization-service.ts`; `ProfileProvider` keeps only the effect that applies the store reset.
@@ -60,6 +61,9 @@ Read if relevant:
 - `cd expo; bun run typecheck`: passed after Part 4 stabilization.
 - `cd expo; bun run lint`: passed after Part 4 stabilization.
 - `git diff --check`: passed after Part 4 stabilization and status doc updates.
+- `cd expo; bun run typecheck`: passed after monetization result application cleanup.
+- `cd expo; bun run lint`: passed after monetization result application cleanup.
+- `git diff --check`: passed after monetization result application cleanup.
 - `cd expo; bun run typecheck`: passed after M5 discovery change.
 - `cd expo; bun run lint`: passed after M5 discovery change.
 - `git diff --check`: passed after M5 discovery change.

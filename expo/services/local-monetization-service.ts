@@ -9,6 +9,8 @@ import {
 
 import type { SubscriptionState } from "./local-profile-storage";
 
+type NumericUpdater = number | ((current: number) => number);
+
 export interface LocalPurchaseResult {
   extraSlotsDelta?: number;
   boostedUntil?: number;
@@ -22,6 +24,14 @@ export interface LocalSubscriptionResult {
   extraSlotsDelta: number;
   superLikeBalanceDelta: number;
   boostedUntil?: number;
+}
+
+export interface LocalMonetizationSetters {
+  setBoostedUntil(boostedUntil: number | null): void;
+  setExtraSlots(extraSlots: NumericUpdater): void;
+  setSubscription(subscription: SubscriptionState | null): void;
+  setSuperLikeBalance(superLikeBalance: NumericUpdater): void;
+  setSuperLikeLastUseAt(superLikeLastUseAt: number | null): void;
 }
 
 export function applyLocalPurchase(
@@ -70,6 +80,53 @@ export function createLocalSubscription(
     superLikeBalanceDelta: plan.monthlySuperLikes,
     boostedUntil: plan.includesBoost ? now + BOOST_DURATION_MS : undefined,
   };
+}
+
+export function applyLocalPurchaseResult(
+  result: LocalPurchaseResult,
+  setters: Pick<
+    LocalMonetizationSetters,
+    | "setBoostedUntil"
+    | "setExtraSlots"
+    | "setSuperLikeBalance"
+    | "setSuperLikeLastUseAt"
+  >
+) {
+  if (typeof result.extraSlotsDelta === "number") {
+    const delta = result.extraSlotsDelta;
+    setters.setExtraSlots((value) => value + delta);
+  }
+  if (typeof result.boostedUntil === "number") {
+    setters.setBoostedUntil(result.boostedUntil);
+  }
+  if (typeof result.superLikeBalance === "number") {
+    setters.setSuperLikeBalance(result.superLikeBalance);
+  }
+  if (typeof result.superLikeBalanceDelta === "number") {
+    const delta = result.superLikeBalanceDelta;
+    setters.setSuperLikeBalance((value) => value + delta);
+  }
+  if ("superLikeLastUseAt" in result) {
+    setters.setSuperLikeLastUseAt(result.superLikeLastUseAt ?? null);
+  }
+}
+
+export function applyLocalSubscriptionResult(
+  result: LocalSubscriptionResult,
+  setters: Pick<
+    LocalMonetizationSetters,
+    | "setBoostedUntil"
+    | "setExtraSlots"
+    | "setSubscription"
+    | "setSuperLikeBalance"
+  >
+) {
+  setters.setSubscription(result.subscription);
+  setters.setExtraSlots((value) => value + result.extraSlotsDelta);
+  setters.setSuperLikeBalance((value) => value + result.superLikeBalanceDelta);
+  if (typeof result.boostedUntil === "number") {
+    setters.setBoostedUntil(result.boostedUntil);
+  }
 }
 
 export function isLocalBoostActive(boostedUntil: number | null, now = Date.now()) {

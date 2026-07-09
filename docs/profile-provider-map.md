@@ -226,6 +226,7 @@ Preserved behavior:
 
 - Existing AsyncStorage keys are reused: `duet.extraSlots.v1`, `duet.boostedUntil.v1`, `duet.superLikeBalance.v1`, `duet.superLikeLastUse.v1`, and `duet.subscription.v1`.
 - `ProfileProvider.purchase`, `subscribe`, and `cancelSubscription` remain compatibility wrappers.
+- Purchase/subscription result application now lives in `expo/services/local-monetization-service.ts`; the provider facade only logs the action, computes the local result, and delegates store updates.
 - Demo paywall, boost, match-slot, super-like refill, subscription, and auto-recharge behavior is unchanged.
 
 ## Extracted Chat UI Store

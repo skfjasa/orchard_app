@@ -65,6 +65,8 @@ import {
 } from "@/services/local-profile-storage";
 import {
   applyLocalPurchase,
+  applyLocalPurchaseResult,
+  applyLocalSubscriptionResult,
   createLocalSubscription,
   getSuperLikeRechargeAt,
   isLocalBoostActive,
@@ -975,28 +977,12 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     (id: PurchaseId) => {
       console.log("[profile-provider] purchase", id);
       const result = applyLocalPurchase(id, superLikeBalance);
-
-      if (typeof result.extraSlotsDelta === "number") {
-        const delta = result.extraSlotsDelta;
-        setExtraSlots((v) => {
-          return v + delta;
-        });
-      }
-      if (typeof result.boostedUntil === "number") {
-        setBoostedUntil(result.boostedUntil);
-      }
-      if (typeof result.superLikeBalance === "number") {
-        setSuperLikeBalance(result.superLikeBalance);
-      }
-      if (typeof result.superLikeBalanceDelta === "number") {
-        const delta = result.superLikeBalanceDelta;
-        setSuperLikeBalance((v) => {
-          return v + delta;
-        });
-      }
-      if ("superLikeLastUseAt" in result) {
-        setSuperLikeLastUseAt(result.superLikeLastUseAt ?? null);
-      }
+      applyLocalPurchaseResult(result, {
+        setBoostedUntil,
+        setExtraSlots,
+        setSuperLikeBalance,
+        setSuperLikeLastUseAt,
+      });
     },
     [
       superLikeBalance,
@@ -1012,17 +998,12 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       console.log("[profile-provider] subscribe", id);
       const result = createLocalSubscription(id);
       if (!result) return;
-      setSubscription(result.subscription);
-
-      setExtraSlots((v) => {
-        return v + result.extraSlotsDelta;
+      applyLocalSubscriptionResult(result, {
+        setBoostedUntil,
+        setExtraSlots,
+        setSubscription,
+        setSuperLikeBalance,
       });
-      setSuperLikeBalance((v) => {
-        return v + result.superLikeBalanceDelta;
-      });
-      if (typeof result.boostedUntil === "number") {
-        setBoostedUntil(result.boostedUntil);
-      }
     },
     [
       setBoostedUntil,
