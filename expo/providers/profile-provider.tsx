@@ -66,7 +66,9 @@ import {
 import {
   applyLocalPurchase,
   createLocalSubscription,
+  getSuperLikeRechargeAt,
   isLocalBoostActive,
+  shouldRechargeSuperLikes,
 } from "@/services/local-monetization-service";
 import {
   acceptPartnerLink as acceptLocalPartnerLink,
@@ -99,7 +101,6 @@ import {
   DEFAULT_SUPER_LIKES,
   Profile,
   PurchaseId,
-  SUPER_LIKE_RECHARGE_MS,
   SubscriptionId,
 } from "@/types";
 import type { MatchRecord } from "@/services/match-service";
@@ -1080,9 +1081,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   }, [boostedUntil]);
 
   const superLikeRechargeAt = useMemo(() => {
-    if (superLikeBalance >= DEFAULT_SUPER_LIKES) return null;
-    if (!superLikeLastUseAt) return null;
-    return superLikeLastUseAt + SUPER_LIKE_RECHARGE_MS;
+    return getSuperLikeRechargeAt(superLikeBalance, superLikeLastUseAt);
   }, [superLikeBalance, superLikeLastUseAt]);
 
   const getProfileById = useCallback(
@@ -1133,10 +1132,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
   useEffect(() => {
     if (!hydrated) return;
-    if (superLikeBalance >= DEFAULT_SUPER_LIKES) return;
-    if (!superLikeLastUseAt) return;
-    const due = superLikeLastUseAt + SUPER_LIKE_RECHARGE_MS;
-    if (Date.now() >= due) {
+    if (shouldRechargeSuperLikes(superLikeBalance, superLikeLastUseAt)) {
       console.log("[profile-provider] super like auto-recharge");
       setSuperLikeBalance(DEFAULT_SUPER_LIKES);
       setSuperLikeLastUseAt(null);

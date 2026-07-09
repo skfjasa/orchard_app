@@ -285,6 +285,7 @@ Done:
 - [x] [C] Profile lookup cache resolution now lives in `expo/services/backend-profile-display-service.ts`.
 - [x] [C] Supabase discovery now excludes hosted test fixture rows by default; Fruit keeps its local fixture pool explicit instead of mixing hosted mock rows into backend discovery.
 - [x] [C] Partner-link local profile mutations now share one provider-local persistence helper instead of repeating the same `setProfile`/`applyProfileMutation`/save wrapper across invite, resend, accept, and remove actions.
+- [x] [C] Super-like recharge timing calculation now lives in `expo/services/local-monetization-service.ts`; `ProfileProvider` keeps only the effect that applies the store update.
 
 Remaining:
 

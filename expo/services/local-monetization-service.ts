@@ -4,6 +4,7 @@ import {
   PurchaseId,
   SUBSCRIPTION_OPTIONS,
   SubscriptionId,
+  SUPER_LIKE_RECHARGE_MS,
 } from "@/types";
 
 import type { SubscriptionState } from "./local-profile-storage";
@@ -74,4 +75,25 @@ export function createLocalSubscription(
 export function isLocalBoostActive(boostedUntil: number | null, now = Date.now()) {
   if (!boostedUntil) return false;
   return boostedUntil > now;
+}
+
+export function getSuperLikeRechargeAt(
+  superLikeBalance: number,
+  superLikeLastUseAt: number | null
+): number | null {
+  if (superLikeBalance >= DEFAULT_SUPER_LIKES) return null;
+  if (!superLikeLastUseAt) return null;
+  return superLikeLastUseAt + SUPER_LIKE_RECHARGE_MS;
+}
+
+export function shouldRechargeSuperLikes(
+  superLikeBalance: number,
+  superLikeLastUseAt: number | null,
+  now = Date.now()
+): boolean {
+  const rechargeAt = getSuperLikeRechargeAt(
+    superLikeBalance,
+    superLikeLastUseAt
+  );
+  return rechargeAt !== null && now >= rechargeAt;
 }
