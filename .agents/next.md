@@ -4,10 +4,11 @@ Continue safely through the milestone list from `docs/milestone-tracker.md`.
 
 Recommended next non-UAT task:
 
-1. Continue non-human M1 provider/facade cleanup.
-2. Inspect residual `ProfileProvider` state/action wrappers and extract only a small, behavior-preserving helper if it reduces provider ownership.
-3. Avoid changing Supabase-mode fixture simulated replies/photo-request behavior until the M6 product decision is made.
-4. Keep hosted UAT items open unless a human/device test is actually run.
+1. Most remaining M3-M10 tracker items are human decisions or hosted UAT.
+2. Continue non-human work only where it is a small, behavior-preserving M1 provider/facade cleanup.
+3. Avoid transient-empty guard movement until M4 back-navigation/first-render UAT can verify it.
+4. Avoid changing Supabase-mode fixture simulated replies/photo-request behavior until the M6 product decision is made.
+5. Keep hosted UAT items open unless a human/device test is actually run.
 
 Avoid changing Supabase-mode fixture simulated replies/photo behavior until the product decision in M6 is made.
 
@@ -31,6 +32,9 @@ Read if relevant:
 
 ## Latest Completed Work
 
+- Matches/Inbox focus refresh no longer depends on a provider `refreshBackendMatches` facade; focused read-model hooks invalidate the React Query matches key directly.
+- M9 privacy checklist now reflects the completed privacy/logging audit: no production analytics calls and diagnostics avoid private message bodies/raw profile text/photos/PII.
+- Super-like recharge timing calculation now lives in `expo/services/local-monetization-service.ts`; `ProfileProvider` keeps only the effect that applies the store reset.
 - Partner-link local profile mutations now share one provider-local persistence helper instead of repeating the same wrapper across invite/resend/accept/remove.
 - M6 source audit confirmed Supabase text-send failures do not create a misleading local sent message; remaining acceptance is hosted failure-path UAT and possible visible retry/error UX.
 - M6 source audit confirmed unmatch/block remove local conversation visibility and server-side message policies deny read/send once a match is inactive; hosted UAT remains.

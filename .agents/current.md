@@ -10,16 +10,15 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 
 - Branch: `main`.
 - Remote state: clean with `origin/main` as of latest push.
-- Latest checkpoint: `487e94e` - Consolidate partner profile mutation wrapper.
+- Latest checkpoint: `4f18af1` - Move match focus refresh to query invalidation.
 - Recent relevant checkpoints:
+  - `4f18af1` - Move match focus refresh to query invalidation.
+  - `0544a8a` - Reconcile privacy audit checklist.
+  - `a041aa3` - Extract super like recharge helpers.
+  - `eadb12b` - Sync handoff after provider cleanup.
   - `487e94e` - Consolidate partner profile mutation wrapper.
   - `68d9a08` - Record backend first chat audit.
   - `b54027b` - Record chat unmatch block audit.
-  - `6c0c2f6` - Record chat send failure audit.
-  - `d5d01a5` - Record pushed sync state.
-  - `6510765` - Sync agent state after milestone progress.
-  - `cd8d0ae` - Clarify Supabase discovery source of truth.
-  - `02ee0d9` - Draft beta release notes.
   - `cb8ff54` - Add root app error boundary.
   - `6b24afe` - Add repeatable full-flow UAT checklist.
   - `054679d` - Document Supabase moderation workflow.
@@ -32,6 +31,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 - M1 provider/facade cleanup has advanced:
   - Local read-watermark and seen-match preference calculations live in `expo/services/local-interaction-service.ts`.
   - Partner-link local profile mutations now share one provider-local persistence helper instead of repeating the same wrapper across invite/resend/accept/remove.
+  - Super-like recharge timing calculation now lives in `expo/services/local-monetization-service.ts`; the provider applies the resulting store reset.
+  - Matches/Inbox focus refresh no longer depends on a provider `refreshBackendMatches` facade; focused hooks invalidate the React Query matches key directly.
 - M7 safety/moderation work advanced:
   - Privacy/logging audit found no production analytics calls and no private message bodies/raw profile text/PII in current diagnostics.
   - Fixture audit confirmed deterministic test emails/ids and fictional mock copy; original human-like dating/profile language is intentionally preserved for simulation realism.
@@ -49,6 +50,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
   - Real/non-fixture Supabase text chat is backend-first and appends local conversation state only from successful backend messages.
   - Supabase text-send failures do not create false local sent bubbles.
   - Unmatch/block source paths remove local conversation visibility and server policies deny read/send once inactive; hosted UAT remains.
+- M9 QA/privacy status advanced: privacy/logging audit is now reflected in the M9 checklist item for not capturing private messages, raw profile text, photos, or PII.
 - `ProfileProvider` remains active as a compatibility facade. App routes/components no longer import `useProfile()` directly; focused read-model hooks own route/provider access.
 - Supabase mode has auth/profile/photo/discovery/match/chat/read-state/Realtime paths in varying degrees.
 - Mock/Fruit/demo mode remains required and should not be broken by hosted-mode work.
@@ -63,6 +65,9 @@ Latest code-touching checks:
 - `cd expo; bun run typecheck`: passed after partner profile mutation wrapper cleanup.
 - `cd expo; bun run lint`: passed after partner profile mutation wrapper cleanup.
 - `git diff --check`: passed after partner profile mutation wrapper cleanup.
+- `cd expo; bun run typecheck`: passed after match focus refresh moved to query invalidation.
+- `cd expo; bun run lint`: passed after match focus refresh moved to query invalidation.
+- `git diff --check`: passed after match focus refresh moved to query invalidation.
 - `expo/app.json` JSON parse check passed after permission-string config.
 
 No new human UAT was run after these checkpoints.
@@ -87,4 +92,4 @@ No new human UAT was run after these checkpoints.
 
 ## Next Recommended Task
 
-Best next non-UAT task: continue M1 provider/facade cleanup with another small behavior-preserving extraction, or move to M4/M5/M7 hosted UAT prep when a human/device testing window is available. Do not change Supabase-mode fixture simulated replies or photo-request behavior until the M6 product decision is made.
+Best next task: most remaining tracker items are now human decisions or hosted UAT. For non-human work, continue only with very small M1 provider/facade cleanup slices that avoid M4 transient-empty/back-navigation risk, or prepare UAT support materials when a human testing window is available. Do not change Supabase-mode fixture simulated replies or photo-request behavior until the M6 product decision is made.
