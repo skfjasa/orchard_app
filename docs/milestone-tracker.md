@@ -239,8 +239,8 @@ Done:
 
 Remaining:
 
-- [ ] [C] Keep this tracker, `.agents/current.md`, `.agents/next.md`, and `docs/project-status.md` in sync when milestone status changes.
-- [ ] [C] Keep `docs/repo-audit-and-foundation-plan.md` aligned with the current provider extraction strategy when architecture decisions change.
+- [x] [C] This tracker, `.agents/current.md`, `.agents/next.md`, and `docs/project-status.md` are synced through the latest pushed provider cleanup checkpoints.
+- [x] [C] `docs/repo-audit-and-foundation-plan.md` is aligned with the current provider extraction strategy and Part 4 stabilization status.
 
 ## M1 - App Foundation And Adapter Boundaries
 
@@ -308,7 +308,7 @@ Remaining:
     - [x] [C] Edit Profile, Paywall, Report, and Safety & Legal now use focused read-model hooks.
     - [x] [C] Profile tab, onboarding photos/sign-in, tab badges, root redirect, and ProtectedRoute/bootstrap gates now use focused read-model hooks.
 - [x] [C] Slice 5b: Hand over background polling and cache invalidation to React Query (remove manual setInterval/AppState from ProfileProvider and extract Realtime invalidation).
-- [ ] [C] Continue isolating remaining provider-owned application paths, especially residual provider facade state and action wrappers.
+- [~] [C+U] Continue isolating remaining provider-owned application paths only as explicitly selected, PR-sized slices. Further nontrivial movement touches bootstrap, chat, or source-of-truth behavior and should be paired with targeted UAT.
 
 Exit criteria:
 
@@ -337,7 +337,7 @@ Remaining:
 
 - [ ] [H] Decide whether Supabase DB tests should run automatically on migration PRs.
 - [ ] [H+C] Create production Supabase project later: `orchard-prod`.
-- [ ] [C] Keep `docs/supabase-schema.md` current after schema/RLS migrations.
+- [x] [C] `docs/supabase-schema.md` is current through migration `202607040004`; no schema/RLS migrations changed in the latest app cleanup work.
 
 Exit criteria:
 
@@ -520,8 +520,8 @@ Done:
 Remaining:
 
 - [ ] [H] Decide PostHog, Sentry, both, or neither for inner-circle testing.
-- [ ] [C] Add env-gated analytics/crash setup if approved.
-- [ ] [C] Track privacy-safe funnel/safety events only.
+- [ ] [C+H] Add env-gated analytics/crash setup if PostHog, Sentry, both, or neither is approved.
+- [ ] [C+H] Track privacy-safe funnel/safety events only if analytics is approved.
 - [x] [C] Do not capture private messages, raw profile text, or PII. Privacy/logging audit on 2026-07-08 found no production analytics calls and current diagnostics log ids/counts/lengths/status metadata rather than private message bodies, raw profile text, photos, or PII.
 - [x] [C] Create repeatable UAT checklist for auth, onboarding, discovery, matching, chat, safety, and sign-out/sign-in. See "Repeatable Full-Flow UAT Checklist" above.
 - [ ] [H] Decide whether to automate more E2E/browser smoke checks.
@@ -570,7 +570,7 @@ Remaining:
 
 - [ ] [H] Decide production package name.
 - [ ] [C+H] Review adaptive icon and Android permissions.
-- [ ] [C] Configure Android EAS build/AAB.
+- [ ] [C+H] Configure Android EAS build/AAB after the Android package/distribution decision.
 - [ ] [C+H] Prepare Play Console internal testing docs.
 
 Exit criteria:

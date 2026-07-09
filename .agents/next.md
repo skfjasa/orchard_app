@@ -4,11 +4,12 @@ Continue safely through the milestone list from `docs/milestone-tracker.md`.
 
 Recommended next non-UAT task:
 
-1. Most remaining M3-M10 tracker items are human decisions or hosted UAT.
-2. Continue non-human work only where it is a small, behavior-preserving M1 provider/facade cleanup.
-3. Avoid transient-empty guard movement until M4 back-navigation/first-render UAT can verify it.
-4. Avoid changing Supabase-mode fixture simulated replies/photo-request behavior until the M6 product decision is made.
-5. Keep hosted UAT items open unless a human/device test is actually run.
+1. No active standalone non-human task remains from the latest audit pass.
+2. Most remaining M3-M10 tracker items are human decisions or hosted UAT.
+3. Further provider/facade cleanup should be explicitly selected as a PR-sized slice and paired with targeted UAT because remaining paths touch bootstrap, chat fixture behavior, or source-of-truth transitions.
+4. Avoid transient-empty guard movement until M4 back-navigation/first-render UAT can verify it.
+5. Avoid changing Supabase-mode fixture simulated replies/photo-request behavior until the M6 product decision is made.
+6. Keep hosted UAT items open unless a human/device test is actually run.
 
 Avoid changing Supabase-mode fixture simulated replies/photo behavior until the product decision in M6 is made.
 

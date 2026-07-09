@@ -276,7 +276,7 @@ Provider-internal cleanup after Slice 6 has moved pure compatibility selectors, 
 ## Next Planned Tasks
 
 1. Human UAT forgot-password flow on hosted Supabase/ngrok when practical: request reset email, open link, set new password, sign in with the new password, and confirm the old password no longer works.
-2. Continue provider-internal cleanup after Slice 6/Slice 5b: isolate remaining residual provider facade state and action wrapper paths without changing visible UI.
+2. Run targeted hosted/mobile UAT for M4-M7. Remaining provider cleanup should be explicitly selected as a PR-sized slice and paired with targeted UAT because the remaining paths touch bootstrap, chat fixture behavior, or source-of-truth transitions.
 3. Continue Supabase source-of-truth session bootstrap for inner-circle testing: profile, active matches, display profiles/photos, inbox summaries, thread snippets, unread/read state, and block/unmatch visibility should load before tabs render.
 4. Monitor Android Match Detail's brief app-background loading step; optimize only if it is multi-second, frequent after warmup, or loses rows/highlight state.
 5. Decide whether seen-match/highlight state remains local-only for inner-circle testing or moves to backend-backed per-user state.

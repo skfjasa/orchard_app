@@ -108,4 +108,4 @@ No new human UAT was run after these checkpoints.
 
 ## Next Recommended Task
 
-Best next task: most remaining tracker items are now human decisions or hosted UAT. For non-human work, continue only with very small M1 provider/facade cleanup slices that avoid M4 transient-empty/back-navigation risk, or prepare UAT support materials when a human testing window is available. Do not change Supabase-mode fixture simulated replies or photo-request behavior until the M6 product decision is made.
+Best next task: run human/hosted UAT for M4-M7 when practical. All active non-human tasks from the latest audit pass are handled and pushed. Further provider/facade cleanup should be explicitly selected as a PR-sized slice and paired with targeted UAT because the remaining paths touch bootstrap, chat fixture behavior, or source-of-truth transitions. Do not change Supabase-mode fixture simulated replies or photo-request behavior until the M6 product decision is made.
