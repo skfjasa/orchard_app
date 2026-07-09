@@ -375,29 +375,17 @@ Validation:
 
 Status: implemented 2026-07-08.
 
-> [!WARNING]
-> **To the executing agent (Codex):** The previous Slice 5 extraction created `useMatchesQuery` but left it neutered (`enabled: false`). It is currently being manually triggered by `ProfileProvider.refreshBackendMatches` inside `setInterval` loops. Execute the following steps to permanently hand over the background polling control flow to React Query and dismantle the manual loops.
+Current state:
 
-### Step 1: Remove Manual Polling from `ProfileProvider`
-- **[MODIFY] `expo/providers/profile-provider.tsx`**
-  - Delete the `setInterval` block that triggers `refreshBackendMatches` based on `BACKEND_MATCH_REFRESH_INTERVAL_MS`.
-  - Delete the `AppState.addEventListener` block that triggers `refreshBackendMatches` on app focus.
+- `useMatchesQuery` runs when Supabase profile/bootstrap readiness is true.
+- React Query owns 10-second backend match polling and window-focus refetch.
+- `useMatchRealtime` invalidates match queries when Supabase match/message changes arrive.
+- Matches and Inbox focus refresh use `useRefreshMatchesOnFocus` to invalidate the React Query matches key directly.
+- `ProfileProvider` no longer exposes `refreshBackendMatches` as a compatibility facade. It still applies the existing backend match/thread hydration algorithm when query data changes.
 
-### Step 2: Native React Query Configuration
-- **[MODIFY] `expo/hooks/api/use-matches.ts`**
-  - Remove `enabled: false`. Allow the query to run natively when the `profileId` is present and the mode is `supabase`.
-  - Add `refetchInterval: 10000` (10 seconds) to the `useQuery` config so React Query handles the background polling automatically.
-  - Add `refetchOnWindowFocus: true` so React Query handles the AppState foregrounding automatically.
+Remaining follow-up:
 
-### Step 3: Extract Realtime Subscriptions
-- **[NEW] `expo/hooks/api/use-match-realtime.ts`**
-  - Move the Supabase Realtime subscription logic (`appServices.realtime.subscribeToMatchAndMessageChanges`) out of `ProfileProvider` and into this new hook.
-  - Instead of calling `refreshBackendMatches()` on a socket event, this hook should simply call `queryClient.invalidateQueries({ queryKey: ["matches"] })`.
-
-### Step 4: Isolate the Data Merge Algorithm
-- **[MODIFY] `expo/providers/profile-provider.tsx` (or extract to a service)**
-  - Move the complex merging of `useMatchesQuery.data` (which merges backend threads, Fruit profiles, and Mock modes into Zustand stores) out of the manual `refreshBackendMatches` function.
-  - Instead, run this merge logic reactively inside a `useEffect` that listens for changes to `useMatchesQuery.data`, or preferably inside the `select` / `onSuccess` handlers of the React Query hook itself.
+- Continue isolating provider-owned hydration application and facade action wrappers in small behavior-preserving slices.
 
 ## Deprecated Items Removed From Active Plan
 

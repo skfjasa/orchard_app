@@ -40,7 +40,6 @@ Categories:
 | `getProfileById` | UI selector/facade | Used by Chat/Match Detail; migrate behind profile lookup hook. |
 | `getConversation` | UI selector/facade | Used by Chat; migrate behind chat-thread hook. |
 | `hasActiveMatch` | UI selector/facade / server state | Compatibility guard; future owner should use active match source of truth. |
-| `refreshBackendMatches` | Server state | Future owner: query invalidation/refetch hooks. |
 | `rememberProfiles` | Server state / UI selector | Display-cache helper; should shrink as backend profile query ownership improves. |
 | `completeOnboarding` | Auth/profile bootstrap | Profile creation facade over local/mock and Supabase profile service. |
 | `updateProfile` | Auth/profile bootstrap | Profile mutation facade. |
@@ -133,7 +132,7 @@ Preserved behavior:
 - Hooks wrap existing `appServices` methods instead of calling Supabase directly from screens.
 - Query keys include backend mode and relevant profile/match/filter inputs.
 - `Discover` and `Fruit` use `useDiscoveryProfilesQuery` for discovery reads while preserving local deck/grid state and existing UI behavior.
-- `ProfileProvider.refreshBackendMatches` uses `useMatchesQuery().refetch()` for match listing while keeping the current match/thread merge algorithm, Realtime refresh, and polling fallback intact.
+- Matches and Inbox focus refresh now invalidates the React Query matches key through `useRefreshMatchesOnFocus`; `ProfileProvider` no longer exposes a manual match-refresh facade method.
 
 Not moved in Slice 5:
 

@@ -209,7 +209,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     profileId: userId,
     services: appServices,
   });
-  const refetchBackendMatchesQuery = backendMatchesQuery.refetch;
   useMatchRealtime({
     enabled: canQueryBackendMatches,
     matchIds: backendActiveMatchIds,
@@ -497,11 +496,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     session?.access_token,
     userId,
   ]);
-
-  const refreshBackendMatches = useCallback(async () => {
-    if (!canQueryBackendMatches) return;
-    await refetchBackendMatchesQuery();
-  }, [canQueryBackendMatches, refetchBackendMatchesQuery]);
 
   useEffect(() => {
     if (!backendMatchesQuery.data) return;
@@ -1176,7 +1170,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       getProfileById,
       getConversation,
       hasActiveMatch,
-      refreshBackendMatches,
       completeOnboarding,
       rememberProfiles,
       markMatchSeen,
@@ -1235,7 +1228,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       getProfileById,
       getConversation,
       hasActiveMatch,
-      refreshBackendMatches,
       completeOnboarding,
       rememberProfiles,
       markMatchSeen,

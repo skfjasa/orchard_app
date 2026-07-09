@@ -1,6 +1,6 @@
-import { useFocusEffect } from "expo-router";
 import { useCallback, useMemo } from "react";
 
+import { useRefreshMatchesOnFocus } from "@/hooks/use-refresh-matches-on-focus";
 import { useTransientEmptyList } from "@/hooks/use-transient-empty-list";
 import { useProfile } from "@/providers/profile-provider";
 
@@ -9,7 +9,6 @@ export function useInboxReadModel() {
     inboxItems,
     markRead,
     profile,
-    refreshBackendMatches,
     typingProfileIds,
   } = useProfile();
   const visibleItems = useTransientEmptyList(inboxItems);
@@ -18,11 +17,7 @@ export function useInboxReadModel() {
     [typingProfileIds]
   );
 
-  useFocusEffect(
-    useCallback(() => {
-      void refreshBackendMatches();
-    }, [refreshBackendMatches])
-  );
+  useRefreshMatchesOnFocus();
 
   const isTyping = useCallback(
     (profileId: string) => typingProfileIdSet.has(profileId),

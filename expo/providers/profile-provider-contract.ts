@@ -56,7 +56,6 @@ export interface ProfileProviderContract {
   getProfileById(profileId: string): Profile | undefined;
   getConversation(profileId: string): Conversation | undefined;
   hasActiveMatch(profileId: string): boolean;
-  refreshBackendMatches(): Promise<void>;
   completeOnboarding(profile: Profile): Promise<ProfileActionResult>;
   rememberProfiles(profiles: Profile[]): void;
   markMatchSeen(profileId: string): Promise<void>;

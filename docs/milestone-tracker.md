@@ -286,6 +286,7 @@ Done:
 - [x] [C] Supabase discovery now excludes hosted test fixture rows by default; Fruit keeps its local fixture pool explicit instead of mixing hosted mock rows into backend discovery.
 - [x] [C] Partner-link local profile mutations now share one provider-local persistence helper instead of repeating the same `setProfile`/`applyProfileMutation`/save wrapper across invite, resend, accept, and remove actions.
 - [x] [C] Super-like recharge timing calculation now lives in `expo/services/local-monetization-service.ts`; `ProfileProvider` keeps only the effect that applies the store update.
+- [x] [C] Matches/Inbox focus refresh no longer depends on a `ProfileProvider.refreshBackendMatches` facade method; focused read-model hooks invalidate the React Query matches key directly.
 
 Remaining:
 
