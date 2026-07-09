@@ -512,7 +512,7 @@ Remaining:
 - [ ] [H] Decide PostHog, Sentry, both, or neither for inner-circle testing.
 - [ ] [C] Add env-gated analytics/crash setup if approved.
 - [ ] [C] Track privacy-safe funnel/safety events only.
-- [ ] [C] Do not capture private messages, raw profile text, or PII.
+- [x] [C] Do not capture private messages, raw profile text, or PII. Privacy/logging audit on 2026-07-08 found no production analytics calls and current diagnostics log ids/counts/lengths/status metadata rather than private message bodies, raw profile text, photos, or PII.
 - [x] [C] Create repeatable UAT checklist for auth, onboarding, discovery, matching, chat, safety, and sign-out/sign-in. See "Repeatable Full-Flow UAT Checklist" above.
 - [ ] [H] Decide whether to automate more E2E/browser smoke checks.
 - [x] [C] Add or confirm app-level error boundary strategy before broader tester release. Root Expo Router error boundary exists in `expo/app/_layout.tsx` with retry UI and message-only diagnostic logging.
