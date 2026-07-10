@@ -1,6 +1,6 @@
 # Current Agent State
 
-Last updated: 2026-07-09
+Last updated: 2026-07-10
 
 ## Objective
 
@@ -10,8 +10,9 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 
 - Branch: `main`.
 - Remote state: clean with `origin/main` as of latest push.
-- Latest checkpoint: `bd7c53a` - Sync human-gated remaining work.
+- Latest code checkpoint: `dfac3c2` - Sync session handoff; the current pending checkpoint is documentation-only audit/handoff work.
 - Recent relevant checkpoints:
+  - `dfac3c2` - Sync session handoff.
   - `bd7c53a` - Sync human-gated remaining work.
   - `f960925` - Remove pass swipe provider wrapper.
   - `9c32cc1` - Extract seen match application.
@@ -43,7 +44,7 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
   - Backend pass-swipe persistence now calls `recordBackendSwipe` directly through `expo/services/backend-swipe-action-service.ts` instead of a provider-owned wrapper.
   - Matches/Inbox focus refresh no longer depends on a provider `refreshBackendMatches` facade; focused hooks invalidate the React Query matches key directly.
 - M7 safety/moderation work advanced:
-  - Privacy/logging audit found no production analytics calls and no private message bodies/raw profile text/PII in current diagnostics.
+  - No production analytics calls or private message-body logging were found. The 2026-07-10 deep audit supersedes the earlier broader privacy claim: current diagnostics still log a raw sign-in identifier, stable user/profile ids, and a selected-photo URI.
   - Fixture audit confirmed deterministic test emails/ids and fictional mock copy; original human-like dating/profile language is intentionally preserved for simulation realism.
   - Interim Supabase Studio moderation workflow is documented in `docs/supabase-moderation-workflow.md`.
 - M9 QA hardening advanced:
@@ -51,15 +52,15 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
   - Root Expo Router error boundary exists in `expo/app/_layout.tsx` with retry UI and message-only diagnostic logging.
 - M10 TestFlight prep advanced:
   - `expo/eas.json` exists with internal preview and production build profiles plus an iOS submit placeholder.
-  - `expo/app.json` now has explicit iOS photo-library and microphone permission copy; camera permission is blocked because current flows only launch the photo library.
+  - `expo/app.json` now has explicit iOS photo-library and microphone permission copy. The adversarial audit review found that Expo introspection still emits Android camera permission despite `cameraPermission: false`; native permission minimization remains open.
   - Current app metadata/assets were audited: `Orchard`, slug `orchard`, version `1.0.0`, iOS bundle `com.orchardapp.ios`, Android package `com.orchardapp.android`, and 1024x1024 branded icon/adaptive/splash assets.
 - M8/M10 release preparation advanced: `docs/beta-release-notes.md` contains draft tester instructions, beta description, and reviewer-note scaffolding with placeholders only.
 - M5 discovery advanced: Supabase-mode Discover now relies on the backend discovery service/swipe table for query exclusions instead of local liked/passed ids; mock mode still uses local exclusions.
 - M6 chat source audits advanced:
   - Real/non-fixture Supabase text chat is backend-first and appends local conversation state only from successful backend messages.
   - Supabase text-send failures do not create false local sent bubbles.
-  - Unmatch/block source paths remove local conversation visibility and server policies deny read/send once inactive; hosted UAT remains.
-- M9 QA/privacy status advanced: privacy/logging audit is now reflected in the M9 checklist item for not capturing private messages, raw profile text, photos, or PII.
+  - Unmatch/block source paths remove local conversation visibility and server policies deny direct read/send while a match remains inactive. The 2026-07-10 audit found a separate consent bug: stale chat sending can create a new like and active rematch.
+- `docs/2026-07-10-repository-audit-gpt-5.6-sol-ultra.md` now contains the original deep audit plus a timestamped `gpt-5.6-sol-max` adversarial review. Use the adversarial section for corrected verdicts, exclusions, and the 18-slice PR-sized backlog. No implementation has started; user action selection is pending.
 - `ProfileProvider` remains active as a compatibility facade. App routes/components no longer import `useProfile()` directly; focused read-model hooks own route/provider access.
 - Supabase mode has auth/profile/photo/discovery/match/chat/read-state/Realtime paths in varying degrees.
 - Mock/Fruit/demo mode remains required and should not be broken by hosted-mode work.
@@ -67,6 +68,11 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 ## Validation State
 
 Latest code-touching checks:
+
+- `cd expo; bun run typecheck`: passed during the 2026-07-10 read-only audit.
+- `cd expo; bun run lint`: passed during the 2026-07-10 read-only audit.
+- Current GitHub Expo Checks for `dfac3c2`: passed.
+- The latest July Supabase migrations were not rerun locally or through the manual DB workflow during the audit.
 
 - `cd expo; bun run typecheck`: passed after M5 Supabase discovery source-of-truth change.
 - `cd expo; bun run lint`: passed after M5 Supabase discovery source-of-truth change.
@@ -102,6 +108,7 @@ Final docs-only sync `bd7c53a` ran `git diff --check`; typecheck/lint were not r
 - Human decisions remain open for analytics/crash reporting, automatic Supabase DB tests on migration PRs, fixture image ingestion, feedback channel/support process, and whether mobile web/ngrok is acceptable for the first inner-circle pass before TestFlight.
 - M6 Supabase-mode fixture simulated replies/photo behavior still needs a product decision before changing chat behavior further.
 - Seeded/demo account creation and private credential handling remain human-owned; the repo now has only placeholder release-note scaffolding.
+- Selection and acceptance order for the corrected autonomous `[C]`/`[C+U]` backlog in the audit's adversarial appendix remains with the user; do not rely on the original severity labels without the corrections.
 
 ## Canonical Docs
 
@@ -110,9 +117,10 @@ Final docs-only sync `bd7c53a` ran `git diff --check`; typecheck/lint were not r
 - `docs/beta-release-notes.md`: draft tester instructions, beta description, and reviewer-note scaffolding.
 - `docs/supabase-moderation-workflow.md`: interim Studio moderation workflow.
 - `docs/repo-audit-and-foundation-plan.md`: provider/foundation cleanup plan.
+- `docs/2026-07-10-repository-audit-gpt-5.6-sol-ultra.md`: original deep audit plus the authoritative adversarial correction, exclusions, and sequenced implementation slices.
 - `docs/profile-provider-map.md`: provider responsibility map and extraction context.
 - `docs/README.md`: docs index.
 
 ## Next Recommended Task
 
-Best next task: run human/hosted UAT for M4-M7 when practical. All active non-human tasks from the latest audit pass are handled and pushed. Further provider/facade cleanup should be explicitly selected as a PR-sized slice and paired with targeted UAT because the remaining paths touch bootstrap, chat fixture behavior, or source-of-truth transitions. Do not change Supabase-mode fixture simulated replies or photo-request behavior until the M6 product decision is made.
+Best next task: wait for the user to select a PR-sized action from the adversarial review section of `docs/2026-07-10-repository-audit-gpt-5.6-sol-ultra.md`. The highest-priority source-confirmed actions remain persisted-password removal, chat send-path rematch removal, and profile-photo storage-path ownership enforcement. Do not begin a broad `ProfileProvider` rewrite or change Supabase-mode fixture simulated replies/photo-request behavior.

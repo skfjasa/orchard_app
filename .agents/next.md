@@ -4,10 +4,10 @@ Continue safely through the milestone list from `docs/milestone-tracker.md`.
 
 Recommended next non-UAT task:
 
-1. No active standalone non-human task remains from the latest audit pass.
-2. Most remaining M3-M10 tracker items are human decisions or hosted UAT.
-3. Further provider/facade cleanup should be explicitly selected as a PR-sized slice and paired with targeted UAT because remaining paths touch bootstrap, chat fixture behavior, or source-of-truth transitions.
-4. Avoid transient-empty guard movement until M4 back-navigation/first-render UAT can verify it.
+1. Read the timestamped `gpt-5.6-sol-max` adversarial review appended to `docs/2026-07-10-repository-audit-gpt-5.6-sol-ultra.md` and wait for the user to select an implementation slice.
+2. Highest-priority source-confirmed `[C+U]` candidates are persisted-password removal, chat send-path rematch removal, and profile-photo storage-path ownership enforcement.
+3. Keep every change PR-sized and preserve mock/demo behavior, storage compatibility, and the current UI.
+4. Avoid a broad `ProfileProvider` rewrite.
 5. Avoid changing Supabase-mode fixture simulated replies/photo-request behavior until the M6 product decision is made.
 6. Keep hosted UAT items open unless a human/device test is actually run.
 
@@ -30,10 +30,12 @@ Read if relevant:
 - `docs/supabase-moderation-workflow.md`
 - `docs/profile-provider-map.md`
 - `docs/repo-audit-and-foundation-plan.md`
+- `docs/2026-07-10-repository-audit-gpt-5.6-sol-ultra.md`
 
 ## Latest Completed Work
 
-- Final handoff/status sync is pushed at `bd7c53a`; no active standalone non-human task remains from the latest audit pass.
+- Latest code checkpoint remains `dfac3c2`; the current deep-audit/adversarial-review checkpoint is documentation-only and did not implement fixes.
+- `docs/2026-07-10-repository-audit-gpt-5.6-sol-ultra.md` contains the original audit plus an authoritative adversarial section that corrects mixed/overstated findings and provides an 18-slice `[C]`/`[C+U]` backlog.
 - Part 4 React Query/auth/error-boundary stabilization is implemented:
   - Profile and conversation persistence callbacks no longer depend on unstable React Query mutation result objects.
   - `AuthProvider` processes `Linking.getInitialURL()` so cold-start password-reset/email-confirmation callbacks can restore sessions.
@@ -42,15 +44,15 @@ Read if relevant:
 - Local seen-match state/ref application for `markMatchSeen` now delegates to `expo/services/local-interaction-service.ts`.
 - Backend pass-swipe persistence now calls `recordBackendSwipe` directly through `expo/services/backend-swipe-action-service.ts` instead of a provider-owned wrapper.
 - Matches/Inbox focus refresh no longer depends on a provider `refreshBackendMatches` facade; focused read-model hooks invalidate the React Query matches key directly.
-- M9 privacy checklist now reflects the completed privacy/logging audit: no production analytics calls and diagnostics avoid private message bodies/raw profile text/photos/PII.
+- No production analytics calls or private message-body logging were found, but the 2026-07-10 audit supersedes the prior broader privacy claim because diagnostics still expose a raw sign-in identifier, stable ids, and a selected-photo URI.
 - Super-like recharge timing calculation now lives in `expo/services/local-monetization-service.ts`; `ProfileProvider` keeps only the effect that applies the store reset.
 - Partner-link local profile mutations now share one provider-local persistence helper instead of repeating the same wrapper across invite/resend/accept/remove.
 - M6 source audit confirmed Supabase text-send failures do not create a misleading local sent message; remaining acceptance is hosted failure-path UAT and possible visible retry/error UX.
-- M6 source audit confirmed unmatch/block remove local conversation visibility and server-side message policies deny read/send once a match is inactive; hosted UAT remains.
+- Server-side message policies correctly deny direct read/send while a match is inactive, but the 2026-07-10 audit found that stale chat sending can create a new like and active rematch.
 - M6 source audit confirmed real/non-fixture Supabase text chat is backend-first; fixture simulated replies/photo-request behavior remains pending product decision.
 - Supabase-mode Discover now relies on backend discovery/swipe state for query exclusions instead of local liked/passed ids; mock mode still uses local exclusions.
 - Draft tester instructions, beta description, and App Store reviewer-note scaffolding now live in `docs/beta-release-notes.md` with placeholders only.
-- TestFlight app metadata/icon/splash/permission-string audit is recorded; `expo/app.json` has explicit photo-library and microphone permission strings and blocks camera permission.
+- TestFlight app metadata/icon/splash/permission-string audit is recorded; `expo/app.json` requests no camera permission, but adversarial Expo introspection still emitted Android camera permission, so native permission minimization remains open.
 - Root Expo Router error boundary added in `expo/app/_layout.tsx`.
 - EAS build configuration added in `expo/eas.json`.
 - Hosted filtering source audit recorded; code/RLS coverage is done and hosted UAT remains.
@@ -62,6 +64,10 @@ Read if relevant:
 
 ## Latest Validation
 
+- `cd expo; bun run typecheck`: passed during the 2026-07-10 read-only audit.
+- `cd expo; bun run lint`: passed during the 2026-07-10 read-only audit.
+- Current GitHub Expo Checks for `dfac3c2`: passed.
+- The latest July Supabase migrations were not rerun during the audit; the database workflow remains manual-only.
 - `cd expo; bun run typecheck`: passed after Part 4 stabilization.
 - `cd expo; bun run lint`: passed after Part 4 stabilization.
 - `git diff --check`: passed after Part 4 stabilization and status doc updates.
