@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-07-09
+Last updated: 2026-07-10
 
 ## Current Repo State
 
@@ -257,6 +257,7 @@ Last updated: 2026-07-09
 - M1 provider cleanup continued by moving local seen-match state/ref application for `markMatchSeen` into `expo/services/local-interaction-service.ts`; `ProfileProvider` keeps the compatibility facade.
 - M1 provider cleanup removed the provider-owned backend pass-swipe wrapper; `passProfile` now calls `recordBackendSwipe` directly through `expo/services/backend-swipe-action-service.ts`.
 - Profile-tab sign-out now clears profile/auth state before routing to `/onboarding`, preventing the user from landing on Discover with no profile/data loaded.
+- Corrected audit backlog item 1 adds a Bun-native TypeScript application test harness. `expo/services/supabase-service-response.test.ts` proves a pure service's configured and missing-Supabase response paths, and regular Expo CI now runs `bun test`; the manual Supabase DB workflow remains unchanged and dispatch-only.
 - Remaining observed behavior to decide/fix later: after sign-out/sign-in, only hosted messages are restored; local fixture greeting/simulated messages are intentionally not persisted to hosted chat yet.
 - The original generated onboarding background was recovered from the previous remote URL, vendored as `expo/assets/images/welcome-background.png`, and the welcome, sign-in, and pending-confirmation screens now use the local bundled asset instead of the app icon background or a remote Rork URL.
 - Hosted onboarding/profile-photo confirmation smoke passed: after reaching the pending-confirmation page, opening email in a new tab and following the Supabase confirmation link opened another tab on Discover; the created profile's name, email, and selected photo hydrated correctly from the Profile tab while the original pending-confirmation tab remained idle.
