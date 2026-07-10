@@ -4,8 +4,8 @@ Continue safely through the milestone list from `docs/milestone-tracker.md`.
 
 Recommended next non-UAT task:
 
-1. Read the timestamped `gpt-5.6-sol-max` adversarial review appended to `docs/2026-07-10-repository-audit-gpt-5.6-sol-ultra.md` and wait for the user to select an implementation slice.
-2. Highest-priority source-confirmed `[C+U]` candidates are persisted-password removal, chat send-path rematch removal, and profile-photo storage-path ownership enforcement.
+1. Corrected backlog item 1 is complete at `bcd6961` with Bun-native application tests, one pure-service test, and an application-test step in regular Expo CI.
+2. Wait for explicit user instruction before beginning corrected backlog item 2 (persisted-password removal) or any later audit slice.
 3. Keep every change PR-sized and preserve mock/demo behavior, storage compatibility, and the current UI.
 4. Avoid a broad `ProfileProvider` rewrite.
 5. Avoid changing Supabase-mode fixture simulated replies/photo-request behavior until the M6 product decision is made.
@@ -34,7 +34,9 @@ Read if relevant:
 
 ## Latest Completed Work
 
-- Latest code checkpoint remains `dfac3c2`; the current deep-audit/adversarial-review checkpoint is documentation-only and did not implement fixes.
+- Latest code checkpoint is `bcd6961` - Add Bun application test harness.
+- `expo/services/supabase-service-response.test.ts` proves Bun can run TypeScript application tests against a pure service, covering both configured-client success and missing-configuration failure responses.
+- Regular Expo CI now runs `bun test` after its existing frozen-lockfile install. The manual Supabase DB workflow remains dispatch-only and unchanged.
 - `docs/2026-07-10-repository-audit-gpt-5.6-sol-ultra.md` contains the original audit plus an authoritative adversarial section that corrects mixed/overstated findings and provides an 18-slice `[C]`/`[C+U]` backlog.
 - Part 4 React Query/auth/error-boundary stabilization is implemented:
   - Profile and conversation persistence callbacks no longer depend on unstable React Query mutation result objects.
@@ -64,6 +66,10 @@ Read if relevant:
 
 ## Latest Validation
 
+- `cd expo; bun test`: passed for the minimal application test harness (1 test, 2 assertions).
+- `cd expo; bun run typecheck`: passed after the harness.
+- `cd expo; bun run lint`: passed after the harness.
+- `git diff --check`: passed after the harness, with only LF-to-CRLF working-copy warnings.
 - `cd expo; bun run typecheck`: passed during the 2026-07-10 read-only audit.
 - `cd expo; bun run lint`: passed during the 2026-07-10 read-only audit.
 - Current GitHub Expo Checks for `dfac3c2`: passed.
