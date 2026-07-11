@@ -12,6 +12,7 @@ Migration files:
 - `supabase/migrations/202607040002_active_match_profile_reads.sql`
 - `supabase/migrations/202607040003_enable_match_message_realtime.sql`
 - `supabase/migrations/202607040004_match_read_states.sql`
+- `supabase/migrations/202607110001_profile_photo_storage_path_ownership.sql` (local only; hosted preflight and apply pending)
 
 ## Scope
 
@@ -64,6 +65,39 @@ Read-state migration `202607040004_match_read_states.sql` adds:
 - `public.match_read_states`.
 - Per-user per-match read-through persistence with active-match RLS.
 
+Profile-photo path-ownership migration `202607110001_profile_photo_storage_path_ownership.sql` adds:
+
+- Immutable `private.is_owned_profile_photo_path(profile_id, storage_path)` validation for the current `<profile_id>/<purpose>/<filename>` layout.
+- A fail-fast existing-row preflight and `profile_photos_storage_path_owned` table constraint, including for RLS-bypassing server/service operations.
+- INSERT and UPDATE policies that require both authenticated profile ownership and an owner-prefixed valid storage path.
+- No storage-path uniqueness constraint. Same-owner duplicate paths are a separate photo-lifecycle consistency concern and are not required to close cross-owner authorization.
+
+Run this read-only query against hosted data before applying the migration. Any returned row requires explicit human review; do not rewrite or delete it automatically:
+
+```sql
+select id, profile_id, storage_path
+from public.profile_photos
+where storage_path is null
+   or storage_path <> btrim(storage_path)
+   or length(storage_path) = 0
+   or cardinality(string_to_array(storage_path, '/')) <> 3
+   or split_part(storage_path, '/', 1) <> profile_id::text
+   or split_part(storage_path, '/', 2) !~ '^[a-z][a-z0-9_]*$'
+   or split_part(storage_path, '/', 3) !~ '^[A-Za-z0-9][A-Za-z0-9._-]*$'
+   or split_part(storage_path, '/', 3) in ('.', '..')
+order by profile_id, id;
+```
+
+Duplicate paths are informational for this slice and do not block the ownership constraint:
+
+```sql
+select storage_path, count(*) as metadata_row_count
+from public.profile_photos
+group by storage_path
+having count(*) > 1
+order by storage_path;
+```
+
 ## Key Product Rules Represented
 
 - Users own one account-level profile row keyed by `auth.users.id`.
@@ -85,7 +119,7 @@ Read-state migration `202607040004_match_read_states.sql` adds:
 - `submit_report(reported_profile_id, report_reason, report_details, reported_message_id)` derives reporter identity from `auth.uid()` and creates a moderation report.
 - `request_account_deletion(deletion_reason)` derives profile identity from `auth.uid()` and creates an account deletion request.
 
-These functions are granted to authenticated users only. Database/RLS tests exist at `supabase/tests/database/202606200001_mvp_security.sql` and pass against the local Supabase database: 1 file, 45 tests.
+These functions are granted to authenticated users only. Database/RLS tests exist at `supabase/tests/database/202606200001_mvp_security.sql` and pass against the local Supabase database: 1 file, 67 tests.
 
 ## Known Gaps Before Staging Or Production
 
@@ -95,6 +129,7 @@ These functions are granted to authenticated users only. Database/RLS tests exis
 - Approximate location approach needs product/privacy review.
 - Message body moderation strategy is not defined.
 - Hosted UAT still needs broader safety and block/unmatch/report verification with real accounts.
+- Hosted profile-photo path preflight and ownership UAT remain pending; do not apply `202607110001` until the preflight returns no unexplained rows.
 
 ## RLS Review Required
 

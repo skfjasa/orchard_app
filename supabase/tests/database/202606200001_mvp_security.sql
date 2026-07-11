@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(45);
+select plan(67);
 
 insert into auth.users (
   id,
@@ -237,10 +237,18 @@ values
   (
     '00000000-0000-0000-0000-000000000002',
     '10000000-0000-0000-0000-000000000002',
-    'profiles/b/photo.jpg',
+    '00000000-0000-0000-0000-000000000002/profile_photo/photo.jpg',
     0,
     'approved'
   );
+
+insert into storage.objects (bucket_id, name, owner_id)
+values (
+  'profile-photos',
+  '00000000-0000-0000-0000-000000000002/profile_photo/photo.jpg',
+  '00000000-0000-0000-0000-000000000002'
+)
+on conflict (bucket_id, name) do nothing;
 
 select is(
   (
@@ -285,6 +293,85 @@ select is(
   ),
   1,
   'profile photos can be upserted by profile member and sort order'
+);
+
+select is(
+  (
+    select count(*)::int
+    from pg_constraint
+    where conname = 'profile_photos_storage_path_owned'
+      and conrelid = 'public.profile_photos'::regclass
+  ),
+  1,
+  'profile photo metadata has a storage path ownership constraint'
+);
+
+select is(
+  (
+    select provolatile
+    from pg_proc
+    where oid = 'private.is_owned_profile_photo_path(uuid, text)'::regprocedure
+  ),
+  'i'::"char",
+  'profile photo path ownership predicate is immutable'
+);
+
+select is(
+  (
+    select count(*)::int
+    from public.profile_photos pp
+    where not private.is_owned_profile_photo_path(
+      pp.profile_id,
+      pp.storage_path
+    )
+  ),
+  0,
+  'existing valid owner-prefixed photo metadata passes preflight'
+);
+
+select is(
+  private.is_owned_profile_photo_path(
+    '00000000-0000-0000-0000-000000000001',
+    '00000000-0000-0000-0000-000000000002/profile_photo/photo.jpg'
+  ),
+  false,
+  'preflight identifies a cross-owned storage path'
+);
+
+select is(
+  private.is_owned_profile_photo_path(
+    '00000000-0000-0000-0000-000000000001',
+    '/profile_photo/photo.jpg'
+  ),
+  false,
+  'preflight identifies a malformed storage path'
+);
+
+select is(
+  (
+    select count(*)::int
+    from pg_policies
+    where schemaname = 'public'
+      and tablename = 'profile_photos'
+      and policyname = 'profile_photos_insert_own'
+      and position('is_owned_profile_photo_path' in with_check) > 0
+  ),
+  1,
+  'profile photo insert policy checks path ownership'
+);
+
+select is(
+  (
+    select count(*)::int
+    from pg_policies
+    where schemaname = 'public'
+      and tablename = 'profile_photos'
+      and policyname = 'profile_photos_update_own'
+      and position('is_owned_profile_photo_path' in qual) > 0
+      and position('is_owned_profile_photo_path' in with_check) > 0
+  ),
+  1,
+  'profile photo update policy checks existing and resulting path ownership'
 );
 
 set local role anon;
@@ -347,6 +434,181 @@ select is(
 select is(
   (
     select count(*)::int
+    from storage.objects
+    where bucket_id = 'profile-photos'
+      and name = '00000000-0000-0000-0000-000000000002/profile_photo/photo.jpg'
+  ),
+  1,
+  'eligible viewer can read a valid visible profile photo object'
+);
+
+select lives_ok(
+  $$
+    insert into public.profile_photos (
+      profile_id,
+      member_id,
+      storage_path,
+      sort_order
+    )
+    values (
+      '00000000-0000-0000-0000-000000000001',
+      '10000000-0000-0000-0000-000000000001',
+      '00000000-0000-0000-0000-000000000001/profile_photo/owner.jpg',
+      1
+    )
+  $$,
+  'owner can insert metadata for an owner-prefixed storage path'
+);
+
+reset role;
+
+insert into storage.objects (bucket_id, name, owner_id)
+values (
+  'profile-photos',
+  '00000000-0000-0000-0000-000000000001/profile_photo/owner.jpg',
+  '00000000-0000-0000-0000-000000000001'
+)
+on conflict (bucket_id, name) do nothing;
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+
+select throws_ok(
+  $$
+    insert into public.profile_photos (
+      profile_id,
+      member_id,
+      storage_path,
+      sort_order
+    )
+    values (
+      '00000000-0000-0000-0000-000000000001',
+      '10000000-0000-0000-0000-000000000001',
+      '00000000-0000-0000-0000-000000000002/profile_photo/photo.jpg',
+      3
+    )
+  $$,
+  '42501',
+  'new row violates row-level security policy for table "profile_photos"',
+  'owner cannot insert metadata referencing another profile path'
+);
+
+select throws_ok(
+  $$
+    insert into public.profile_photos (
+      profile_id,
+      member_id,
+      storage_path,
+      sort_order
+    )
+    values (
+      '00000000-0000-0000-0000-000000000001',
+      '10000000-0000-0000-0000-000000000001',
+      '',
+      3
+    )
+  $$,
+  '42501',
+  'new row violates row-level security policy for table "profile_photos"',
+  'owner cannot insert blank photo metadata path'
+);
+
+select throws_ok(
+  $$
+    insert into public.profile_photos (
+      profile_id,
+      member_id,
+      storage_path,
+      sort_order
+    )
+    values (
+      '00000000-0000-0000-0000-000000000001',
+      '10000000-0000-0000-0000-000000000001',
+      '00000000-0000-0000-0000-000000000001//photo.jpg',
+      3
+    )
+  $$,
+  '42501',
+  'new row violates row-level security policy for table "profile_photos"',
+  'owner cannot insert malformed photo metadata path'
+);
+
+select throws_ok(
+  $$
+    update public.profile_photos
+    set storage_path = '00000000-0000-0000-0000-000000000002/profile_photo/photo.jpg'
+    where profile_id = '00000000-0000-0000-0000-000000000001'
+      and sort_order = 1
+  $$,
+  '42501',
+  'new row violates row-level security policy for table "profile_photos"',
+  'owner cannot update metadata to another profile path'
+);
+
+select throws_ok(
+  $$
+    update public.profile_photos
+    set profile_id = '00000000-0000-0000-0000-000000000002'
+    where profile_id = '00000000-0000-0000-0000-000000000001'
+      and sort_order = 1
+  $$,
+  '42501',
+  'permission denied for table profile_photos',
+  'owner cannot change photo metadata to another profile id'
+);
+
+select lives_ok(
+  $$
+    update public.profile_photos
+    set sort_order = 2
+    where profile_id = '00000000-0000-0000-0000-000000000001'
+      and sort_order = 1
+  $$,
+  'owner can update nonownership metadata while retaining an owned path'
+);
+
+select is(
+  (
+    select count(*)::int
+    from public.profile_photos
+    where profile_id = '00000000-0000-0000-0000-000000000001'
+      and storage_path = '00000000-0000-0000-0000-000000000001/profile_photo/owner.jpg'
+      and sort_order = 2
+  ),
+  1,
+  'valid owner-prefixed metadata remains intact after allowed update'
+);
+
+reset role;
+
+select throws_ok(
+  $$
+    insert into public.profile_photos (
+      profile_id,
+      member_id,
+      storage_path,
+      sort_order
+    )
+    values (
+      '00000000-0000-0000-0000-000000000001',
+      '10000000-0000-0000-0000-000000000001',
+      '00000000-0000-0000-0000-000000000002/profile_photo/photo.jpg',
+      3
+    )
+  $$,
+  '23514',
+  'new row for relation "profile_photos" violates check constraint "profile_photos_storage_path_owned"',
+  'constraint rejects cross-owned metadata even when RLS is bypassed'
+);
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+
+select is(
+  (
+    select count(*)::int
     from public.profile_members
     where profile_id = '00000000-0000-0000-0000-000000000002'
   ),
@@ -385,7 +647,7 @@ select throws_ok(
     values (
       '00000000-0000-0000-0000-000000000001',
       '10000000-0000-0000-0000-000000000002',
-      'profiles/a/wrong-member.jpg',
+      '00000000-0000-0000-0000-000000000001/profile_photo/wrong-member.jpg',
       1
     )
   $$,
@@ -476,6 +738,43 @@ select is(
   1,
   'reciprocal likes create one active match'
 );
+
+reset role;
+
+update public.profiles
+set is_visible = false
+where id = '00000000-0000-0000-0000-000000000001';
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000002', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+
+select is(
+  (
+    select count(*)::int
+    from public.profile_photos
+    where profile_id = '00000000-0000-0000-0000-000000000001'
+  ),
+  1,
+  'active match can read valid photo metadata after discovery eligibility ends'
+);
+
+select is(
+  (
+    select count(*)::int
+    from storage.objects
+    where bucket_id = 'profile-photos'
+      and name = '00000000-0000-0000-0000-000000000001/profile_photo/owner.jpg'
+  ),
+  1,
+  'active match can read valid photo object after discovery eligibility ends'
+);
+
+reset role;
+
+update public.profiles
+set is_visible = true
+where id = '00000000-0000-0000-0000-000000000001';
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000001', true);
@@ -772,6 +1071,47 @@ select is(
   ),
   0,
   'blocked match messages are hidden from match members'
+);
+
+select is(
+  (
+    select count(*)::int
+    from public.profile_photos
+    where profile_id = '00000000-0000-0000-0000-000000000001'
+  ),
+  0,
+  'blocked user cannot read the other profile valid photo metadata'
+);
+
+select is(
+  (
+    select count(*)::int
+    from storage.objects
+    where bucket_id = 'profile-photos'
+      and name = '00000000-0000-0000-0000-000000000001/profile_photo/owner.jpg'
+  ),
+  0,
+  'blocked user cannot read the other profile valid photo object'
+);
+
+select throws_ok(
+  $$
+    insert into public.profile_photos (
+      profile_id,
+      member_id,
+      storage_path,
+      sort_order
+    )
+    values (
+      '00000000-0000-0000-0000-000000000002',
+      '10000000-0000-0000-0000-000000000002',
+      '00000000-0000-0000-0000-000000000001/profile_photo/owner.jpg',
+      4
+    )
+  $$,
+  '42501',
+  'new row violates row-level security policy for table "profile_photos"',
+  'blocked user cannot forge metadata to regain access to another profile object'
 );
 
 set local role authenticated;
