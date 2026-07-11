@@ -38,6 +38,7 @@ export interface ProfileProviderContract {
   passedIds: string[];
   hydrated: boolean;
   backendProfileHydrated: boolean;
+  backendProfileIncomplete: boolean;
   backendMatchesHydrated: boolean;
   isLoading: boolean;
   totalSlots: number;

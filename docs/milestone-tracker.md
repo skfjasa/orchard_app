@@ -359,12 +359,14 @@ Done:
 - [x] [C+U] Supabase Storage-backed profile photo upload exists.
 - [x] [C] Profile photo storage policies and active-match photo read policies exist.
 - [~] [C+U] Profile-photo metadata now requires `<profile_id>/<purpose>/<filename>` ownership at both the database constraint and INSERT/UPDATE policy layers. Local automated checks pass; hosted preflight and owner/attacker/visibility/revocation UAT remain.
+- [~] [C+U] Corrected audit backlog item 5 makes Supabase onboarding completion two-phase. Profile preparation and incomplete-row retry keep `onboarding_completed = false` and `is_visible = false`; member, settings, and photo stages must succeed before one scoped finalization publishes both flags. Missing, incomplete, completed, and failed profile reads are distinct, incomplete rows resume from pending onboarding when available, protected routes reject incomplete rows, and local automated checks pass. Human UAT remains.
 - [x] [C+U] Onboarding background/sign-in header visual regressions were fixed and UAT-confirmed.
 
 Remaining:
 
 - [ ] [U] UAT full sign-up/sign-in/profile/photo flow on target mobile browser and later iOS device.
 - [ ] [U] Run the hosted photo-path preflight, remediate any unexplained row before apply, then verify valid owner upload, forged metadata INSERT/UPDATE rejection, discovery/active-match reads, and block/unmatch revocation.
+- [ ] [U] Accept corrected audit backlog item 5 with immediate-session, confirmation-required, member/settings/photo/finalization failure-and-retry, incomplete relaunch, completed-profile regression, and mock/demo scenarios. Confirm the row stays incomplete/invisible before finalization and becomes discoverable only afterward.
 - [ ] [C+U] Confirm no profile hydration loops or stale local profile state on repeated sign-out/sign-in.
 - [ ] [H] Decide if branded auth emails are needed for inner-circle testing.
 - [!] [H] Custom SMTP is required before Supabase Auth email branding can be customized.

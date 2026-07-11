@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(67);
+select plan(75);
 
 insert into auth.users (
   id,
@@ -230,6 +230,16 @@ values
     null,
     null,
     0
+  ),
+  (
+    '10000000-0000-0000-0000-000000000005',
+    '00000000-0000-0000-0000-000000000005',
+    'Incomplete',
+    '1994-01-01',
+    null,
+    null,
+    null,
+    0
   );
 
 insert into public.profile_photos (profile_id, member_id, storage_path, sort_order, moderation_status)
@@ -240,14 +250,27 @@ values
     '00000000-0000-0000-0000-000000000002/profile_photo/photo.jpg',
     0,
     'approved'
+  ),
+  (
+    '00000000-0000-0000-0000-000000000005',
+    '10000000-0000-0000-0000-000000000005',
+    '00000000-0000-0000-0000-000000000005/profile_photo/photo.jpg',
+    0,
+    'approved'
   );
 
 insert into storage.objects (bucket_id, name, owner_id)
-values (
-  'profile-photos',
-  '00000000-0000-0000-0000-000000000002/profile_photo/photo.jpg',
-  '00000000-0000-0000-0000-000000000002'
-)
+values
+  (
+    'profile-photos',
+    '00000000-0000-0000-0000-000000000002/profile_photo/photo.jpg',
+    '00000000-0000-0000-0000-000000000002'
+  ),
+  (
+    'profile-photos',
+    '00000000-0000-0000-0000-000000000005/profile_photo/photo.jpg',
+    '00000000-0000-0000-0000-000000000005'
+  )
 on conflict (bucket_id, name) do nothing;
 
 select is(
@@ -420,6 +443,96 @@ select is(
   0,
   'invisible suspended incomplete and age-unconfirmed profiles are hidden'
 );
+
+select is(
+  (select count(*)::int from public.profile_members
+   where profile_id = '00000000-0000-0000-0000-000000000005'),
+  0,
+  'other users cannot read incomplete profile members through discovery'
+);
+
+select is(
+  (select count(*)::int from public.profile_photos
+   where profile_id = '00000000-0000-0000-0000-000000000005'),
+  0,
+  'other users cannot read incomplete profile photos through discovery'
+);
+
+select is(
+  (select count(*)::int from storage.objects
+   where bucket_id = 'profile-photos'
+     and name = '00000000-0000-0000-0000-000000000005/profile_photo/photo.jpg'),
+  0,
+  'other users cannot read incomplete profile photo objects'
+);
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000005', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+
+select is(
+  (select count(*)::int from public.profiles
+   where id = '00000000-0000-0000-0000-000000000005'),
+  1,
+  'owner can read their own incomplete profile for resumption'
+);
+
+select is(
+  (select count(*)::int from public.profile_members
+   where profile_id = '00000000-0000-0000-0000-000000000005'),
+  1,
+  'owner can read their own incomplete profile members for resumption'
+);
+
+select is(
+  (select count(*)::int from public.profile_photos
+   where profile_id = '00000000-0000-0000-0000-000000000005'),
+  1,
+  'owner can read their own incomplete profile photos for resumption'
+);
+
+reset role;
+update public.profiles
+set onboarding_completed = true,
+    is_visible = false
+where id = '00000000-0000-0000-0000-000000000005';
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+
+select is(
+  (select count(*)::int from public.profiles
+   where id = '00000000-0000-0000-0000-000000000005'),
+  0,
+  'completed but invisible profile is not discoverable'
+);
+
+reset role;
+update public.profiles
+set is_visible = true
+where id = '00000000-0000-0000-0000-000000000005';
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+
+select is(
+  (select count(*)::int from public.profiles
+   where id = '00000000-0000-0000-0000-000000000005'),
+  1,
+  'profile becomes discoverable only after completion and visibility are both true'
+);
+
+reset role;
+update public.profiles
+set onboarding_completed = false,
+    is_visible = false
+where id = '00000000-0000-0000-0000-000000000005';
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
 
 select is(
   (

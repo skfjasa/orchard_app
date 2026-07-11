@@ -96,8 +96,13 @@ export default function SignInScreen() {
     signOut,
     updatePassword,
   } = useAuth();
-  const { backendMatchesHydrated, backendProfileHydrated, hydrated, profile } =
-    useSignInProfileReadModel();
+  const {
+    backendMatchesHydrated,
+    backendProfileHydrated,
+    backendProfileIncomplete,
+    hydrated,
+    profile,
+  } = useSignInProfileReadModel();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [newPassword, setNewPassword] = useState<string>("");
@@ -323,9 +328,9 @@ export default function SignInScreen() {
               {signedInWithoutProfile && (
                 <View style={styles.finalizing} testID="missing-profile">
                   <Text style={styles.finalizingText}>
-                    You are signed in, but Orchard could not find a saved
-                    profile for this email. Continue profile setup to enter
-                    Orchard.
+                    {backendProfileIncomplete
+                      ? "Your profile setup is incomplete. Continue setup to finish saving it before entering Orchard."
+                      : "You are signed in, but Orchard could not find a saved profile for this email. Continue profile setup to enter Orchard."}
                   </Text>
                   <Pressable
                     onPress={() => router.replace("/onboarding/account-type")}

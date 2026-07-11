@@ -12,7 +12,11 @@ export function createMockProfileService(
 ): ProfileService {
   return {
     async getCurrentProfile() {
-      return ok(state.currentProfile);
+      return ok(
+        state.currentProfile
+          ? { status: "completed" as const, profile: state.currentProfile }
+          : { status: "missing" as const }
+      );
     },
 
     async completeOnboarding(input: ProfileDraftInput) {

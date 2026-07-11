@@ -20,7 +20,10 @@ import Colors from "@/constants/colors";
 import { useOnboarding } from "@/providers/onboarding-provider";
 import { useAuth } from "@/providers/auth-provider";
 import { useOnboardingCompletionReadModel } from "@/hooks/use-onboarding-completion-read-model";
-import { savePendingOnboardingProfile } from "@/services/pending-onboarding-storage";
+import {
+  clearPendingOnboardingProfile,
+  savePendingOnboardingProfile,
+} from "@/services/pending-onboarding-storage";
 import {
   AccountCredentials,
   AccountType,
@@ -228,6 +231,10 @@ export default function PhotosScreen() {
       return;
     }
 
+    if (mode === "supabase") {
+      await savePendingOnboardingProfile(profile);
+    }
+
     const completeResult = await completeOnboarding(profile);
     if (!completeResult.ok) {
       Alert.alert(
@@ -236,6 +243,10 @@ export default function PhotosScreen() {
       );
       setFinishing(false);
       return;
+    }
+
+    if (mode === "supabase") {
+      await clearPendingOnboardingProfile();
     }
 
     reset();

@@ -11,8 +11,13 @@ export interface ProfileUpdateInput {
   patch: Partial<Profile>;
 }
 
+export type CurrentProfileResult =
+  | { status: "missing" }
+  | { status: "incomplete"; profile: Profile }
+  | { status: "completed"; profile: Profile };
+
 export interface ProfileService {
-  getCurrentProfile(): Promise<ServiceResponse<Profile | null>>;
+  getCurrentProfile(): Promise<ServiceResponse<CurrentProfileResult>>;
   completeOnboarding(input: ProfileDraftInput): Promise<ServiceResponse<Profile>>;
   updateProfile(input: ProfileUpdateInput): Promise<ServiceResponse<Profile>>;
   setProfileVisibility(

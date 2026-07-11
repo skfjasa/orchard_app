@@ -1,3 +1,5 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import { supabase, type Database } from "@/lib/supabase";
 import type {
   AccountType,
@@ -9,11 +11,19 @@ import type {
 } from "@/types";
 
 import type {
+  CurrentProfileResult,
   ProfileDraftInput,
   ProfileService,
   ProfileUpdateInput,
 } from "./profile-service";
 import type { ServiceResponse } from "./service-types";
+import { completeOnboardingInPhases } from "./onboarding-completion-service";
+import {
+  toIncompleteProfileInsert,
+  toIncompleteProfileUpdate,
+  toOnboardingFinalizationUpdate,
+  toPostOnboardingProfileUpdate,
+} from "./supabase-profile-mappers";
 import { fail, ok, requireSupabase } from "./supabase-service-response";
 import {
   createSupabaseStorageService,
@@ -23,8 +33,6 @@ import {
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
 type ProfileMemberRow = Database["public"]["Tables"]["profile_members"]["Row"];
 type ProfilePhotoRow = Database["public"]["Tables"]["profile_photos"]["Row"];
-type ProfileInsert = Database["public"]["Tables"]["profiles"]["Insert"];
-type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
 type ProfileMemberInsert =
   Database["public"]["Tables"]["profile_members"]["Insert"];
 type ProfileMemberUpdate =
@@ -50,29 +58,6 @@ function ageFromBirthdate(birthdate: string | null): number {
   return Math.max(18, new Date().getFullYear() - year);
 }
 
-function toProfileInsert(profile: Profile): ProfileInsert {
-  const firstPerson = profile.people[0];
-  return {
-    id: profile.id,
-    display_name: firstPerson?.name ?? null,
-    birthdate: birthdateFromAge(firstPerson?.age),
-    age_confirmed: profile.ageConfirmed ?? true,
-    city: profile.location.city,
-    latitude_approx: profile.location.lat,
-    longitude_approx: profile.location.lng,
-    gender: firstPerson?.gender ?? null,
-    relationship_structure: profile.polyType ? [profile.polyType] : [],
-    partnered_status: profile.accountType,
-    dating_mode: profile.lookingFor,
-    looking_for: profile.preferences,
-    boundaries: [],
-    bio: profile.bio ?? null,
-    is_visible: true,
-    onboarding_completed: true,
-    last_active_at: new Date().toISOString(),
-  };
-}
-
 function toMemberInserts(profile: Profile): ProfileMemberInsert[] {
   return profile.people.map((person, index) => ({
     profile_id: profile.id,
@@ -82,43 +67,6 @@ function toMemberInserts(profile: Profile): ProfileMemberInsert[] {
     bio: index === 0 ? profile.bio ?? null : null,
     sort_order: index,
   }));
-}
-
-function toProfileUpdate(patch: Partial<Profile>): ProfileUpdate {
-  const firstPerson = patch.people?.[0];
-  const update: ProfileUpdate = {};
-
-  if (firstPerson?.name !== undefined) update.display_name = firstPerson.name;
-  if (firstPerson?.age !== undefined) {
-    update.birthdate = birthdateFromAge(firstPerson.age);
-  }
-  if (firstPerson?.gender !== undefined) update.gender = firstPerson.gender;
-  if (patch.ageConfirmed !== undefined) update.age_confirmed = patch.ageConfirmed;
-  if (patch.location?.city !== undefined) update.city = patch.location.city;
-  if (patch.location?.lat !== undefined) {
-    update.latitude_approx = patch.location.lat;
-  }
-  if (patch.location?.lng !== undefined) {
-    update.longitude_approx = patch.location.lng;
-  }
-  if (patch.polyType !== undefined) {
-    update.relationship_structure = patch.polyType ? [patch.polyType] : [];
-  }
-  if (patch.accountType !== undefined) update.partnered_status = patch.accountType;
-  if (patch.lookingFor !== undefined) update.dating_mode = patch.lookingFor;
-  if (patch.preferences !== undefined) update.looking_for = patch.preferences;
-  if (patch.bio !== undefined) update.bio = patch.bio ?? null;
-
-  update.last_active_at = new Date().toISOString();
-  return update;
-}
-
-function toProfileUpdateFromProfile(profile: Profile): ProfileUpdate {
-  return {
-    ...toProfileUpdate(profile),
-    is_visible: true,
-    onboarding_completed: true,
-  };
 }
 
 function toMemberUpdate(row: ProfileMemberInsert): ProfileMemberUpdate {
@@ -218,6 +166,58 @@ export async function buildPhotosByMemberId(
   return grouped;
 }
 
+async function readProfileState(
+  client: SupabaseClient<Database>,
+  userId: string
+): Promise<ServiceResponse<CurrentProfileResult>> {
+  const { data: profileRow, error: profileError } = await client
+    .from("profiles")
+    .select("*")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (profileError) {
+    return fail("profile_read_failed", "Unable to read profile.", profileError);
+  }
+  if (!profileRow) return ok({ status: "missing" });
+
+  const { data: members, error: membersError } = await client
+    .from("profile_members")
+    .select("*")
+    .eq("profile_id", userId)
+    .order("sort_order", { ascending: true });
+
+  if (membersError) {
+    return fail(
+      "profile_members_read_failed",
+      "Unable to read profile members.",
+      membersError
+    );
+  }
+
+  const { data: photos, error: photosError } = await client
+    .from("profile_photos")
+    .select("*")
+    .eq("profile_id", userId)
+    .order("sort_order", { ascending: true });
+
+  if (photosError) {
+    return fail(
+      "profile_photos_read_failed",
+      "Unable to read profile photos.",
+      photosError
+    );
+  }
+
+  const photosByMemberId = await buildPhotosByMemberId(photos ?? []);
+  const profile = toAppProfile(profileRow, members ?? [], photosByMemberId);
+  return ok(
+    profileRow.onboarding_completed
+      ? { status: "completed", profile }
+      : { status: "incomplete", profile }
+  );
+}
+
 function applyUploadedPhotosToProfile(
   profile: Profile,
   uploadedPhotosByPersonIndex: Record<number, Record<number, string>>
@@ -264,7 +264,10 @@ async function persistProfilePhotos(
         for (const storagePath of uploadedPaths) {
           void storage.remove(storagePath);
         }
-        return { ok: false, error: uploadResult.error };
+        return fail(
+          "profile_photos_write_failed",
+          uploadResult.error.message
+        );
       }
 
       uploadedPaths.push(uploadResult.value.storagePath);
@@ -345,49 +348,8 @@ export function createSupabaseProfileService(): ProfileService {
       const { data: authData, error: authError } = await client.auth.getUser();
       if (authError) return fail("auth_user_failed", "Unable to read current user.", authError);
       const userId = authData.user?.id;
-      if (!userId) return ok(null);
-
-      const { data: profileRow, error: profileError } = await client
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .maybeSingle();
-
-      if (profileError) {
-        return fail("profile_read_failed", "Unable to read profile.", profileError);
-      }
-      if (!profileRow) return ok(null);
-
-      const { data: members, error: membersError } = await client
-        .from("profile_members")
-        .select("*")
-        .eq("profile_id", userId)
-        .order("sort_order", { ascending: true });
-
-      if (membersError) {
-        return fail(
-          "profile_members_read_failed",
-          "Unable to read profile members.",
-          membersError
-        );
-      }
-
-      const { data: photos, error: photosError } = await client
-        .from("profile_photos")
-        .select("*")
-        .eq("profile_id", userId)
-        .order("sort_order", { ascending: true });
-
-      if (photosError) {
-        return fail(
-          "profile_photos_read_failed",
-          "Unable to read profile photos.",
-          photosError
-        );
-      }
-
-      const photosByMemberId = await buildPhotosByMemberId(photos ?? []);
-      return ok(toAppProfile(profileRow, members ?? [], photosByMemberId));
+      if (!userId) return ok({ status: "missing" });
+      return readProfileState(client, userId);
     },
 
     async completeOnboarding(input: ProfileDraftInput) {
@@ -395,94 +357,168 @@ export function createSupabaseProfileService(): ProfileService {
       if (!clientResult.ok) return clientResult;
       const client = clientResult.value;
       const profile = input.profile;
-
-      const profileInsert = toProfileInsert(profile);
-      const { error: profileInsertError } = await client
-        .from("profiles")
-        .insert(profileInsert);
-
-      if (profileInsertError) {
-        if (!isUniqueViolation(profileInsertError)) {
-          return fail(
-            "profile_write_failed",
-            "Unable to save profile.",
-            profileInsertError
-          );
-        }
-
-        const { error: profileUpdateError } = await client
-          .from("profiles")
-          .update(toProfileUpdateFromProfile(profile))
-          .eq("id", profile.id);
-
-        if (profileUpdateError) {
-          return fail(
-            "profile_write_failed",
-            "Unable to save profile.",
-            profileUpdateError
-          );
-        }
+      const { data: authData, error: authError } = await client.auth.getUser();
+      if (authError) {
+        return fail("auth_user_failed", "Unable to read current user.", authError);
       }
-
-      const memberRows = toMemberInserts(profile);
-      let savedMembers: ProfileMemberRow[] = [];
-      if (memberRows.length > 0) {
-        for (const memberRow of memberRows) {
-          const { data: insertedMember, error: memberInsertError } = await client
-            .from("profile_members")
-            .insert(memberRow)
-            .select("*")
-            .single();
-
-          if (!memberInsertError) {
-            savedMembers.push(insertedMember);
-            continue;
-          }
-
-          if (!isUniqueViolation(memberInsertError)) {
-            return fail(
-              "profile_members_write_failed",
-              "Unable to save profile members.",
-              memberInsertError
-            );
-          }
-
-          const { data: updatedMember, error: memberUpdateError } = await client
-            .from("profile_members")
-            .update(toMemberUpdate(memberRow))
-            .eq("profile_id", profile.id)
-            .eq("sort_order", memberRow.sort_order ?? 0)
-            .select("*")
-            .single();
-
-          if (memberUpdateError) {
-            return fail(
-              "profile_members_write_failed",
-              "Unable to save profile members.",
-              memberUpdateError
-            );
-          }
-
-          savedMembers.push(updatedMember);
-        }
-      }
-
-      const { error: settingsError } = await client
-        .from("user_settings")
-        .upsert(toUserSettings(profile), { onConflict: "profile_id" });
-
-      if (settingsError) {
+      if (!authData.user || authData.user.id !== profile.id) {
         return fail(
-          "user_settings_write_failed",
-          "Unable to save default user settings.",
-          settingsError
+          "profile_preparation_forbidden",
+          "Unable to prepare a profile for a different user."
         );
       }
 
-      const photoResult = await persistProfilePhotos(profile, savedMembers);
-      if (!photoResult.ok) return photoResult;
+      return completeOnboardingInPhases<ProfileMemberRow[]>({
+        async prepareProfile() {
+          const { error: insertError } = await client
+            .from("profiles")
+            .insert(toIncompleteProfileInsert(profile));
 
-      return ok(photoResult.value);
+          if (!insertError) return ok({ status: "prepared" as const });
+          if (!isUniqueViolation(insertError)) {
+            return fail(
+              "profile_preparation_failed",
+              "Unable to prepare profile.",
+              insertError
+            );
+          }
+
+          const current = await readProfileState(client, profile.id);
+          if (!current.ok) {
+            return fail(
+              "profile_preparation_read_failed",
+              current.error.message
+            );
+          }
+          if (current.value.status === "missing") {
+            return fail(
+              "profile_preparation_conflict",
+              "The existing profile could not be found after a conflict."
+            );
+          }
+          if (current.value.status === "completed") {
+            return ok({
+              status: "already_completed" as const,
+              profile: current.value.profile,
+            });
+          }
+
+          const { data: updatedRow, error: updateError } = await client
+            .from("profiles")
+            .update(toIncompleteProfileUpdate(profile))
+            .eq("id", profile.id)
+            .eq("onboarding_completed", false)
+            .select("id")
+            .maybeSingle();
+
+          if (updateError || !updatedRow) {
+            return fail(
+              "profile_preparation_failed",
+              "Unable to refresh the incomplete profile.",
+              updateError ?? undefined
+            );
+          }
+          return ok({ status: "prepared" as const });
+        },
+
+        async persistMembers() {
+          const savedMembers: ProfileMemberRow[] = [];
+          const memberRows = toMemberInserts(profile);
+          if (memberRows.length === 0) {
+            return fail(
+              "profile_members_write_failed",
+              "At least one profile member is required."
+            );
+          }
+
+          for (const memberRow of memberRows) {
+            const { data: insertedMember, error: memberInsertError } = await client
+              .from("profile_members")
+              .insert(memberRow)
+              .select("*")
+              .single();
+
+            if (!memberInsertError) {
+              savedMembers.push(insertedMember);
+              continue;
+            }
+            if (!isUniqueViolation(memberInsertError)) {
+              return fail(
+                "profile_members_write_failed",
+                "Unable to save profile members.",
+                memberInsertError
+              );
+            }
+
+            const { data: updatedMember, error: memberUpdateError } = await client
+              .from("profile_members")
+              .update(toMemberUpdate(memberRow))
+              .eq("profile_id", profile.id)
+              .eq("sort_order", memberRow.sort_order ?? 0)
+              .select("*")
+              .single();
+
+            if (memberUpdateError) {
+              return fail(
+                "profile_members_write_failed",
+                "Unable to save profile members.",
+                memberUpdateError
+              );
+            }
+            savedMembers.push(updatedMember);
+          }
+          return ok(savedMembers);
+        },
+
+        async persistSettings() {
+          const { error } = await client
+            .from("user_settings")
+            .upsert(toUserSettings(profile), { onConflict: "profile_id" });
+          return error
+            ? fail(
+                "user_settings_write_failed",
+                "Unable to save default user settings.",
+                error
+              )
+            : ok(undefined);
+        },
+
+        async persistPhotos(savedMembers) {
+          return persistProfilePhotos(profile, savedMembers);
+        },
+
+        async finalizeProfile() {
+          const { data: finalizedRow, error: finalizationError } = await client
+            .from("profiles")
+            .update(toOnboardingFinalizationUpdate())
+            .eq("id", profile.id)
+            .eq("onboarding_completed", false)
+            .select("id")
+            .maybeSingle();
+
+          if (finalizationError || !finalizedRow) {
+            return fail(
+              "profile_finalization_failed",
+              "Unable to finalize profile.",
+              finalizationError ?? undefined
+            );
+          }
+
+          const completed = await readProfileState(client, profile.id);
+          if (!completed.ok) {
+            return fail(
+              "profile_finalization_failed",
+              completed.error.message
+            );
+          }
+          return completed.value.status === "completed"
+            ? ok(completed.value.profile)
+            : fail(
+                "profile_finalization_failed",
+                "The finalized profile could not be confirmed."
+              );
+        },
+      });
     },
 
     async updateProfile(input: ProfileUpdateInput) {
@@ -492,7 +528,7 @@ export function createSupabaseProfileService(): ProfileService {
 
       const { error } = await client
         .from("profiles")
-        .update(toProfileUpdate(input.patch))
+        .update(toPostOnboardingProfileUpdate(input.patch))
         .eq("id", input.profileId);
 
       if (error) {
@@ -523,8 +559,8 @@ export function createSupabaseProfileService(): ProfileService {
       }
 
       const current = await this.getCurrentProfile();
-      return current.ok && current.value
-        ? ok(current.value)
+      return current.ok && current.value.status === "completed"
+        ? ok(current.value.profile)
         : fail("profile_not_found", "Current profile was not found.");
     },
 
@@ -547,8 +583,8 @@ export function createSupabaseProfileService(): ProfileService {
       }
 
       const current = await this.getCurrentProfile();
-      return current.ok && current.value
-        ? ok(current.value)
+      return current.ok && current.value.status === "completed"
+        ? ok(current.value.profile)
         : fail("profile_not_found", "Current profile was not found.");
     },
 

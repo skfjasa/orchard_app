@@ -24,6 +24,7 @@ export type {
 } from "./auth-service";
 
 export type {
+  CurrentProfileResult,
   ProfileDraftInput,
   ProfileService,
   ProfileUpdateInput,

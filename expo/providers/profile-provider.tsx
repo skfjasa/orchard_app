@@ -189,6 +189,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const [hydrated, setHydrated] = useState<boolean>(false);
   const [backendProfileHydrated, setBackendProfileHydrated] =
     useState<boolean>(false);
+  const [backendProfileIncomplete, setBackendProfileIncomplete] =
+    useState<boolean>(false);
   const [backendMatchesHydrated, setBackendMatchesHydrated] =
     useState<boolean>(false);
 
@@ -283,6 +285,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         setBackendProfileHydrated,
         setKnownProfiles,
       });
+      setBackendProfileIncomplete(false);
       return;
     }
 
@@ -297,6 +300,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         setBackendMatchesHydrated,
         setBackendProfileHydrated,
       });
+      setBackendProfileIncomplete(false);
       return;
     }
 
@@ -316,6 +320,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     console.log("[profile-provider] backend bootstrap reset: user changed", {
       userId,
     });
+    setBackendProfileIncomplete(false);
     applyUserChangedBackendBootstrapReset({
       displayProfilesRef,
       knownProfilesRef,
@@ -344,24 +349,15 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     });
     setProfile(null);
     saveProfileRef.current(null);
+    setBackendProfileIncomplete(false);
     setBackendProfileHydrated(false);
     setBackendMatchesHydrated(false);
   }, [hydrated, mode, profile, userId]);
 
   useEffect(() => {
     if (mode !== "supabase") return;
-    if (!hydrated || !userId || !profile) return;
-    if (profile.id !== userId || backendProfileHydrated) return;
-    console.log("[profile-provider] cached profile accepted for backend bootstrap", {
-      userId,
-    });
-    setBackendProfileHydrated(true);
-  }, [backendProfileHydrated, hydrated, mode, profile, userId]);
-
-  useEffect(() => {
-    if (mode !== "supabase") return;
     if (appServices.capabilities.profiles !== "supabase") return;
-    if (!hydrated || backendProfileHydrated || !userId || profile) return;
+    if (!hydrated || backendProfileHydrated || !userId) return;
 
     let cancelled = false;
     void bootstrapBackendProfile({
@@ -373,8 +369,17 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       if (cancelled) return;
 
       if (result.status === "loaded") {
+        setBackendProfileIncomplete(false);
         setProfile(result.profile);
         saveProfileRef.current(result.profile);
+      } else if (result.status === "incomplete") {
+        setBackendProfileIncomplete(true);
+        setProfile(null);
+        saveProfileRef.current(null);
+      } else if (result.status !== "cancelled") {
+        setBackendProfileIncomplete(false);
+        setProfile(null);
+        saveProfileRef.current(null);
       }
 
       setBackendProfileHydrated(true);
@@ -388,7 +393,6 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     backendProfileHydrated,
     hydrated,
     mode,
-    profile,
     session?.user.email,
     userId,
   ]);
@@ -526,6 +530,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       console.log("[profile-provider] completeOnboarding", profileToStore.id);
       setProfile(profileToStore);
       saveProfileRef.current(profileToStore);
+      setBackendProfileIncomplete(false);
       setBackendProfileHydrated(true);
       return { ok: true };
     },
@@ -1115,6 +1120,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       passedIds,
       hydrated,
       backendProfileHydrated,
+      backendProfileIncomplete,
       backendMatchesHydrated,
       isLoading: loadQuery.isLoading,
       totalSlots,
@@ -1173,6 +1179,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       passedIds,
       hydrated,
       backendProfileHydrated,
+      backendProfileIncomplete,
       backendMatchesHydrated,
       loadQuery.isLoading,
       totalSlots,

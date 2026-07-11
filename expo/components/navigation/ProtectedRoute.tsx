@@ -4,6 +4,7 @@ import { ActivityIndicator, StyleSheet, View } from "react-native";
 
 import Colors from "@/constants/colors";
 import { useAppBootstrapReadModel } from "@/hooks/use-app-bootstrap-read-model";
+import { selectProfileBootstrapPath } from "@/services/profile-bootstrap-route-service";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -18,6 +19,7 @@ export default function ProtectedRoute({
     authInitialized,
     backendMatchesHydrated,
     backendProfileHydrated,
+    backendProfileIncomplete,
     hydrated,
     mode,
     profile,
@@ -67,15 +69,16 @@ export default function ProtectedRoute({
     );
   }
 
-  if (mode === "supabase" && !session) {
-    return <Redirect href="/onboarding" />;
-  }
-
-  if (mode === "supabase" && session && !profile) {
+  const path = selectProfileBootstrapPath({
+    backendProfileIncomplete,
+    hasProfile: !!profile,
+    hasSession: !!session,
+    mode,
+  });
+  if (path === "onboarding_profile") {
     return <Redirect href="/onboarding/account-type" />;
   }
-
-  if (!profile) return <Redirect href="/onboarding" />;
+  if (path === "onboarding") return <Redirect href="/onboarding" />;
 
   return <>{children}</>;
 }
