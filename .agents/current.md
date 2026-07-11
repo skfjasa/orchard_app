@@ -1,6 +1,6 @@
 # Current Agent State
 
-Last updated: 2026-07-10
+Last updated: 2026-07-11
 
 ## Objective
 
@@ -9,9 +9,11 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 ## Branch And Commit
 
 - Branch: `main`.
-- Remote state: clean with `origin/main` after the application-test harness push.
-- Latest code checkpoint: `bcd6961` - Add Bun application test harness.
+- Remote state: clean with `origin/main` after the corrected backlog item 3 and 4 push.
+- Latest code checkpoint: `ddac497` - Enforce profile photo path ownership.
 - Recent relevant checkpoints:
+  - `280b601` - Remove swipe repair from chat sending.
+  - `ddac497` - Enforce profile photo path ownership.
   - `dfac3c2` - Sync session handoff.
   - `bd7c53a` - Sync human-gated remaining work.
   - `f960925` - Remove pass swipe provider wrapper.
@@ -62,6 +64,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
   - Unmatch/block source paths remove local conversation visibility and server policies deny direct read/send while a match remains inactive. The 2026-07-10 audit found a separate consent bug: stale chat sending can create a new like and active rematch.
 - `docs/2026-07-10-repository-audit-gpt-5.6-sol-ultra.md` contains the original deep audit plus a timestamped `gpt-5.6-sol-max` adversarial review. Use the adversarial section for corrected verdicts, exclusions, and the 18-slice PR-sized backlog.
 - Corrected backlog item 1 is implemented at `bcd6961`: `expo/package.json` exposes Bun's native test runner, one pure service test covers configured/missing Supabase response semantics, and the regular Expo CI workflow runs application tests. The manual Supabase database workflow is unchanged.
+- Corrected backlog item 3 is implemented at `280b601` with automated checks passed and targeted human UAT pending. Chat lookup no longer calls swipe repair, missing/inactive matches trigger the existing bounded local cleanup, and non-match lookup/send failures remain distinct.
+- Corrected backlog item 4 is implemented at `ddac497` with automated checks passed and hosted preflight/UAT pending. New migration `202607110001` binds `profile_photos.storage_path` to the row owner at the constraint and RLS layers without changing existing private storage visibility or write policies.
 - `ProfileProvider` remains active as a compatibility facade. App routes/components no longer import `useProfile()` directly; focused read-model hooks own route/provider access.
 - Supabase mode has auth/profile/photo/discovery/match/chat/read-state/Realtime paths in varying degrees.
 - Mock/Fruit/demo mode remains required and should not be broken by hosted-mode work.
@@ -70,6 +74,13 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 
 Latest code-touching checks:
 
+- `expo\node_modules\.bin\supabase db reset`: passed through migration `202607110001` and seed.
+- `expo\node_modules\.bin\supabase test db`: passed, 1 file and 67 pgTAP cases.
+- `expo\node_modules\.bin\supabase db lint --level warning`: passed with no schema errors.
+- `cd expo; bun test`: passed after chat swipe-repair removal (11 tests, 28 assertions).
+- `cd expo; bun run typecheck`: passed after chat swipe-repair removal.
+- `cd expo; bun run lint`: passed after chat swipe-repair removal.
+- `git diff --check`: passed after chat swipe-repair removal, with only Git's existing LF-to-CRLF working-copy warnings.
 - `cd expo; bun test`: passed after the minimal application test harness (1 test, 2 assertions).
 - `cd expo; bun run typecheck`: passed after the minimal application test harness.
 - `cd expo; bun run lint`: passed after the minimal application test harness.
@@ -113,7 +124,9 @@ Final docs-only sync `bd7c53a` ran `git diff --check`; typecheck/lint were not r
 - Human decisions remain open for analytics/crash reporting, automatic Supabase DB tests on migration PRs, fixture image ingestion, feedback channel/support process, and whether mobile web/ngrok is acceptable for the first inner-circle pass before TestFlight.
 - M6 Supabase-mode fixture simulated replies/photo behavior still needs a product decision before changing chat behavior further.
 - Seeded/demo account creation and private credential handling remain human-owned; the repo now has only placeholder release-note scaffolding.
-- Corrected backlog item 1 is complete. Selection and acceptance order for item 2 and later slices remains with the user; do not begin password removal without explicit instruction.
+- Corrected backlog item 1 is complete. Item 2 remains unimplemented, and selection of item 4 or later slices remains with the user; do not begin another slice without explicit instruction.
+- Corrected backlog item 3 is `Implemented / Automated Checks Passed / Awaiting UAT`; do not mark it accepted until the targeted hosted scenarios pass.
+- Corrected backlog item 4 is `Implemented / Automated Checks Passed / Awaiting Hosted UAT`; hosted preflight and migration apply were not performed.
 
 ## Canonical Docs
 
@@ -128,4 +141,4 @@ Final docs-only sync `bd7c53a` ran `git diff --check`; typecheck/lint were not r
 
 ## Next Recommended Task
 
-Best next task: wait for explicit selection before starting corrected backlog item 2 or any later slice. Do not begin a broad `ProfileProvider` rewrite or change Supabase-mode fixture simulated replies/photo-request behavior.
+Best next task: run the documented read-only hosted photo-path preflight before any item 4 hosted apply, then complete item 3/item 4 targeted UAT when human accounts/sessions are available. Do not begin corrected backlog item 5 or another slice without explicit instruction.

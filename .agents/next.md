@@ -5,11 +5,14 @@ Continue safely through the milestone list from `docs/milestone-tracker.md`.
 Recommended next non-UAT task:
 
 1. Corrected backlog item 1 is complete at `bcd6961` with Bun-native application tests, one pure-service test, and an application-test step in regular Expo CI.
-2. Wait for explicit user instruction before beginning corrected backlog item 2 (persisted-password removal) or any later audit slice.
-3. Keep every change PR-sized and preserve mock/demo behavior, storage compatibility, and the current UI.
-4. Avoid a broad `ProfileProvider` rewrite.
-5. Avoid changing Supabase-mode fixture simulated replies/photo-request behavior until the M6 product decision is made.
-6. Keep hosted UAT items open unless a human/device test is actually run.
+2. Corrected backlog item 3 is implemented at `280b601` with automated checks passed and targeted hosted UAT pending.
+3. Corrected backlog item 4 is implemented at `ddac497` with full reset, 67 pgTAP cases, and database lint passing; hosted preflight/apply/UAT remain pending.
+4. Run the documented read-only hosted photo-path preflight before any item 4 hosted apply. If it returns unexplained rows, stop for human remediation.
+5. Run item 3 and item 4 targeted hosted UAT when human accounts/sessions are available; otherwise wait for explicit instruction before another audit slice.
+6. Keep every change PR-sized and preserve mock/demo behavior, storage compatibility, and the current UI.
+7. Avoid a broad `ProfileProvider` rewrite.
+8. Avoid changing Supabase-mode fixture simulated replies/photo-request behavior until the M6 product decision is made.
+9. Keep hosted UAT items open unless a human/device test is actually run.
 
 Avoid changing Supabase-mode fixture simulated replies/photo behavior until the product decision in M6 is made.
 
@@ -34,9 +37,12 @@ Read if relevant:
 
 ## Latest Completed Work
 
-- Latest code checkpoint is `bcd6961` - Add Bun application test harness.
+- Latest code checkpoint is `ddac497` - Enforce profile photo path ownership.
 - `expo/services/supabase-service-response.test.ts` proves Bun can run TypeScript application tests against a pure service, covering both configured-client success and missing-configuration failure responses.
 - Regular Expo CI now runs `bun test` after its existing frozen-lockfile install. The manual Supabase DB workflow remains dispatch-only and unchanged.
+- Corrected backlog item 3 removes chat-triggered swipe repair. Backend chat lookup now returns `match_not_found` for missing/inactive matches without calling swipes, the provider preserves bounded stale target cleanup, and valid sends remain backend-first.
+- Focused tests cover no-swipe missing/inactive paths, cleanup isolation, successful send/echo behavior, lookup and RLS failure distinction, mock skip behavior, and unchanged explicit swipe behavior.
+- Corrected backlog item 4 adds local migration `202607110001`, fail-fast hosted-data diagnostics, constraint-level photo path ownership, hardened metadata write policies, and 22 focused pgTAP assertions while preserving existing storage visibility/write policies.
 - `docs/2026-07-10-repository-audit-gpt-5.6-sol-ultra.md` contains the original audit plus an authoritative adversarial section that corrects mixed/overstated findings and provides an 18-slice `[C]`/`[C+U]` backlog.
 - Part 4 React Query/auth/error-boundary stabilization is implemented:
   - Profile and conversation persistence callbacks no longer depend on unstable React Query mutation result objects.
@@ -66,6 +72,13 @@ Read if relevant:
 
 ## Latest Validation
 
+- `expo\node_modules\.bin\supabase db reset`: passed through migration `202607110001` and seed.
+- `expo\node_modules\.bin\supabase test db`: passed, 1 file and 67 pgTAP cases.
+- `expo\node_modules\.bin\supabase db lint --level warning`: passed with no schema errors.
+- `cd expo; bun test`: passed after chat swipe-repair removal (11 tests, 28 assertions).
+- `cd expo; bun run typecheck`: passed after chat swipe-repair removal.
+- `cd expo; bun run lint`: passed after chat swipe-repair removal.
+- `git diff --check`: passed after chat swipe-repair removal, with only LF-to-CRLF working-copy warnings.
 - `cd expo; bun test`: passed for the minimal application test harness (1 test, 2 assertions).
 - `cd expo; bun run typecheck`: passed after the harness.
 - `cd expo; bun run lint`: passed after the harness.

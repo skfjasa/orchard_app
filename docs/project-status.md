@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-07-10
+Last updated: 2026-07-11
 
 ## Current Repo State
 
@@ -258,6 +258,8 @@ Last updated: 2026-07-10
 - M1 provider cleanup removed the provider-owned backend pass-swipe wrapper; `passProfile` now calls `recordBackendSwipe` directly through `expo/services/backend-swipe-action-service.ts`.
 - Profile-tab sign-out now clears profile/auth state before routing to `/onboarding`, preventing the user from landing on Discover with no profile/data loaded.
 - Corrected audit backlog item 1 adds a Bun-native TypeScript application test harness. `expo/services/supabase-service-response.test.ts` proves a pure service's configured and missing-Supabase response paths, and regular Expo CI now runs `bun test`; the manual Supabase DB workflow remains unchanged and dispatch-only.
+- Corrected audit backlog item 3 is implemented with automated checks passed and human UAT pending. Backend chat lookup no longer accepts `repairWithSwipe` or calls the swipe service; missing/inactive matches return `match_not_found`, provider-owned stale target cleanup is preserved through a small application helper, successful sends still append only after backend success, and lookup/send failures retain their domain error code. No database files changed because message inserts already require an active member match and only the explicit swipe RPC can create a match.
+- Corrected audit backlog item 4 is implemented locally with automated checks passed and hosted UAT pending. Forward migration `202607110001_profile_photo_storage_path_ownership.sql` adds an immutable path predicate, fail-fast existing-row preflight, table CHECK, and owner/path-aware metadata INSERT/UPDATE policies. Existing storage object write and private signed-read policies remain unchanged. A full local reset, 67 pgTAP cases, database lint, and targeted SQL inspection pass; hosted preflight/apply were not run.
 - Remaining observed behavior to decide/fix later: after sign-out/sign-in, only hosted messages are restored; local fixture greeting/simulated messages are intentionally not persisted to hosted chat yet.
 - The original generated onboarding background was recovered from the previous remote URL, vendored as `expo/assets/images/welcome-background.png`, and the welcome, sign-in, and pending-confirmation screens now use the local bundled asset instead of the app icon background or a remote Rork URL.
 - Hosted onboarding/profile-photo confirmation smoke passed: after reaching the pending-confirmation page, opening email in a new tab and following the Supabase confirmation link opened another tab on Discover; the created profile's name, email, and selected photo hydrated correctly from the Profile tab while the original pending-confirmation tab remained idle.

@@ -1,6 +1,6 @@
 # Orchard Closed-Beta Milestone Tracker
 
-Last updated: 2026-07-08
+Last updated: 2026-07-11
 
 This is the single canonical milestone, roadmap, checklist, blocker, and feedback-loop document for getting Orchard to a closed beta with close friends and inner-circle testers.
 
@@ -332,12 +332,13 @@ Done:
 - [x] [C] Realtime publication migration exists for matches/messages.
 - [x] [C] Backend read-state migration exists.
 - [x] [C] GitHub Actions run Expo checks; manual Supabase DB test workflow exists.
+- [~] [C+U] Local migration `202607110001_profile_photo_storage_path_ownership.sql` enforces profile-photo path ownership through a database constraint and hardened metadata policies. Full reset, 67 pgTAP cases, and database lint pass; hosted preflight/apply/UAT remain pending.
 
 Remaining:
 
 - [ ] [H] Decide whether Supabase DB tests should run automatically on migration PRs.
 - [ ] [H+C] Create production Supabase project later: `orchard-prod`.
-- [x] [C] `docs/supabase-schema.md` is current through migration `202607040004`; no schema/RLS migrations changed in the latest app cleanup work.
+- [~] [C+U] `docs/supabase-schema.md` is current through local migration `202607110001`; hosted preflight/apply remain pending.
 
 Exit criteria:
 
@@ -357,11 +358,13 @@ Done:
 - [x] [C] Profile/member rows persist to Supabase.
 - [x] [C+U] Supabase Storage-backed profile photo upload exists.
 - [x] [C] Profile photo storage policies and active-match photo read policies exist.
+- [~] [C+U] Profile-photo metadata now requires `<profile_id>/<purpose>/<filename>` ownership at both the database constraint and INSERT/UPDATE policy layers. Local automated checks pass; hosted preflight and owner/attacker/visibility/revocation UAT remain.
 - [x] [C+U] Onboarding background/sign-in header visual regressions were fixed and UAT-confirmed.
 
 Remaining:
 
 - [ ] [U] UAT full sign-up/sign-in/profile/photo flow on target mobile browser and later iOS device.
+- [ ] [U] Run the hosted photo-path preflight, remediate any unexplained row before apply, then verify valid owner upload, forged metadata INSERT/UPDATE rejection, discovery/active-match reads, and block/unmatch revocation.
 - [ ] [C+U] Confirm no profile hydration loops or stale local profile state on repeated sign-out/sign-in.
 - [ ] [H] Decide if branded auth emails are needed for inner-circle testing.
 - [!] [H] Custom SMTP is required before Supabase Auth email branding can be customized.
@@ -445,6 +448,7 @@ Done:
 - [x] [C] Source audit confirmed Supabase text-send failures do not create a misleading local sent message. Real backend-profile sends append to the local conversation only after `services.chat.sendMessage` returns `ok`; failures currently log and leave no false sent bubble.
 - [x] [C] Source audit confirmed unmatch/block paths remove local conversation visibility and server-side policies deny message read/send once the match is inactive. `unmatch_match` marks matches `unmatched`, `block_profile` marks matches `blocked`, message RLS depends on `private.can_access_active_match`, and database tests cover unmatched/blocked message denial.
 - [x] [C] Source audit confirmed real/non-fixture Supabase text chat is backend-first: `sendMessage` sends non-mock backend profile ids through `persistBackendChatMessage` only, and the local conversation is updated only from the successful backend message.
+- [~] [C+U] Chat sending no longer repairs missing matches through `recordSwipe`: missing/inactive matches return `match_not_found`, existing bounded stale-state cleanup remains authoritative, and lookup/send failures retain their service error codes. Focused Bun tests pass; hosted stale-sender, historical-like, valid-send, failure-distinction, and mock regression UAT remain required.
 
 Remaining:
 
