@@ -108,7 +108,8 @@ export function createSupabaseChatService(): ChatService {
         .single();
 
       if (error) {
-        return fail("send_message_failed", "Could not send message.", error);
+        const code = error.code === "42501" ? "message_forbidden" : "send_message_failed";
+        return fail(code, "Could not send message.", error);
       }
 
       return ok(toMessage(data, input.senderId));

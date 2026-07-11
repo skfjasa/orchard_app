@@ -17,6 +17,7 @@ import {
   markBackendConversationRead,
   sendBackendChatMessage,
 } from "@/services/backend-chat-action-service";
+import { applyBackendChatSendResult } from "@/services/backend-chat-send-application-service";
 import { unmatchBackendProfile } from "@/services/backend-match-action-service";
 import {
   buildBackendDisplayProfileMap,
@@ -633,23 +634,12 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         targetId,
         userId,
       }).then((result) => {
-        if (result.status === "match_not_found") {
-          removeLocalMatchState({
-            profileId: targetId,
-            setLikedIds,
-            updateConversations,
-          });
-          return;
-        }
-
-        if (result.status !== "sent" || options.appendLocalEcho === false) {
-          return;
-        }
-
-        updateConversations((prev) => {
-          const next = mergeBackendConversation(prev, targetId, [result.message]);
-          if (next === prev) return prev;
-          return next;
+        applyBackendChatSendResult({
+          appendLocalEcho: options.appendLocalEcho,
+          result,
+          setLikedIds,
+          targetId,
+          updateConversations,
         });
       });
     },

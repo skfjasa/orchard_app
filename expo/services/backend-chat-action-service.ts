@@ -3,6 +3,7 @@ import {
   toBackendProfileId,
 } from "@/constants/mock-profile-ids";
 import type { AppServices } from "@/services/app-services";
+import type { ServiceFailure } from "@/services/service-types";
 import type { Message } from "@/types";
 
 import { findMatchBetweenProfiles } from "./match-record-utils";
@@ -11,7 +12,16 @@ export type BackendChatSendResult =
   | { status: "skipped" }
   | { status: "match_not_found"; targetProfileId: string }
   | { status: "sent"; message: Message }
-  | { status: "failed" };
+  | {
+      status: "failed";
+      stage: "lookup" | "send";
+      error: ServiceFailure;
+    };
+
+type BackendChatMatchLookupResult =
+  | { status: "found"; matchId: string }
+  | { status: "not_found" }
+  | { status: "failed"; error: ServiceFailure };
 
 interface SendBackendChatMessageInput {
   body: string;
@@ -45,20 +55,18 @@ export async function sendBackendChatMessage({
     return { status: "skipped" };
   }
 
-  const matchId = await findBackendChatMatchId({
+  const matchLookup = await findBackendChatMatch({
     lookupContext: "send",
-    repairWithSwipe: true,
     services,
-    targetId,
     targetProfileId,
     userId,
   });
 
-  if (matchId === "failed") {
-    return { status: "failed" };
+  if (matchLookup.status === "failed") {
+    return { status: "failed", stage: "lookup", error: matchLookup.error };
   }
 
-  if (!matchId) {
+  if (matchLookup.status === "not_found") {
     console.log("[profile-provider] backend chat match not found", {
       targetProfileId,
     });
@@ -66,7 +74,7 @@ export async function sendBackendChatMessage({
   }
 
   const result = await services.chat.sendMessage({
-    matchId,
+    matchId: matchLookup.matchId,
     senderId: userId,
     body,
   });
@@ -76,7 +84,7 @@ export async function sendBackendChatMessage({
       code: result.error.code,
       message: result.error.message,
     });
-    return { status: "failed" };
+    return { status: "failed", stage: "send", error: result.error };
   }
 
   return { status: "sent", message: result.value };
@@ -95,18 +103,20 @@ export async function markBackendConversationRead({
   const targetProfileId = toBackendProfileId(profileId);
   if (!isBackendProfileId(targetProfileId)) return;
 
-  const matchId = await findBackendChatMatchId({
+  const matchLookup = await findBackendChatMatch({
     lookupContext: "mark_read",
-    repairWithSwipe: false,
     services,
-    targetId: profileId,
     targetProfileId,
     userId,
   });
 
-  if (!matchId || matchId === "failed") return;
+  if (matchLookup.status !== "found") return;
 
-  const result = await services.chat.markRead(matchId, userId, readThrough);
+  const result = await services.chat.markRead(
+    matchLookup.matchId,
+    userId,
+    readThrough
+  );
   if (!result.ok) {
     console.log("[profile-provider] backend mark read failed", {
       code: result.error.code,
@@ -130,21 +140,17 @@ function canUseBackendChat(
   );
 }
 
-async function findBackendChatMatchId({
-  repairWithSwipe,
+async function findBackendChatMatch({
   lookupContext,
   services,
-  targetId,
   targetProfileId,
   userId,
 }: {
   lookupContext: "mark_read" | "send";
-  repairWithSwipe: boolean;
   services: AppServices;
-  targetId: string;
   targetProfileId: string;
   userId: string;
-}): Promise<string | null | "failed"> {
+}): Promise<BackendChatMatchLookupResult> {
   const matchResult = await services.matches.listMatches(userId);
   if (!matchResult.ok) {
     const message =
@@ -155,7 +161,7 @@ async function findBackendChatMatchId({
       code: matchResult.error.code,
       message: matchResult.error.message,
     });
-    return "failed";
+    return { status: "failed", error: matchResult.error };
   }
 
   const match = findMatchBetweenProfiles(
@@ -164,26 +170,7 @@ async function findBackendChatMatchId({
     targetProfileId
   );
 
-  if (match) return match.id;
-
-  if (!repairWithSwipe || services.capabilities.swipes !== "supabase") {
-    return null;
-  }
-
-  const swipeResult = await services.swipes.recordSwipe({
-    swiperId: userId,
-    targetId,
-    decision: "like",
-  });
-
-  if (!swipeResult.ok) {
-    console.log("[profile-provider] backend chat match repair failed", {
-      code: swipeResult.error.code,
-      message: swipeResult.error.message,
-      targetProfileId,
-    });
-    return null;
-  }
-
-  return swipeResult.value.matchId ?? null;
+  return match?.status === "active"
+    ? { status: "found", matchId: match.id }
+    : { status: "not_found" };
 }
