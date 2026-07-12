@@ -6,8 +6,11 @@ import { Platform } from "react-native";
 
 import { getBackendMode, supabase } from "@/lib/supabase";
 import type { AuthCredentials } from "@/services";
-
-const AUTH_CALLBACK_PATH = "/onboarding/sign-in";
+import {
+  buildPasswordResetRedirectOptions,
+  buildSignUpRedirectOptions,
+  resolveAuthRedirectUrl,
+} from "@/services/auth-redirect-service";
 
 type WebLocationLike = {
   href?: string;
@@ -34,18 +37,16 @@ type WebGlobalLike = typeof globalThis & {
   ) => void;
 };
 
-function getAuthRedirectUrl(): string | undefined {
-  const configuredUrl = process.env.EXPO_PUBLIC_AUTH_REDIRECT_URL?.trim();
-  if (configuredUrl) return configuredUrl;
-
-  if (Platform.OS === "web") {
-    const location = (globalThis as typeof globalThis & {
-      location?: WebLocationLike;
-    }).location;
-    if (location?.origin) return `${location.origin}${AUTH_CALLBACK_PATH}`;
-  }
-
-  return Linking.createURL(AUTH_CALLBACK_PATH.replace(/^\//, ""));
+function getAuthRedirectUrl(): string {
+  const location = (globalThis as typeof globalThis & {
+    location?: WebLocationLike;
+  }).location;
+  return resolveAuthRedirectUrl({
+    configuredUrl: process.env.EXPO_PUBLIC_AUTH_REDIRECT_URL,
+    createNativeUrl: (path) => Linking.createURL(path),
+    platform: Platform.OS === "web" ? "web" : "native",
+    webOrigin: location?.origin,
+  });
 }
 
 function formatAuthErrorMessage(message: string): string {
@@ -290,7 +291,9 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       const { data, error } = await supabase.auth.signUp({
         email: credentials.email,
         password: credentials.password,
-        options: emailRedirectTo ? { emailRedirectTo } : undefined,
+        options: emailRedirectTo
+          ? buildSignUpRedirectOptions(emailRedirectTo)
+          : undefined,
       });
       if (error) throw error;
       setSession(data.session ?? null);
@@ -318,7 +321,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     try {
       const emailRedirectTo = getAuthRedirectUrl();
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: emailRedirectTo,
+        ...buildPasswordResetRedirectOptions(emailRedirectTo),
       });
       if (error) throw error;
       return { ok: true as const };

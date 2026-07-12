@@ -155,7 +155,7 @@ Expected variables:
 ```text
 EXPO_PUBLIC_SUPABASE_URL=
 EXPO_PUBLIC_SUPABASE_ANON_KEY=
-EXPO_PUBLIC_AUTH_REDIRECT_URL=
+EXPO_PUBLIC_AUTH_REDIRECT_URL=https://preview.example.com/onboarding/sign-in
 EXPO_PUBLIC_POSTHOG_KEY=
 EXPO_PUBLIC_POSTHOG_HOST=
 EXPO_PUBLIC_SENTRY_DSN=
@@ -178,7 +178,9 @@ Rules:
 Supabase hosted auth setup:
 
 - Add the local/web preview URL to the Supabase Auth redirect allow-list before browser sign-up testing. For local web this may be `http://localhost:8081`; for Expo tunnel testing use the current tunnel origin.
-- `EXPO_PUBLIC_AUTH_REDIRECT_URL` can pin a redirect URL when the dynamic browser origin should not be used. Leave it blank to use the current web origin on web and the Expo app link on native.
+- `EXPO_PUBLIC_AUTH_REDIRECT_URL` can pin the web callback when the dynamic browser origin should not be used. A root HTTP(S) origin is normalized to `/onboarding/sign-in`; a complete callback is preferred. A full callback is not duplicated, and native builds keep their Expo/deep-link callback instead of inheriting an HTTP browser override. Leave it blank to use the current web origin on web and the Expo app link on native.
+- Temporary browser UAT callback as of 2026-07-11: `https://maturely-usher-electable.ngrok-free.dev/onboarding/sign-in`. Put this complete value in the untracked `expo/.env`, restart Expo web, and allow the exact callback in Supabase Authentication -> URL Configuration. This tunnel is temporary and must not be treated as a production default.
+- In hosted Supabase, verify the Site URL is not an obsolete tunnel and that the confirm-signup and password-recovery templates use the application-supplied redirect rather than a hardcoded host. Previously issued emails cannot be corrected; resend or generate a new email for UAT.
 - Supabase-hosted auth email template edits require custom SMTP configuration in the Dashboard. Until SMTP is configured, confirmation emails may use default Supabase Auth branding.
 - For external testing, configure custom SMTP, set an Orchard sender name/from address, then update the confirm-signup email template.
 
