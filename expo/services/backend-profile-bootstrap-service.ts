@@ -77,5 +77,5 @@ export async function bootstrapBackendProfile({
   await pendingStorage.clear();
   if (isCancelled?.()) return { status: "cancelled" };
 
-  return { status: "loaded", profile: pendingResult.value };
+  return { status: "loaded", profile: pendingResult.value.profile };
 }

@@ -6,6 +6,8 @@ import { bootstrapBackendProfile } from "./backend-profile-bootstrap-service";
 import {
   completeOnboardingInPhases,
   type OnboardingCompletionDependencies,
+  type OnboardingCompletionResult,
+  type ProfilePhotoPersistenceResult,
 } from "./onboarding-completion-service";
 import { selectProfileBootstrapPath } from "./profile-bootstrap-route-service";
 import type { CurrentProfileResult } from "./profile-service";
@@ -77,8 +79,8 @@ function stagedDependencies(failStage?: string): {
       async persistPhotos() {
         calls.push("photos");
         return failStage === "photos"
-          ? failure<Profile>("profile_photos_write_failed")
-          : success(profile);
+          ? failure<ProfilePhotoPersistenceResult>("profile_photos_write_failed")
+          : success({ profile, warnings: [] });
       },
       async finalizeProfile() {
         calls.push("finalize");
@@ -92,7 +94,10 @@ function stagedDependencies(failStage?: string): {
 
 function profileServices(
   reads: ServiceResponse<CurrentProfileResult>[],
-  completion: ServiceResponse<Profile> = success(profile)
+  completion: ServiceResponse<OnboardingCompletionResult> = success({
+    profile,
+    warnings: [],
+  })
 ) {
   let completionCalls = 0;
   const services = {
@@ -170,10 +175,13 @@ describe("two-phase onboarding orchestration", () => {
       },
       async persistMembers() { calls.push("members"); return success([]); },
       async persistSettings() { calls.push("settings"); return success(undefined); },
-      async persistPhotos() { calls.push("photos"); return success(profile); },
+      async persistPhotos() {
+        calls.push("photos");
+        return success({ profile, warnings: [] });
+      },
       async finalizeProfile() { calls.push("finalize"); return success(profile); },
     });
-    expect(result).toEqual(success(profile));
+    expect(result).toEqual(success({ profile, warnings: [] }));
     expect(calls).toEqual(["prepare"]);
   });
 
@@ -234,6 +242,26 @@ describe("two-phase onboarding orchestration", () => {
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.code).toBe("profile_photos_write_failed");
     expect(calls).not.toContain("finalize");
+  });
+
+  test("post-commit photo cleanup warning still finalizes and remains explicit", async () => {
+    const { calls, dependencies } = stagedDependencies();
+    dependencies.persistPhotos = async () => {
+      calls.push("photos");
+      return success({
+        profile,
+        warnings: [
+          {
+            code: "profile_photo_cleanup_failed",
+            storagePaths: [`${profile.id}/profile_photo/displaced.jpg`],
+          },
+        ],
+      });
+    };
+    const result = await completeOnboardingInPhases(dependencies);
+    expect(result.ok).toBe(true);
+    expect(calls.at(-1)).toBe("finalize");
+    if (result.ok) expect(result.value.warnings).toHaveLength(1);
   });
 });
 

@@ -13,6 +13,7 @@ Migration files:
 - `supabase/migrations/202607040003_enable_match_message_realtime.sql`
 - `supabase/migrations/202607040004_match_read_states.sql`
 - `supabase/migrations/202607110001_profile_photo_storage_path_ownership.sql` (local only; hosted preflight and apply pending)
+- `supabase/migrations/202607110002_transactional_profile_photo_replacement.sql` (local only; hosted apply/UAT pending)
 
 ## Scope
 
@@ -72,6 +73,15 @@ Profile-photo path-ownership migration `202607110001_profile_photo_storage_path_
 - INSERT and UPDATE policies that require both authenticated profile ownership and an owner-prefixed valid storage path.
 - No storage-path uniqueness constraint. Same-owner duplicate paths are a separate photo-lifecycle consistency concern and are not required to close cross-owner authorization.
 
+Transactional photo replacement migration `202607110002_transactional_profile_photo_replacement.sql` adds:
+
+- Authenticated `replace_profile_photos(desired_photos, removed_slots)` RPC with authority derived only from `auth.uid()`.
+- Explicit targeted-slot replacement: omitted photo slots remain unchanged; removals require an explicit slot list.
+- Member, path-ownership, duplicate-slot, duplicate-path, and desired/removal-overlap validation before metadata mutation.
+- Owner-row locking plus atomic INSERT/UPDATE/DELETE behavior inside the RPC transaction.
+- Preserved moderation state for identical paths and `pending` moderation for new or changed paths.
+- The complete committed owner metadata set and exact deduplicated displaced paths as the result, allowing object deletion only after metadata commit.
+
 Run this read-only query against hosted data before applying the migration. Any returned row requires explicit human review; do not rewrite or delete it automatically:
 
 ```sql
@@ -118,8 +128,9 @@ order by storage_path;
 - `block_profile(blocked_profile_id)` creates a block and marks any active match between the two users as blocked.
 - `submit_report(reported_profile_id, report_reason, report_details, reported_message_id)` derives reporter identity from `auth.uid()` and creates a moderation report.
 - `request_account_deletion(deletion_reason)` derives profile identity from `auth.uid()` and creates an account deletion request.
+- `replace_profile_photos(desired_photos, removed_slots)` atomically replaces explicitly targeted owner photo slots, preserves omitted slots, and returns committed rows plus displaced object paths.
 
-These functions are granted to authenticated users only. Database/RLS tests exist at `supabase/tests/database/202606200001_mvp_security.sql` and pass against the local Supabase database: 1 file, 67 tests.
+These functions are granted to authenticated users only. Database/RLS tests exist at `supabase/tests/database/202606200001_mvp_security.sql` and pass against the local Supabase database: 1 file, 103 tests.
 
 ## Known Gaps Before Staging Or Production
 
@@ -130,6 +141,7 @@ These functions are granted to authenticated users only. Database/RLS tests exis
 - Message body moderation strategy is not defined.
 - Hosted UAT still needs broader safety and block/unmatch/report verification with real accounts.
 - Hosted profile-photo path preflight and ownership UAT remain pending; do not apply `202607110001` until the preflight returns no unexplained rows.
+- Transactional photo replacement migration `202607110002` has not been applied to hosted Supabase; hosted upload/replacement/compensation/cleanup-warning UAT remains pending.
 
 ## RLS Review Required
 

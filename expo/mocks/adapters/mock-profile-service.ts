@@ -21,7 +21,7 @@ export function createMockProfileService(
 
     async completeOnboarding(input: ProfileDraftInput) {
       state.currentProfile = input.profile;
-      return ok(input.profile);
+      return ok({ profile: input.profile, warnings: [] });
     },
 
     async updateProfile(input: ProfileUpdateInput) {

@@ -249,6 +249,10 @@ export default function PhotosScreen() {
       await clearPendingOnboardingProfile();
     }
 
+    if (completeResult.warning) {
+      Alert.alert("Profile saved", completeResult.warning);
+    }
+
     reset();
     setFinishing(false);
 

@@ -1,9 +1,10 @@
 import type { AppServices } from "@/services/app-services";
 import type { Profile } from "@/types";
+import type { ProfilePhotoCleanupWarning } from "./onboarding-completion-service";
 
 export type BackendProfileCompletionResult =
-  | { status: "skipped"; profile: Profile }
-  | { status: "completed"; profile: Profile }
+  | { status: "skipped"; profile: Profile; warnings: ProfilePhotoCleanupWarning[] }
+  | { status: "completed"; profile: Profile; warnings: ProfilePhotoCleanupWarning[] }
   | { status: "failed"; error: string };
 
 export type BackendProfileUpdateResult =
@@ -27,7 +28,7 @@ export async function completeBackendOnboardingProfile({
   services,
 }: CompleteBackendOnboardingProfileInput): Promise<BackendProfileCompletionResult> {
   if (!canUseBackendProfiles(services)) {
-    return { status: "skipped", profile };
+    return { status: "skipped", profile, warnings: [] };
   }
 
   const result = await services.profiles.completeOnboarding({ profile });
@@ -35,7 +36,11 @@ export async function completeBackendOnboardingProfile({
     return { status: "failed", error: result.error.message };
   }
 
-  return { status: "completed", profile: result.value };
+  return {
+    status: "completed",
+    profile: result.value.profile,
+    warnings: result.value.warnings,
+  };
 }
 
 export async function updateBackendProfile({

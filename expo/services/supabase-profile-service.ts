@@ -19,6 +19,11 @@ import type {
 import type { ServiceResponse } from "./service-types";
 import { completeOnboardingInPhases } from "./onboarding-completion-service";
 import {
+  buildSignedPhotosByMemberId,
+  persistProfilePhotosTransactionally,
+  type ProfilePhotoMetadata,
+} from "./profile-photo-replacement-service";
+import {
   toIncompleteProfileInsert,
   toIncompleteProfileUpdate,
   toOnboardingFinalizationUpdate,
@@ -37,8 +42,6 @@ type ProfileMemberInsert =
   Database["public"]["Tables"]["profile_members"]["Insert"];
 type ProfileMemberUpdate =
   Database["public"]["Tables"]["profile_members"]["Update"];
-type ProfilePhotoInsert =
-  Database["public"]["Tables"]["profile_photos"]["Insert"];
 type UserSettingsInsert =
   Database["public"]["Tables"]["user_settings"]["Insert"];
 
@@ -146,24 +149,19 @@ export function toAppProfile(
   };
 }
 
-function isUploadablePhotoUri(uri: string | undefined): uri is string {
-  if (!uri) return false;
-  return !uri.startsWith("http://") && !uri.startsWith("https://");
-}
-
 export async function buildPhotosByMemberId(
-  photoRows: ProfilePhotoRow[]
+  photoRows: ProfilePhotoRow[],
+  signPath: (storagePath: string) => Promise<string | undefined> =
+    signedUrlForPath
 ): Promise<Record<string, string[]>> {
-  const grouped: Record<string, string[]> = {};
-  const sortedRows = [...photoRows].sort((a, b) => a.sort_order - b.sort_order);
-
-  for (const row of sortedRows) {
-    const signedUrl = await signedUrlForPath(row.storage_path);
-    if (!signedUrl) continue;
-    grouped[row.member_id] = [...(grouped[row.member_id] ?? []), signedUrl];
-  }
-
-  return grouped;
+  return buildSignedPhotosByMemberId(
+    photoRows.map((row) => ({
+      memberId: row.member_id,
+      sortOrder: row.sort_order,
+      storagePath: row.storage_path,
+    })),
+    signPath
+  );
 }
 
 async function readProfileState(
@@ -218,124 +216,81 @@ async function readProfileState(
   );
 }
 
-function applyUploadedPhotosToProfile(
-  profile: Profile,
-  uploadedPhotosByPersonIndex: Record<number, Record<number, string>>
-): Profile {
-  return {
-    ...profile,
-    people: profile.people.map((person, personIndex) => {
-      const uploadedBySlot = uploadedPhotosByPersonIndex[personIndex] ?? {};
-      const photos = (person.photos ?? [person.photo]).map((uri, photoIndex) =>
-        uploadedBySlot[photoIndex] ?? uri
-      );
-      return {
-        ...person,
-        photo: photos[0] ?? person.photo,
-        photos,
-      };
-    }),
-  };
-}
-
 async function persistProfilePhotos(
   profile: Profile,
   members: ProfileMemberRow[]
-): Promise<ServiceResponse<Profile>> {
+): ReturnType<typeof persistProfilePhotosTransactionally> {
   const storage = createSupabaseStorageService();
-  const photoRows: ProfilePhotoInsert[] = [];
-  const uploadedPaths: string[] = [];
-  const uploadedPhotosByPersonIndex: Record<number, Record<number, string>> = {};
-
-  for (const member of members) {
-    const person = profile.people[member.sort_order];
-    const photos = person?.photos ?? (person?.photo ? [person.photo] : []);
-
-    for (const [photoIndex, photoUri] of photos.entries()) {
-      if (!isUploadablePhotoUri(photoUri)) continue;
-
-      const uploadResult = await storage.upload({
-        profileId: profile.id,
-        localUri: photoUri,
-        purpose: "profile_photo",
-      });
-
-      if (!uploadResult.ok) {
-        for (const storagePath of uploadedPaths) {
-          void storage.remove(storagePath);
-        }
-        return fail(
-          "profile_photos_write_failed",
-          uploadResult.error.message
-        );
-      }
-
-      uploadedPaths.push(uploadResult.value.storagePath);
-      if (uploadResult.value.publicUrl) {
-        uploadedPhotosByPersonIndex[member.sort_order] = {
-          ...(uploadedPhotosByPersonIndex[member.sort_order] ?? {}),
-          [photoIndex]: uploadResult.value.publicUrl,
-        };
-      }
-
-      photoRows.push({
-        profile_id: profile.id,
-        member_id: member.id,
-        storage_path: uploadResult.value.storagePath,
-        sort_order: photoIndex,
-      });
-    }
-  }
-
-  if (photoRows.length === 0) {
-    return ok(profile);
-  }
-
   const clientResult = requireSupabase(supabase);
-  if (!clientResult.ok) return clientResult;
+  if (!clientResult.ok) return Promise.resolve(clientResult);
+  const client = clientResult.value;
 
-  for (const photoRow of photoRows) {
-    const { error: insertError } = await clientResult.value
-      .from("profile_photos")
-      .insert(photoRow);
+  const toMetadata = (row: ProfilePhotoRow): ProfilePhotoMetadata => ({
+    id: row.id,
+    memberId: row.member_id,
+    moderationStatus: row.moderation_status,
+    profileId: row.profile_id,
+    sortOrder: row.sort_order,
+    storagePath: row.storage_path,
+  });
 
-    if (!insertError) continue;
+  return persistProfilePhotosTransactionally({
+    profile,
+    members,
+    dependencies: {
+      upload: (input) => storage.upload(input),
+      remove: (storagePath) => storage.remove(storagePath),
+      async loadCurrentMetadata(profileId) {
+        const { data, error } = await client
+          .from("profile_photos")
+          .select("*")
+          .eq("profile_id", profileId)
+          .order("member_id", { ascending: true })
+          .order("sort_order", { ascending: true });
+        return error
+          ? fail(
+              "profile_photos_read_failed",
+              "Unable to read current profile photos.",
+              error
+            )
+          : ok((data ?? []).map(toMetadata));
+      },
+      async replaceMetadata({ desiredPhotos, removedSlots }) {
+        const { data, error } = await client.rpc("replace_profile_photos", {
+          desired_photos: desiredPhotos.map((photo) => ({
+            member_id: photo.memberId,
+            sort_order: photo.sortOrder,
+            storage_path: photo.storagePath,
+          })),
+          removed_slots: removedSlots.map((slot) => ({
+            member_id: slot.memberId,
+            sort_order: slot.sortOrder,
+          })),
+        });
+        if (error) {
+          return fail(
+            "profile_photos_replacement_failed",
+            "Unable to replace profile photo metadata.",
+            error
+          );
+        }
 
-    if (!isUniqueViolation(insertError)) {
-      for (const storagePath of uploadedPaths) {
-        void storage.remove(storagePath);
-      }
-      return fail(
-        "profile_photos_write_failed",
-        "Unable to save profile photos.",
-        insertError
-      );
-    }
+        const result = data?.[0];
+        if (!result || !Array.isArray(result.committed_photos)) {
+          return fail(
+            "profile_photos_replacement_failed",
+            "Profile photo replacement returned an invalid result."
+          );
+        }
 
-    const { error: updateError } = await clientResult.value
-      .from("profile_photos")
-      .update({
-        member_id: photoRow.member_id,
-        storage_path: photoRow.storage_path,
-        sort_order: photoRow.sort_order,
-      })
-      .eq("profile_id", photoRow.profile_id)
-      .eq("member_id", photoRow.member_id)
-      .eq("sort_order", photoRow.sort_order ?? 0);
-
-    if (updateError) {
-      for (const storagePath of uploadedPaths) {
-        void storage.remove(storagePath);
-      }
-      return fail(
-        "profile_photos_write_failed",
-        "Unable to save profile photos.",
-        updateError
-      );
-    }
-  }
-
-  return ok(applyUploadedPhotosToProfile(profile, uploadedPhotosByPersonIndex));
+        return ok({
+          committedPhotos: (result.committed_photos as unknown as ProfilePhotoRow[])
+            .map(toMetadata),
+          displacedPaths: result.displaced_paths ?? [],
+        });
+      },
+    },
+  });
 }
 
 export function createSupabaseProfileService(): ProfileService {

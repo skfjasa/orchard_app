@@ -347,6 +347,16 @@ export interface Database {
         };
         Returns: string;
       };
+      replace_profile_photos: {
+        Args: {
+          desired_photos: Json;
+          removed_slots?: Json;
+        };
+        Returns: {
+          committed_photos: Json;
+          displaced_paths: string[];
+        }[];
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

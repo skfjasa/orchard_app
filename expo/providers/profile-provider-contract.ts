@@ -11,6 +11,7 @@ import type {
 export type ProfileActionResult = {
   ok: boolean;
   error?: string;
+  warning?: string;
 };
 
 export type MatchActionResult = {

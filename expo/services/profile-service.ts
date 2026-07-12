@@ -1,6 +1,7 @@
 import type { Profile } from "@/types";
 
 import type { ServiceResponse } from "./service-types";
+import type { OnboardingCompletionResult } from "./onboarding-completion-service";
 
 export interface ProfileDraftInput {
   profile: Profile;
@@ -18,7 +19,9 @@ export type CurrentProfileResult =
 
 export interface ProfileService {
   getCurrentProfile(): Promise<ServiceResponse<CurrentProfileResult>>;
-  completeOnboarding(input: ProfileDraftInput): Promise<ServiceResponse<Profile>>;
+  completeOnboarding(
+    input: ProfileDraftInput
+  ): Promise<ServiceResponse<OnboardingCompletionResult>>;
   updateProfile(input: ProfileUpdateInput): Promise<ServiceResponse<Profile>>;
   setProfileVisibility(
     profileId: string,

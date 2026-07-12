@@ -114,6 +114,7 @@ import { useMonetizationStore } from "@/store/use-monetization-store";
 import { usePreferencesStore } from "@/store/use-preferences-store";
 import type {
   MatchActionResult,
+  ProfileActionResult,
   ProfileProviderContract,
 } from "./profile-provider-contract";
 
@@ -516,7 +517,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   ]);
 
   const completeOnboarding = useCallback(
-    async (p: Profile): Promise<{ ok: boolean; error?: string }> => {
+    async (p: Profile): Promise<ProfileActionResult> => {
       const result = await completeBackendOnboardingProfile({
         profile: p,
         services: appServices,
@@ -532,7 +533,10 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       saveProfileRef.current(profileToStore);
       setBackendProfileIncomplete(false);
       setBackendProfileHydrated(true);
-      return { ok: true };
+      const warning = result.warnings.length
+        ? "Your profile was saved, but some replaced photo files could not be removed."
+        : undefined;
+      return { ok: true, warning };
     },
     [appServices]
   );

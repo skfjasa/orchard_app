@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(75);
+select plan(103);
 
 insert into auth.users (
   id,
@@ -713,6 +713,377 @@ select throws_ok(
   '23514',
   'new row for relation "profile_photos" violates check constraint "profile_photos_storage_path_owned"',
   'constraint rejects cross-owned metadata even when RLS is bypassed'
+);
+
+select has_function(
+  'public',
+  'replace_profile_photos',
+  array['jsonb', 'jsonb'],
+  'transactional profile photo replacement RPC exists'
+);
+
+select is(
+  (
+    select prosecdef
+    from pg_proc
+    where oid = 'public.replace_profile_photos(jsonb, jsonb)'::regprocedure
+  ),
+  true,
+  'profile photo replacement RPC is security definer'
+);
+
+select ok(
+  (
+    select position(
+      'search_path=' in coalesce(array_to_string(proconfig, ','), '')
+    ) > 0
+    from pg_proc
+    where oid = 'public.replace_profile_photos(jsonb, jsonb)'::regprocedure
+  ),
+  'profile photo replacement RPC fixes its search path'
+);
+
+set local role anon;
+select throws_ok(
+  $$ select * from public.replace_profile_photos('[]'::jsonb, '[]'::jsonb) $$,
+  '42501',
+  'permission denied for function replace_profile_photos',
+  'anon cannot execute profile photo replacement RPC'
+);
+reset role;
+
+select ok(
+  has_function_privilege(
+    'authenticated',
+    'public.replace_profile_photos(jsonb, jsonb)',
+    'execute'
+  ),
+  'authenticated role can execute profile photo replacement RPC'
+);
+
+select ok(
+  not has_function_privilege(
+    'anon',
+    'public.replace_profile_photos(jsonb, jsonb)',
+    'execute'
+  )
+  and not has_function_privilege(
+    'public',
+    'public.replace_profile_photos(jsonb, jsonb)',
+    'execute'
+  ),
+  'profile photo replacement RPC is not executable by anon or public'
+);
+
+update public.profile_photos
+set moderation_status = 'approved'
+where profile_id = '00000000-0000-0000-0000-000000000001'
+  and member_id = '10000000-0000-0000-0000-000000000001'
+  and sort_order = 2;
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+
+select lives_ok(
+  $$
+    select * from public.replace_profile_photos(
+      '[{"member_id":"10000000-0000-0000-0000-000000000001","storage_path":"00000000-0000-0000-0000-000000000001/profile_photo/owner.jpg","sort_order":2}]'::jsonb,
+      '[]'::jsonb
+    )
+  $$,
+  'identical profile photo replacement succeeds'
+);
+
+select is(
+  (
+    select moderation_status
+    from public.profile_photos
+    where profile_id = '00000000-0000-0000-0000-000000000001'
+      and member_id = '10000000-0000-0000-0000-000000000001'
+      and sort_order = 2
+  ),
+  'approved',
+  'identical replacement preserves moderation state'
+);
+
+select is(
+  (
+    select displaced_paths
+    from public.replace_profile_photos(
+      '[{"member_id":"10000000-0000-0000-0000-000000000001","storage_path":"00000000-0000-0000-0000-000000000001/profile_photo/owner.jpg","sort_order":2}]'::jsonb,
+      '[]'::jsonb
+    )
+  ),
+  '{}'::text[],
+  'identical replacement is idempotent and displaces nothing'
+);
+
+select is(
+  (
+    select displaced_paths
+    from public.replace_profile_photos(
+      '[
+        {"member_id":"10000000-0000-0000-0000-000000000001","storage_path":"00000000-0000-0000-0000-000000000001/profile_photo/new-zero.jpg","sort_order":0},
+        {"member_id":"10000000-0000-0000-0000-000000000001","storage_path":"00000000-0000-0000-0000-000000000001/profile_photo/new-two.jpg","sort_order":2}
+      ]'::jsonb,
+      '[]'::jsonb
+    )
+  ),
+  array['00000000-0000-0000-0000-000000000001/profile_photo/owner.jpg']::text[],
+  'multirow replacement returns the displaced old path exactly once'
+);
+
+select is(
+  (
+    select count(*)::int
+    from public.profile_photos
+    where profile_id = '00000000-0000-0000-0000-000000000001'
+      and member_id = '10000000-0000-0000-0000-000000000001'
+      and sort_order in (0, 2)
+  ),
+  2,
+  'multirow replacement commits every desired slot'
+);
+
+select is(
+  (
+    select moderation_status
+    from public.profile_photos
+    where profile_id = '00000000-0000-0000-0000-000000000001'
+      and sort_order = 2
+  ),
+  'pending',
+  'changed profile photo path receives pending moderation state'
+);
+
+select is(
+  (
+    select moderation_status
+    from public.profile_photos
+    where profile_id = '00000000-0000-0000-0000-000000000001'
+      and sort_order = 0
+  ),
+  'pending',
+  'new profile photo slot receives pending moderation state'
+);
+
+reset role;
+insert into public.profile_photos (
+  profile_id,
+  member_id,
+  storage_path,
+  sort_order,
+  moderation_status
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  '10000000-0000-0000-0000-000000000001',
+  '00000000-0000-0000-0000-000000000001/profile_photo/keep.jpg',
+  4,
+  'approved'
+);
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+
+select lives_ok(
+  $$
+    select * from public.replace_profile_photos(
+      '[{"member_id":"10000000-0000-0000-0000-000000000001","storage_path":"00000000-0000-0000-0000-000000000001/profile_photo/new-two-again.jpg","sort_order":2}]'::jsonb,
+      '[]'::jsonb
+    )
+  $$,
+  'targeted replacement leaves omitted slots untouched'
+);
+
+select is(
+  (
+    select moderation_status
+    from public.profile_photos
+    where profile_id = '00000000-0000-0000-0000-000000000001'
+      and sort_order = 4
+      and storage_path = '00000000-0000-0000-0000-000000000001/profile_photo/keep.jpg'
+  ),
+  'approved',
+  'omitted unchanged row and moderation state are preserved'
+);
+
+select is(
+  (
+    select displaced_paths
+    from public.replace_profile_photos(
+      '[]'::jsonb,
+      '[{"member_id":"10000000-0000-0000-0000-000000000001","sort_order":0}]'::jsonb
+    )
+  ),
+  array['00000000-0000-0000-0000-000000000001/profile_photo/new-zero.jpg']::text[],
+  'explicit slot removal returns the removed path exactly once'
+);
+
+select is(
+  (
+    select count(*)::int
+    from public.profile_photos
+    where profile_id = '00000000-0000-0000-0000-000000000001'
+      and sort_order = 0
+  ),
+  0,
+  'explicitly removed slot is absent after commit'
+);
+
+select is(
+  (
+    select displaced_paths
+    from public.replace_profile_photos(
+      '[{"member_id":"10000000-0000-0000-0000-000000000001","storage_path":"00000000-0000-0000-0000-000000000001/profile_photo/new-two-again.jpg","sort_order":2}]'::jsonb,
+      '[]'::jsonb
+    )
+  ),
+  '{}'::text[],
+  'repeating the same committed replacement remains idempotent'
+);
+
+select throws_ok(
+  $$
+    select * from public.replace_profile_photos(
+      '[
+        {"member_id":"10000000-0000-0000-0000-000000000001","storage_path":"00000000-0000-0000-0000-000000000001/profile_photo/a.jpg","sort_order":3},
+        {"member_id":"10000000-0000-0000-0000-000000000001","storage_path":"00000000-0000-0000-0000-000000000001/profile_photo/b.jpg","sort_order":3}
+      ]'::jsonb,
+      '[]'::jsonb
+    )
+  $$,
+  'P0001',
+  'duplicate desired photo slot',
+  'duplicate desired logical slots are rejected'
+);
+
+select throws_ok(
+  $$
+    select * from public.replace_profile_photos(
+      '[
+        {"member_id":"10000000-0000-0000-0000-000000000001","storage_path":"00000000-0000-0000-0000-000000000001/profile_photo/same.jpg","sort_order":3},
+        {"member_id":"10000000-0000-0000-0000-000000000001","storage_path":"00000000-0000-0000-0000-000000000001/profile_photo/same.jpg","sort_order":5}
+      ]'::jsonb,
+      '[]'::jsonb
+    )
+  $$,
+  'P0001',
+  'duplicate desired photo path',
+  'ambiguous duplicate desired paths are rejected'
+);
+
+select throws_ok(
+  $$
+    select * from public.replace_profile_photos(
+      '[{"member_id":"10000000-0000-0000-0000-000000000001","storage_path":"00000000-0000-0000-0000-000000000001/profile_photo/keep.jpg","sort_order":3}]'::jsonb,
+      '[]'::jsonb
+    )
+  $$,
+  'P0001',
+  'desired photo path is already assigned to another slot',
+  'RPC rejects a desired path already committed to another slot'
+);
+
+select throws_ok(
+  $$
+    select * from public.replace_profile_photos(
+      '[{"member_id":"10000000-0000-0000-0000-000000000001","storage_path":"00000000-0000-0000-0000-000000000002/profile_photo/other.jpg","sort_order":3}]'::jsonb,
+      '[]'::jsonb
+    )
+  $$,
+  'P0001',
+  'photo path is not owned by current profile',
+  'RPC rejects cross-owned storage paths'
+);
+
+select throws_ok(
+  $$
+    select * from public.replace_profile_photos(
+      '[{"member_id":"10000000-0000-0000-0000-000000000001","storage_path":"/profile_photo/bad.jpg","sort_order":3}]'::jsonb,
+      '[]'::jsonb
+    )
+  $$,
+  'P0001',
+  'photo path is not owned by current profile',
+  'RPC rejects malformed storage paths'
+);
+
+select throws_ok(
+  $$
+    select * from public.replace_profile_photos(
+      '[{"member_id":"10000000-0000-0000-0000-000000000002","storage_path":"00000000-0000-0000-0000-000000000001/profile_photo/forged.jpg","sort_order":3}]'::jsonb,
+      '[]'::jsonb
+    )
+  $$,
+  'P0001',
+  'photo member does not belong to current profile',
+  'RPC cannot use another profile member as authority'
+);
+
+select throws_ok(
+  $$
+    select * from public.replace_profile_photos(
+      '[
+        {"member_id":"10000000-0000-0000-0000-000000000001","storage_path":"00000000-0000-0000-0000-000000000001/profile_photo/would-commit.jpg","sort_order":3},
+        {"member_id":"10000000-0000-0000-0000-000000000002","storage_path":"00000000-0000-0000-0000-000000000001/profile_photo/fails.jpg","sort_order":5}
+      ]'::jsonb,
+      '[]'::jsonb
+    )
+  $$,
+  'P0001',
+  'photo member does not belong to current profile',
+  'one invalid desired row rejects the whole replacement'
+);
+
+select is(
+  (
+    select count(*)::int
+    from public.profile_photos
+    where profile_id = '00000000-0000-0000-0000-000000000001'
+      and storage_path = '00000000-0000-0000-0000-000000000001/profile_photo/would-commit.jpg'
+  ),
+  0,
+  'failed multirow replacement leaves valid-looking metadata uncommitted'
+);
+
+select throws_ok(
+  $$
+    select * from public.replace_profile_photos(
+      '[{"member_id":"10000000-0000-0000-0000-000000000001","storage_path":"00000000-0000-0000-0000-000000000001/profile_photo/overlap.jpg","sort_order":2}]'::jsonb,
+      '[{"member_id":"10000000-0000-0000-0000-000000000001","sort_order":2}]'::jsonb
+    )
+  $$,
+  'P0001',
+  'photo slot cannot be desired and removed',
+  'RPC rejects ambiguous desired and removed slot overlap'
+);
+
+select is(
+  (
+    select jsonb_array_length(committed_photos)
+    from public.replace_profile_photos('[]'::jsonb, '[]'::jsonb)
+  ),
+  2,
+  'empty targeted replacement is a no-op that returns committed owner rows'
+);
+
+reset role;
+delete from public.profile_photos
+where profile_id = '00000000-0000-0000-0000-000000000001';
+insert into public.profile_photos (
+  profile_id,
+  member_id,
+  storage_path,
+  sort_order
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  '10000000-0000-0000-0000-000000000001',
+  '00000000-0000-0000-0000-000000000001/profile_photo/owner.jpg',
+  2
 );
 
 set local role authenticated;
