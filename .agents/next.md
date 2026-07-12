@@ -7,12 +7,14 @@ Recommended next non-UAT task:
 1. Corrected backlog item 1 is complete at `bcd6961` with Bun-native application tests, one pure-service test, and an application-test step in regular Expo CI.
 2. Corrected backlog item 3 is implemented at `280b601` with automated checks passed and targeted hosted UAT pending.
 3. Corrected backlog item 4 is implemented at `ddac497` with full reset, 67 pgTAP cases, and database lint passing; hosted preflight/apply/UAT remain pending.
-4. Run the documented read-only hosted photo-path preflight before any item 4 hosted apply. If it returns unexplained rows, stop for human remediation.
-5. Run item 3 and item 4 targeted hosted UAT when human accounts/sessions are available; otherwise wait for explicit instruction before another audit slice.
-6. Keep every change PR-sized and preserve mock/demo behavior, storage compatibility, and the current UI.
-7. Avoid a broad `ProfileProvider` rewrite.
-8. Avoid changing Supabase-mode fixture simulated replies/photo-request behavior until the M6 product decision is made.
-9. Keep hosted UAT items open unless a human/device test is actually run.
+4. Corrected backlog item 5 is implemented at `96c25bc` with 35 Bun tests, 75 pgTAP cases, typecheck, lint, database lint, and diff check passing; human UAT remains pending.
+5. Item 2 remains unimplemented. Do not begin item 6 without explicit selection.
+6. Run the documented read-only hosted photo-path preflight before any item 4 hosted apply. If it returns unexplained rows, stop for human remediation.
+7. Run item 3, item 4, and item 5 targeted UAT when human accounts/sessions are available; otherwise wait for explicit instruction before another audit slice.
+8. Keep every change PR-sized and preserve mock/demo behavior, storage compatibility, and the current UI.
+9. Avoid a broad `ProfileProvider` rewrite.
+10. Avoid changing Supabase-mode fixture simulated replies/photo-request behavior until the M6 product decision is made.
+11. Keep hosted UAT items open unless a human/device test is actually run.
 
 Avoid changing Supabase-mode fixture simulated replies/photo behavior until the product decision in M6 is made.
 
@@ -37,7 +39,8 @@ Read if relevant:
 
 ## Latest Completed Work
 
-- Latest code checkpoint is `ddac497` - Enforce profile photo path ownership.
+- Latest code checkpoint is `96c25bc` - Make onboarding completion two-phase.
+- Corrected backlog item 5 separates incomplete preparation, idempotent member/settings/photo persistence, and scoped finalization. Completed profile conflicts are returned authoritatively, incomplete rows resume through pending onboarding or the existing setup entry, and protected routes reject incomplete server rows.
 - `expo/services/supabase-service-response.test.ts` proves Bun can run TypeScript application tests against a pure service, covering both configured-client success and missing-configuration failure responses.
 - Regular Expo CI now runs `bun test` after its existing frozen-lockfile install. The manual Supabase DB workflow remains dispatch-only and unchanged.
 - Corrected backlog item 3 removes chat-triggered swipe repair. Backend chat lookup now returns `match_not_found` for missing/inactive matches without calling swipes, the provider preserves bounded stale target cleanup, and valid sends remain backend-first.
@@ -73,9 +76,12 @@ Read if relevant:
 ## Latest Validation
 
 - `expo\node_modules\.bin\supabase db reset`: passed through migration `202607110001` and seed.
-- `expo\node_modules\.bin\supabase test db`: passed, 1 file and 67 pgTAP cases.
+- `expo\node_modules\.bin\supabase test db`: passed, 1 file and 75 pgTAP cases.
 - `expo\node_modules\.bin\supabase db lint --level warning`: passed with no schema errors.
-- `cd expo; bun test`: passed after chat swipe-repair removal (11 tests, 28 assertions).
+- `cd expo; bun test`: passed after item 5 (35 tests, 72 assertions).
+- `cd expo; bun run typecheck`: passed after item 5.
+- `cd expo; bun run lint`: passed after item 5.
+- `git diff --check`: passed after item 5 with only existing LF-to-CRLF warnings.
 - `cd expo; bun run typecheck`: passed after chat swipe-repair removal.
 - `cd expo; bun run lint`: passed after chat swipe-repair removal.
 - `git diff --check`: passed after chat swipe-repair removal, with only LF-to-CRLF working-copy warnings.
@@ -111,3 +117,5 @@ Read if relevant:
 - Full sign-up/sign-in/profile/photo flow on target mobile browser and later iOS device.
 - M4 bootstrap edge cases: zero matches, mock mode, sign-out/sign-in/profile switch.
 - M5/M6/M7 hosted real-account flows: discovery filtering, pass/like persistence, chat failure behavior, block/unmatch/report/account deletion.
+- Corrected item 5 immediate-session, confirmation-required, failure/retry, incomplete-relaunch, completed-profile, and mock regression UAT.
+- Corrected item 2 remains open; item 3 remains awaiting UAT; item 4 remains awaiting hosted preflight/apply/UAT; do not begin item 6 without explicit instruction.
