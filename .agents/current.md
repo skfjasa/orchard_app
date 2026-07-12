@@ -1,6 +1,6 @@
 # Current Agent State
 
-Last updated: 2026-07-11
+Last updated: 2026-07-12
 
 ## Objective
 
@@ -9,12 +9,14 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 ## Branch And Commit
 
 - Branch: `main`.
-- Remote state: local `main` contains the item 5 implementation checkpoint and is pending handoff-sync commit/push.
-- Latest code checkpoint: `96c25bc` - Make onboarding completion two-phase.
+- Remote state: local `main` contains the item 6 and auth-redirect implementation checkpoints and is pending handoff-sync commit/push.
+- Latest code checkpoint: `88a1f2a` - Fix hosted auth callback redirect.
 - Recent relevant checkpoints:
   - `280b601` - Remove swipe repair from chat sending.
   - `ddac497` - Enforce profile photo path ownership.
   - `96c25bc` - Make onboarding completion two-phase.
+  - `e9d3f1b` - Make profile photo replacement transactional.
+  - `88a1f2a` - Fix hosted auth callback redirect.
   - `dfac3c2` - Sync session handoff.
   - `bd7c53a` - Sync human-gated remaining work.
   - `f960925` - Remove pass swipe provider wrapper.
@@ -68,6 +70,8 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 - Corrected backlog item 3 is implemented at `280b601` with automated checks passed and targeted human UAT pending. Chat lookup no longer calls swipe repair, missing/inactive matches trigger the existing bounded local cleanup, and non-match lookup/send failures remain distinct.
 - Corrected backlog item 4 is implemented at `ddac497` with automated checks passed and hosted preflight/UAT pending. New migration `202607110001` binds `profile_photos.storage_path` to the row owner at the constraint and RLS layers without changing existing private storage visibility or write policies.
 - Corrected backlog item 5 is implemented at `96c25bc` with automated checks passed and human UAT pending. Supabase onboarding now prepares profiles as incomplete/invisible, persists members/settings/photos idempotently, and publishes completion/visibility only in one finalization step. Incomplete server rows resume from pending onboarding when available and cannot enter protected routes. No migration or RPC was added.
+- Corrected backlog item 6 is implemented at `e9d3f1b` with automated checks passed and hosted UAT pending. New migration `202607110002` adds an authenticated, owner-scoped transactional photo replacement RPC. The app uploads first, calls the RPC once, compensates new uploads on pre-commit failure, and removes only validated displaced paths after commit. Cleanup failures are awaited and returned as nonfatal committed-with-cleanup warnings. Migration `202607110001` was not edited.
+- The auth redirect repository regression is fixed at `88a1f2a`. One pure resolver normalizes web origins/full callbacks to `/onboarding/sign-in`, preserves dynamic web fallback and native Expo/deep-link behavior, and is shared by signup confirmation and password reset. Ignored local `expo/.env` uses `https://maturely-usher-electable.ngrok-free.dev/onboarding/sign-in`. Hosted URL Configuration, Site URL, and email templates were unavailable and were not changed; hosted configuration and newly generated email UAT remain pending.
 - `ProfileProvider` remains active as a compatibility facade. App routes/components no longer import `useProfile()` directly; focused read-model hooks own route/provider access.
 - Supabase mode has auth/profile/photo/discovery/match/chat/read-state/Realtime paths in varying degrees.
 - Mock/Fruit/demo mode remains required and should not be broken by hosted-mode work.
@@ -76,13 +80,13 @@ Continue converting Orchard into an iOS-first Supabase-backed MVP for close-frie
 
 Latest code-touching checks:
 
-- `expo\node_modules\.bin\supabase db reset`: passed through migration `202607110001` and seed.
-- `expo\node_modules\.bin\supabase test db`: passed, 1 file and 75 pgTAP cases after item 5 RLS/discovery coverage.
+- `expo\node_modules\.bin\supabase db reset`: passed through migration `202607110002` and seed.
+- `expo\node_modules\.bin\supabase test db`: passed, 1 file and 103 pgTAP cases after item 6 transactional RPC coverage.
 - `expo\node_modules\.bin\supabase db lint --level warning`: passed with no schema errors.
-- `cd expo; bun test`: passed after item 5 (35 tests, 72 assertions).
-- `cd expo; bun run typecheck`: passed after item 5.
-- `cd expo; bun run lint`: passed after item 5.
-- `git diff --check`: passed after item 5 with only existing LF-to-CRLF warnings.
+- `cd expo; bun test`: passed after both work packages (67 tests, 125 assertions).
+- `cd expo; bun run typecheck`: passed after both work packages.
+- `cd expo; bun run lint`: passed after both work packages.
+- `git diff --check`: passed after both work packages with only existing LF-to-CRLF warnings.
 - `cd expo; bun run typecheck`: passed after chat swipe-repair removal.
 - `cd expo; bun run lint`: passed after chat swipe-repair removal.
 - `git diff --check`: passed after chat swipe-repair removal, with only Git's existing LF-to-CRLF working-copy warnings.
@@ -132,7 +136,9 @@ Final docs-only sync `bd7c53a` ran `git diff --check`; typecheck/lint were not r
 - Corrected backlog item 1 is complete. Item 2 remains unimplemented; do not claim or partially implement it in another slice.
 - Corrected backlog item 3 is `Implemented / Automated Checks Passed / Awaiting UAT`; do not mark it accepted until the targeted hosted scenarios pass.
 - Corrected backlog item 4 is `Implemented / Automated Checks Passed / Awaiting Hosted Preflight / Apply / UAT`; hosted preflight and migration apply were not performed.
-- Corrected backlog item 5 is `Implemented / Automated Checks Passed / Awaiting UAT`; do not begin item 6 without explicit selection.
+- Corrected backlog item 5 is `Implemented / Automated Checks Passed / Awaiting UAT`.
+- Corrected backlog item 6 is `Implemented / Automated Checks Passed / Awaiting Hosted UAT`; neither July photo migration was applied hosted.
+- The auth redirect is `Repository Fix Complete / Hosted Configuration or Email UAT Pending`. Previously issued email links cannot validate the fix.
 
 ## Canonical Docs
 
@@ -147,4 +153,4 @@ Final docs-only sync `bd7c53a` ran `git diff --check`; typecheck/lint were not r
 
 ## Next Recommended Task
 
-Best next task: run item 5 targeted human UAT and the documented read-only item 4 hosted photo-path preflight when accounts/sessions are available. Item 3 remains awaiting UAT, item 4 remains awaiting hosted preflight/apply/UAT, and item 2 remains open. Do not begin corrected backlog item 6 without explicit instruction.
+Best next task: finish the handoff commit, push, and verify CI, then run item 4/5/6 and auth-redirect hosted UAT when accounts/sessions are available. Item 2 remains open, item 3 remains awaiting UAT, and item 4 remains awaiting hosted preflight/apply/UAT. Do not begin corrected backlog item 7 without explicit instruction.

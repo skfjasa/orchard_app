@@ -360,6 +360,8 @@ Done:
 - [x] [C] Profile photo storage policies and active-match photo read policies exist.
 - [~] [C+U] Profile-photo metadata now requires `<profile_id>/<purpose>/<filename>` ownership at both the database constraint and INSERT/UPDATE policy layers. Local automated checks pass; hosted preflight and owner/attacker/visibility/revocation UAT remain.
 - [~] [C+U] Corrected audit backlog item 5 makes Supabase onboarding completion two-phase. Profile preparation and incomplete-row retry keep `onboarding_completed = false` and `is_visible = false`; member, settings, and photo stages must succeed before one scoped finalization publishes both flags. Missing, incomplete, completed, and failed profile reads are distinct, incomplete rows resume from pending onboarding when available, protected routes reject incomplete rows, and local automated checks pass. Human UAT remains.
+- [~] [C+U] Corrected audit backlog item 6 replaces explicitly targeted photo slots through authenticated transactional RPC `replace_profile_photos`. Upload/RPC failure compensation and post-commit displaced-object cleanup are awaited; cleanup warnings are explicit and do not block item 5 finalization after metadata commits. Local automated checks pass; hosted migration apply and upload/replacement/cleanup UAT remain.
+- [~] [C+U] Auth confirmation/reset redirect resolution now normalizes web origins and full callbacks to `/onboarding/sign-in`, preserves native deep links, and uses one resolver for signup and password reset. The local ignored UAT callback is current; hosted URL Configuration/template inspection and new-email UAT remain pending.
 - [x] [C+U] Onboarding background/sign-in header visual regressions were fixed and UAT-confirmed.
 
 Remaining:
@@ -367,6 +369,8 @@ Remaining:
 - [ ] [U] UAT full sign-up/sign-in/profile/photo flow on target mobile browser and later iOS device.
 - [ ] [U] Run the hosted photo-path preflight, remediate any unexplained row before apply, then verify valid owner upload, forged metadata INSERT/UPDATE rejection, discovery/active-match reads, and block/unmatch revocation.
 - [ ] [U] Accept corrected audit backlog item 5 with immediate-session, confirmation-required, member/settings/photo/finalization failure-and-retry, incomplete relaunch, completed-profile regression, and mock/demo scenarios. Confirm the row stays incomplete/invisible before finalization and becomes discoverable only afterward.
+- [ ] [U] Apply `202607110002` only after the item 4 hosted preflight/apply is explicitly approved, then verify transactional multi-photo replacement, upload/RPC compensation, displaced-object cleanup, cleanup warnings, ownership rejection, and item 5 finalization ordering.
+- [ ] [U] In hosted Supabase, verify the exact temporary callback is allow-listed, Site URL/templates do not force an obsolete tunnel, then test newly generated confirmation and password-reset emails. Do not reuse old links.
 - [ ] [C+U] Confirm no profile hydration loops or stale local profile state on repeated sign-out/sign-in.
 - [ ] [H] Decide if branded auth emails are needed for inner-circle testing.
 - [!] [H] Custom SMTP is required before Supabase Auth email branding can be customized.
